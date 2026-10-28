@@ -30,3 +30,5 @@ Thumbs.db
 # Иде
 .vscode/
 .idea/
+# Council chat (runtime state)
+logs/council/
