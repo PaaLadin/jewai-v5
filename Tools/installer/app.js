@@ -12,7 +12,8 @@
   form.addEventListener('submit', function(e){
     e.preventDefault();
     log.textContent = 'Отправка конфигурации...\n';
-    form.querySelector('button').disabled = true;
+    var btn = form.querySelector('button');
+    btn.disabled = true;
 
     var data = {
       root: document.getElementById('root').value,
@@ -29,13 +30,24 @@
     }).then(r => r.json()).then(res => {
       if(res.ok) {
         log.textContent += 'Установка запущена успешно.\n' + (res.log || '');
+        var a = document.createElement('a');
+        a.href = 'http://127.0.0.1:' + data.chatPort + '/';
+        a.target = '_blank';
+        a.className = 'pbtn';
+        a.style.display = 'block';
+        a.style.textAlign = 'center';
+        a.style.marginTop = '15px';
+        a.style.textDecoration = 'none';
+        a.textContent = 'ПЕРЕЙТИ В МЕЙНФРЕЙМ';
+        form.appendChild(a);
+        form.style.display = 'none';
       } else {
         log.textContent += 'Ошибка: ' + (res.error || 'unknown') + '\n';
-        form.querySelector('button').disabled = false;
+        btn.disabled = false;
       }
     }).catch(err => {
       log.textContent += 'Сетевая ошибка: ' + err + '\n';
-      form.querySelector('button').disabled = false;
+      btn.disabled = false;
     });
   });
 })();
