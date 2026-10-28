@@ -39,7 +39,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             log(f"Target: {target}")
             if ROOT.lower() != target.lower():
                 log("Copying files...")
-                ignore = shutil.ignore_patterns('.git', '__pycache__', '*.pyc', 'logs', 'runtime', 'Agents', 'Profiles', 'Archive', 'media', 'backups', 'Tools')
+                ignore = shutil.ignore_patterns('.git', '__pycache__', '*.pyc', 'logs', 'runtime', 'Agents', 'Profiles', 'Archive', 'media', 'backups')
                 shutil.copytree(ROOT, target, dirs_exist_ok=True, ignore=ignore)
                 log("Files copied.")
             else:
@@ -51,8 +51,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Agents', 'Templates', 'logs']:
                 os.makedirs(os.path.join(target, d), exist_ok=True)
             letters = list("ABCDEFGHIJ")[:n]
+            chrome_paths = [
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+            ]
+            chrome_exe = next((p for p in chrome_paths if os.path.exists(p)), None)
+            
             for L in letters:
                 os.makedirs(os.path.join(target, 'Agents', L), exist_ok=True)
+                prof_dir = os.path.join(target, 'Profiles', L)
+                os.makedirs(prof_dir, exist_ok=True)
+                if chrome_exe:
+                    log(f"Initializing Chrome profile for {L}...")
+                    try:
+                        # Spawn chrome briefly to generate profile, then kill it
+                        p = subprocess.Popen([chrome_exe, f'--user-data-dir={prof_dir}', '--no-first-run', '--no-default-browser-check', 'about:blank'],
+                                             creationflags=subprocess.CREATE_NO_WINDOW)
+                        time.sleep(2)
+                        p.terminate()
+                        log(f"Profile {L} initialized.")
+                    except Exception as e:
+                        log(f"Failed to init profile {L}: {e}")
+                else:
+                    log("WARNING: Chrome not found. Profiles will be created on first launch.")
             config = {
                 "root": target, "agent_port_base": base_port, "n_agents": n,
                 "chat_port": chat_port, "proxy_port": proxy_port,
