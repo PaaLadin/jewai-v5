@@ -1060,3 +1060,27 @@ Watchdog D: ON (pid 17360). Recovery D: ON (pid 7444).
 
 **Ссылки в RAG:**
 - RAG/procedures/current_state.md
+
+## 2026-10-28, запись 037 - FINAL HANDOVER 14D
+
+**Фаза:** передача 14D
+
+**Что сделано:**
+- HANDOVER_14D.md 4565b sha=d12cbe8e0662f0ee.
+- PROMPT_14D.md 2101b sha=bcb9a0ab6eaff8aa.
+- RAG/procedures/current_state.md 929b sha=5af8a0d878f956af.
+- logs/D/TODO.md 2175b sha=967fafb9d9feae3c (TODO для 14D).
+- Все артефакты закоммичены.
+
+**Чем проверено:**
+- Файлы на диске: размеры и sha совпадают.
+- run_all_tests.py: 21/21 pass, 325 проверок.
+- git log: 3 коммита (2770d2f, ab97546, 1b3a1de) + финальный.
+
+**Что дальше:**
+- Ждать 14D. Блокеры: F5 real config, F6 раскатка по одному, F7 push.
+
+**Переписано из старого:** нет (документация).
+
+**Ссылки в RAG:**
+- RAG/procedures/current_state.md
