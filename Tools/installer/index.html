@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>JewAI // INSTALLER</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
-<div class="crt">
-  <div class="topbar">
-    <div class="top-left">JewAI // SYSTEM INSTALLER</div>
-    <div class="top-center" id="clock">--:--:--</div>
-  </div>
-  <div class="screen active">
-    <div class="lp-wrap">
-      <div class="panel-title" style="text-align:center; font-size: 1.5em; margin-bottom: 20px;">УСТАНОВКА JEWAI v5</div>
-      <form id="installForm" style="display: flex; flex-direction: column; gap: 10px; max-width: 500px; margin: 0 auto;">
-        <label>Путь установки: <input type="text" id="root" value="C:\JewAI" style="width: 100%;"></label>
-        <label>Портов агентов (база): <input type="number" id="basePort" value="8760" style="width: 100%;"></label>
-        <label>Количество агентов: <input type="number" id="agentCount" value="4" min="1" max="10" style="width: 100%;"></label>
-        <label>Порт мейнфрейма: <input type="number" id="chatPort" value="8670" style="width: 100%;"></label>
-        <label>Порт DoH-прокси: <input type="number" id="proxyPort" value="9999" style="width: 100%;"></label>
-        <button type="submit" class="pbtn" style="margin-top: 15px;">ЗАПУСТИТЬ</button>
-      </form>
-      <div id="log" style="margin-top: 20px; color: #0f0; font-family: monospace; white-space: pre-wrap; height: 200px; overflow-y: auto;"></div>
+<div id="boot-screen">
+    <div>Press any key to step in the future</div>
+</div>
+
+<div id="splash-screen" style="display:none;">
+    <div id="splash-logo">
+        <span class="letter l-j">J</span><span class="letter l-e">e</span><span class="letter l-w">w</span>
+        <span class="letter l-ai">AI</span>
     </div>
+</div>
+
+<div class="crt" id="crt-container" style="display:none;">
+  <div class="terminal" id="term"></div>
+  <div class="input-line" id="inputLine" style="display:none;">
+    <span class="prompt" id="prompt">&gt;</span>
+    <span id="inputText"></span><span class="cursor">_</span>
   </div>
 </div>
-<script src="app.js"></script>
+
+<script src="app_audio.js?v=11"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

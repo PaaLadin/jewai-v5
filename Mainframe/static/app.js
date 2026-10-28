@@ -1,3 +1,4 @@
+
 (function(){
   function $(id){return document.getElementById(id);}
   function clock(){
@@ -11,18 +12,22 @@
     fetch('/api/status').then(r=>r.json()).then(d=>{
       if(!d.ok) return;
       var st=$('lpState');
-      if(st){
-        var html='';
-        var s=d.services||d;
-        if(s.agents){ html+='<div>AGENTS: '+JSON.stringify(s.agents)+'</div>'; }
-        else { html+='<pre>'+JSON.stringify(d,null,2)+'</pre>'; }
-        st.innerHTML=html;
+      if(st && d.channels){
+        var html = '<table style="width:100%; border-collapse: collapse; text-align: left; font-family: monospace;">';
+        html += '<tr style="border-bottom: 1px solid #0f0;"><th>CH</th><th>NAME</th><th>AGENT</th><th>CDP</th></tr>';
+        for (var L in d.channels) {
+            var c = d.channels[L];
+            var ag = c.agent_alive ? '<span style="color:#0f0">ON</span>' : '<span style="color:#f00">OFF</span>';
+            var cd = c.cdp_alive ? '<span style="color:#0f0">ON</span>' : '<span style="color:#f00">OFF</span>';
+            html += '<tr><td>'+L+'</td><td>'+c.name+'</td><td>'+c.agent_port+' ('+ag+')</td><td>'+c.cdp+' ('+cd+')</td></tr>';
+        }
+        html += '</table>';
+        st.innerHTML = html;
       }
     }).catch(e=>{});
   }
   setInterval(refreshStatus,3000); refreshStatus();
 
-  // Tabs
   var tabs=document.querySelectorAll('.tab');
   tabs.forEach(function(t){
     t.addEventListener('click',function(){

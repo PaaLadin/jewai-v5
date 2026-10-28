@@ -16,3 +16,5 @@
 - [x] Mainframe UI (Read visual RAG, dynamic tabs)
 - [x] Voice call for acceptance (Accepted by operator)
 
+
+- [x] Принять установщик V11 (заставка, звук, полный цикл, верстка мейнфрейма)

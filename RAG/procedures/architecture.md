@@ -56,3 +56,8 @@ CDP-цикл (create_chat, send_prompt, verify) - Ф5, реализуется п
 - Документация в RAG/procedures/, RAG/knowledge/.
 - Мониторинг: периодический прогон всех тестов, алерт на регресс.
 - Рефакторинг при наличии тестов (Т.З. - сохранять контракт).
+
+## 10. Installer UI (Accepted 28.10)
+Default installer interface is a retro CRT terminal (BBS style).
+Features: Typewriter text, Web Audio API synth (keyboard clicks, printer noise, WebMoney coins for splash).
+Interactive dialog with language selection (en/ru) and aliases (y/n/da/net).
