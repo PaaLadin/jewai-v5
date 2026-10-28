@@ -1,0 +1,29 @@
+{
+  "version": "0.1.0-dev",
+  "root": "C:/JewAI",
+  "bind": "127.0.0.1",
+  "chat_port": 8670,
+  "doh_proxy_port": 9899,
+  "letters": ["A", "B", "C", "D", "E", "F"],
+  "channels": {
+    "A": {"name": "Аркадий", "agent": 8666, "cdp": 9122, "prefix": "AAAA", "extension": "extension", "model": "deepseek"},
+    "B": {"name": "Борис",   "agent": 8667, "cdp": 9123, "prefix": "BBAA", "extension": "extension", "model": "deepseek"},
+    "C": {"name": "Семён",   "agent": 8668, "cdp": 9124, "prefix": "CCAA", "extension": "extension", "model": "deepseek"},
+    "D": {"name": "Димон",   "agent": 8669, "cdp": 9125, "prefix": "DDAA", "extension": "extension", "model": "deepseek"},
+    "E": {"name": "Qwen",    "agent": 8671, "cdp": 9126, "prefix": "QQAA", "extension": "extension_qwen", "model": "qwen"},
+    "F": {"name": "Алиса",   "agent": 8672, "cdp": 9127, "prefix": "FFAA", "extension": "extension_alice", "model": "alice"}
+  },
+  "thresholds": {
+    "rebirth_cmds": 850,
+    "alive_silence_sec": 180,
+    "watchdog_interval": 300,
+    "watchdog_threshold": 3
+  },
+  "timeouts": {
+    "cdp_ws": 15,
+    "cdp_poll": 2000,
+    "stable_ms": 1200,
+    "coalesce_ms": 2500,
+    "min_gap_ms": 5000
+  }
+}

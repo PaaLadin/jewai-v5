@@ -1,0 +1,7 @@
+{
+  "_comment": "Copy to config.json section 'llm'. Replace host/port with your network LLM.",
+  "host": "127.0.0.1",
+  "port": 8080,
+  "path": "/v1/chat/completions",
+  "model": "default"
+}

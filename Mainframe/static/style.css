@@ -1,0 +1,6 @@
+body { font-family: monospace; background: #111; color: #eee; margin: 20px; }
+h1 { color: #4a8a5a; }
+table { border-collapse: collapse; margin: 12px 0; }
+td, th { border: 1px solid #333; padding: 6px 10px; text-align: left; }
+.ok { color: #4a8a5a; }
+.off { color: #b33; }

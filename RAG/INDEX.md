@@ -1,21 +1,9 @@
-# RAG INDEX JewAI v5
+# RAG Index
 
-**Версия:** 0.1.0-dev
-**Обновлено:** 2026-10-27
+- procedures/architecture.md - architecture decisions (13D)
+- architecture/AUDIT.md - old project audit
 
-## architecture
-
-- [OVERVIEW.md](architecture/OVERVIEW.md) — обзор архитектуры v5
-- AUDIT.md — инвентаризация старого (Ф1, пока нет)
-
-## procedures
-
-- [rebirth_v5.md](procedures/rebirth_v5.md) — перерождение агента
-- [cdp_transport_v5.md](procedures/cdp_transport_v5.md) — CDP транспорт
-
-## knowledge
-
-Пусто. Наполняется по мере необходимости (лор, каноны, справочники).
-
-Dixi. 12D, 2026-10-27.
-- [AUDIT.md](architecture/AUDIT.md) — аудит старого JewAI, 15 334 б (Ф1)
+- knowledge/modules.md - auto-generated module index (13D)
+- procedures/current_state.md - short state summary for 14D (13D)
+- procedures/mainframe_gap.md - old 8770 vs v5 Mainframe (13D)
+- procedures/agent_layout.md - personal folder vs Chrome profile vs extension (13D)

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>JewAI v5 agent</title>
+<style>
+body { font-family: monospace; background: #111; color: #eee; margin: 10px; font-size: 12px; }
+h2 { color: #4a8a5a; margin: 8px 0; }
+label { display: block; margin: 6px 0 2px; color: #888; }
+input, button { width: 100%; background: #222; color: #eee; border: 1px solid #444; padding: 4px; font-family: monospace; box-sizing: border-box; }
+button { cursor: pointer; margin-top: 6px; }
+.ok { color: #4a8a5a; } .err { color: #b33; }
+</style>
+</head>
+<body>
+<h2>JewAI v5 agent</h2>
+<div><label>Agent URL</label><input id="agentUrl" placeholder="http://127.0.0.1:8666"></div>
+<div><label>Token</label><input id="token" placeholder="from .agent_token"></div>
+<div><label>Status</label><div id="status">not connected</div></div>
+<button id="save">Save + ping</button>
+<button id="pause">Toggle pause</button>
+<script>
+const els = { url: document.getElementById('agentUrl'), token: document.getElementById('token'), status: document.getElementById('status') };
+function setStatus(text, ok) { els.status.textContent = text; els.status.className = ok ? 'ok' : 'err'; }
+async function load() {
+  const s = await chrome.storage.local.get({ agentUrl: '', token: '', paused: false });
+  els.url.value = s.agentUrl || '';
+  els.token.value = s.token || '';
+  setStatus(s.paused ? 'paused' : 'ready', true);
+}
+document.getElementById('save').addEventListener('click', async () => {
+  const agentUrl = els.url.value.trim();
+  const token = els.token.value.trim();
+  await chrome.storage.local.set({ agentUrl, token });
+  try {
+    const r = await fetch(agentUrl + '/ping', { headers: { 'X-Token': token } });
+    const j = await r.json();
+    setStatus('ping: ' + (j.ok ? 'OK v' + j.version : 'FAIL'), !!j.ok);
+  } catch (e) { setStatus('ping ERR: ' + e, false); }
+});
+document.getElementById('pause').addEventListener('click', async () => {
+  const s = await chrome.storage.local.get({ paused: false });
+  await chrome.storage.local.set({ paused: !s.paused });
+  setStatus(!s.paused ? 'paused' : 'ready', true);
+});
+load();
+</script>
+</body>
+</html>

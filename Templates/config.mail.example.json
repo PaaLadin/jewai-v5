@@ -1,0 +1,9 @@
+{
+  "_comment": "Copy to config.json section 'mail'. Do NOT commit real password.",
+  "smtp_host": "smtp.example.com",
+  "smtp_port": 587,
+  "from_addr": "user@example.com",
+  "password": "PUT_IN_SECRET_NOT_HERE",
+  "to_addr": "user@example.com",
+  "use_tls": true
+}

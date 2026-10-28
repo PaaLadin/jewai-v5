@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "JewAI Agent Bridge",
+  "version": "5.0.0",
+  "description": "Local bridge between LLM chat and filesystem. v5.",
+  "permissions": ["storage", "sidePanel", "tabs"],
+  "host_permissions": [
+    "https://chat.deepseek.com/*",
+    "https://chat.qwen.ai/*",
+    "https://alice.yandex.ru/*",
+    "http://127.0.0.1:8666/*",
+    "http://127.0.0.1:8667/*",
+    "http://127.0.0.1:8668/*",
+    "http://127.0.0.1:8669/*",
+    "http://127.0.0.1:8671/*",
+    "http://127.0.0.1:8672/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://chat.deepseek.com/*"],
+      "js": ["content_deepseek.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chat.qwen.ai/*"],
+      "js": ["content_qwen.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://alice.yandex.ru/*"],
+      "js": ["content_alice.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": { "default_path": "sidepanel.html" },
+  "action": { "default_title": "JewAI - open panel" }
+}
