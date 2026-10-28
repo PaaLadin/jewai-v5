@@ -1,10 +1,44 @@
 <!DOCTYPE html>
-<html lang="ru"><head>
-<meta charset="utf-8">
-<title>JewAI v5 - Mainframe</title>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JewAI // MAINFRAME</title>
 <link rel="stylesheet" href="/style.css">
-</head><body>
-<h1>JewAI v5 - Mainframe</h1>
-<div id="root"><p>loading...</p></div>
+</head>
+<body>
+<div class="crt">
+  <div class="topbar">
+    <div class="top-left">JewAI // MAINFRAME v5</div>
+    <div class="top-center" id="clock">--:--:--</div>
+    <div class="top-right" id="netstat">СЕТЬ: OK</div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="launchpad">ПУЛЬТ</button>
+    <button class="tab" data-tab="chat">ЧАТ</button>
+    <button class="tab" data-tab="logs">ЛОГИ</button>
+  </div>
+  <div class="screen active" id="screen-launchpad">
+    <div class="lp-wrap">
+      <div class="lp-state" id="lpState">---</div>
+      <div class="lp-logbox" id="lpLog"></div>
+    </div>
+  </div>
+  <div class="screen" id="screen-chat">
+    <div class="chat-wrap">
+      <div class="chat-feed" id="chatFeed"></div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="сообщение...">
+        <button id="chatSend">&gt;_</button>
+      </div>
+    </div>
+  </div>
+  <div class="screen" id="screen-logs">
+    <div class="logs-wrap">
+      <pre id="logBody">выберите лог...</pre>
+    </div>
+  </div>
+</div>
 <script src="/app.js"></script>
-</body></html>
+</body>
+</html>

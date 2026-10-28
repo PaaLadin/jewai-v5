@@ -1,20 +1,36 @@
-async function fetch_json(url) {
-  try { const r = await fetch(url); return await r.json(); }
-  catch (e) { return {ok:false, error:String(e)}; }
-}
+(function(){
+  function $(id){return document.getElementById(id);}
+  function clock(){
+    var d=new Date();
+    var h=('0'+d.getHours()).slice(-2), m=('0'+d.getMinutes()).slice(-2), s=('0'+d.getSeconds()).slice(-2);
+    if($('clock')) $('clock').textContent=h+':'+m+':'+s;
+  }
+  setInterval(clock,1000); clock();
 
-async function render() {
-  const root = document.getElementById('root');
-  const st = await fetch_json('/api/status');
-  if (!st.ok) { root.innerHTML = '<p class="off">status FAIL: ' + (st.error||'') + '</p>'; return; }
-  const rows = Object.entries(st.channels).map(([L, c]) => {
-    const a = c.agent_alive ? '<span class="ok">up</span>' : '<span class="off">down</span>';
-    const d = c.cdp_alive ? '<span class="ok">up</span>' : '<span class="off">down</span>';
-    return '<tr><td>'+L+'</td><td>'+c.name+'</td><td>'+c.agent_port+' '+a+'</td><td>'+c.cdp_port+' '+d+'</td></tr>';
-  }).join('');
-  root.innerHTML = '<table><tr><th>Ch</th><th>Name</th><th>Agent</th><th>CDP</th></tr>'+rows+'</table>' +
-    '<p>root: '+st.root+' v'+st.version+'</p>';
-}
+  function refreshStatus(){
+    fetch('/api/status').then(r=>r.json()).then(d=>{
+      if(!d.ok) return;
+      var st=$('lpState');
+      if(st){
+        var html='';
+        var s=d.services||d;
+        if(s.agents){ html+='<div>AGENTS: '+JSON.stringify(s.agents)+'</div>'; }
+        else { html+='<pre>'+JSON.stringify(d,null,2)+'</pre>'; }
+        st.innerHTML=html;
+      }
+    }).catch(e=>{});
+  }
+  setInterval(refreshStatus,3000); refreshStatus();
 
-render();
-setInterval(render, 5000);
+  // Tabs
+  var tabs=document.querySelectorAll('.tab');
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){
+      tabs.forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      var s=$('screen-'+t.dataset.tab);
+      if(s) s.classList.add('active');
+    });
+  });
+})();

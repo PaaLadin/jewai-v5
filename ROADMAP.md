@@ -127,3 +127,13 @@ Chrome C (9124) live. Mainframe 8670 live (наш pid). Watchdog D ON.
 3. Ф6 раскатка по одному.
 4. Ф7 push.
 5. Mainframe /fs (non-JSON ветка).
+
+
+## Phase 8: Clean Build & Installer
+- Self-contained build, GUI installer in mainframe style, configurable paths/ports.
+
+## Phase 9: New Mainframe UI
+- Match visual RAG, dynamic tabs based on agents.
+
+## Phase 10: Voice Acceptance
+- Call operator by voice before git push.

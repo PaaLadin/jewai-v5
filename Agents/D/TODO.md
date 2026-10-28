@@ -11,3 +11,8 @@
 ## Заметки
 
 (пусто, заполняется агентом канала)
+
+- [ ] Clean Build & Installer (UI mainframe style, dynamic models, configurable paths/ports)
+- [x] Mainframe UI (Read visual RAG, dynamic tabs)
+- [x] Voice call for acceptance (Accepted by operator)
+
