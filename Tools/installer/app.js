@@ -11,7 +11,8 @@ const i18n = {
         basePort: "\n[2/5] Base port for agents (e.g. 8760): ",
         agentCount: "\n[3/5] Number of agents (1-10): ",
         chatPort: "\n[4/5] Mainframe chat port (e.g. 8670): ",
-        proxyPort: "\n[5/5] DoH proxy port (e.g. 9999): ",
+        proxyPort: "\n[5/6] DoH proxy port (e.g. 9999): ",
+        names: "\n[6/6] Agent names (comma separated, e.g. Arkady, Boris. Leave empty for A, B): ",
         summary: "\n--- SUMMARY ---\nPath: {0}\nPorts: {1}/{3}/{4}\nAgents: {2}\n\nProceed? [y/n]: ",
         installing: "\nInstalling...\n",
         installDone: "\nInstallation complete. Launch all services now? [y/n]: ",
@@ -27,7 +28,8 @@ const i18n = {
         basePort: "\n[2/5] Базовый порт агентов (например 8760): ",
         agentCount: "\n[3/5] Количество агентов (1-10): ",
         chatPort: "\n[4/5] Порт мейнфрейма (например 8670): ",
-        proxyPort: "\n[5/5] Порт DoH-прокси (например 9999): ",
+        proxyPort: "\n[5/6] Порт DoH-прокси (например 9999): ",
+        names: "\n[6/6] Имена агентов (через запятую, например Аркадий, Борис. Оставьте пустым для A, B): ",
         summary: "\n--- ПОДТВЕРЖДЕНИЕ ---\nПуть: {0}\nПорты: {1}/{3}/{4}\nАгентов: {2}\n\nПродолжить? [y/n]: ",
         installing: "\nУстановка...\n",
         installDone: "\nУстановка завершена. Запустить все сервисы сейчас? [y/n]: ",
@@ -47,7 +49,7 @@ function typeText(text) {
 function processQueue() {
     if (typingQueue.length === 0) {
         isTyping = false;
-        if (state === 1 || (state >= 2 && state <= 7)) showInput();
+        if (state === 1 || (state >= 2 && state <= 8) || state === 10) showInput();
         return;
     }
     isTyping = true;
@@ -108,9 +110,13 @@ function submitInput(val) {
     } else if (state === 6) {
         config.proxyPort = parseInt(val) || 9999;
         state = 7;
+        typeText(i18n[lang].names);
+    } else if (state === 7) {
+        config.names = val;
+        state = 8;
         let s = i18n[lang].summary;
         typeText(s.replace('{0}', config.root).replace('{1}', config.basePort).replace('{2}', config.agentCount).replace('{3}', config.chatPort).replace('{4}', config.proxyPort));
-    } else if (state === 7) {
+    } else if (state === 8) {
         if (['y', 'yes', 'да', 'д'].includes(lower)) {
             state = 9;
             sfxDisk();

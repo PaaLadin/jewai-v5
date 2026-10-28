@@ -84,6 +84,13 @@ def run_cycle(cfg: Config, letter: str, adapter: Any, cdp: Any, table: Table) ->
         return {"ok": False, "error": "no markers in PROMPT (too short?)"}
 
     header = "%s %s" % (next_series, ch.name)
+    
+    # Replace placeholders in prompt text
+    prompt_text = prompt_text.replace("{{AGENT_NAME}}", ch.name)
+    prompt_text = prompt_text.replace("{{CHANNEL_LETTER}}", letter.upper())
+    prompt_text = prompt_text.replace("{{SERIES}}", next_series)
+    prompt_text = prompt_text.replace("{{ID_PREFIX}}", ch.prefix)
+    
     body = header + "\n\n" + prompt_text
     t0 = time.time()
 

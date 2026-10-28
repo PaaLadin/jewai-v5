@@ -48,7 +48,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             n = cfg.get('agentCount', 4)
             chat_port = cfg.get('chatPort', 8670)
             proxy_port = cfg.get('proxyPort', 9999)
-            for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Agents', 'Templates', 'logs']:
+            for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Agents', 'Templates', 'logs', 'Projects', 'Archive', 'Profiles']:
                 os.makedirs(os.path.join(target, d), exist_ok=True)
             letters = list("ABCDEFGHIJ")[:n]
             chrome_paths = [
@@ -74,11 +74,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         log(f"Failed to init profile {L}: {e}")
                 else:
                     log("WARNING: Chrome not found. Profiles will be created on first launch.")
+            names_raw = cfg.get('names', '')
+            names_list = [x.strip() for x in names_raw.split(',') if x.strip()]
+            
+            channels = {}
+            for i, L in enumerate(letters):
+                cname = names_list[i] if i < len(names_list) else L
+                channels[L] = {
+                    "name": cname,
+                    "agent": base_port + i, 
+                    "cdp": 9220 + i, 
+                    "prefix": "AAAA" if L == "A" else L + L + "AA"
+                }
+            
             config = {
                 "root": target, "agent_port_base": base_port, "n_agents": n,
                 "chat_port": chat_port, "proxy_port": proxy_port,
                 "letters": letters,
-                "channels": {L: {"agent": base_port + i, "cdp": 9220 + i, "prefix": "AAAA" if L == "A" else L + L + "AA"} for i, L in enumerate(letters)}
+                "channels": channels
             }
             with open(os.path.join(target, 'config.json'), 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)
@@ -124,6 +137,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             spawn("DoH proxy", [doh, '--port', str(proxy_port)], target)
         mf = os.path.join(target, 'Mainframe', 'server.py')
         if os.path.exists(mf):
+            log("Killing old processes on port " + str(chat_port) + "...")
+            kill_cmd = f"Get-NetTCPConnection -LocalPort {chat_port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Where-Object {{$_ -ne 0}} | ForEach-Object {{ Stop-Process -Id $_ -Force }}"
+            subprocess.run(['powershell', '-c', kill_cmd], capture_output=True)
+            time.sleep(1)
             spawn("Mainframe", [mf], target)
             time.sleep(1.5)
         for L in letters:
