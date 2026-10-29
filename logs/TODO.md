@@ -489,3 +489,27 @@ Operator reboots PC (kill all Chrome, full restart). 11B persisted state.
 - [x] hint text [5/6] 9999 -> 9899 (en + ru).
 - [x] 21/21 tests pass.
 - [ ] Оператор: перезапустить installer, повторить тест.
+
+
+## 2026-10-30 00:11 - install 23:36 (C:\JewAI_v5): 3 bugs
+
+### 1. Agents DOWN
+Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py in memory (no FIX3). install.log has no "Chrome for Testing copied", no "Bridge A started".
+- [ ] Operator: delete C:\JewAI_v5, install STRICTLY from C:\jewai\install.bat into NEW folder.
+- [ ] install.bat guard: detect if run from target copy, warn.
+
+### 2. Chrome opens www.deepseek.com/en instead of chat.deepseek.com
+- [ ] Check: DeepSeek redirect or proxy 9899 issue.
+- [ ] launcher.py DEFAULT_START_URL["deepseek"] = chat.deepseek.com (already). Verify actual URL after load.
+- [ ] If DeepSeek redirects - open direct /a/chat/s/<id>.
+
+### 3. storage: False (extension loaded, sidepanel not connected)
+- [ ] push_storage in launcher.py returned False. Add retry (3x, 2s).
+- [ ] Log reason False (target not found / ws error).
+- [ ] Fallback: sidepanel autodetect 8666-8675 (already in code).
+
+### 4. Panel (v5 Mainframe) - TODO (after operator agreement)
+- [ ] Top button to open sidepanel.
+- [ ] Ideal: sidepanel auto-open right on chat load.
+- [ ] Missing key functions (agree list with operator).
+- [ ] Mnemo: verify all blocks and links.

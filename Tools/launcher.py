@@ -127,7 +127,13 @@ def launch(cfg, letter: str, no_proxy: bool = False, dry: bool = False) -> dict:
     ok = wait_cdp(ch.cdp_port, wait_sec=20.0)
     storage_ok = False
     if ok:
-        storage_ok = _push_storage(cfg, letter, ch)
+        for _attempt in range(1, 4):
+            storage_ok = _push_storage(cfg, letter, ch)
+            if storage_ok:
+                break
+            time.sleep(2)
+        if not storage_ok:
+            print("[launcher] push_storage FAILED x3 channel=%s cdp=%d" % (letter, ch.cdp_port), flush=True)
     return {"ok": ok, "pid": p.pid, "cdp": ch.cdp_port, "first_run": first_run, "storage": storage_ok}
 
 
