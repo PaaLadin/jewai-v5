@@ -24,7 +24,9 @@ def check(name, cond, detail=''):
 tmp = tempfile.mkdtemp(prefix='v5f5_')
 try:
     cfg0 = load_config()
-    cfg = dataclasses.replace(cfg0, root=Path(tmp), chat_port=8671)
+    import socket as _sk
+    _s0 = _sk.socket(); _s0.bind(('127.0.0.1', 0)); PORT = _s0.getsockname()[1]; _s0.close()
+    cfg = dataclasses.replace(cfg0, root=Path(tmp), chat_port=PORT)
     # copy config.json into tmp root? No: llm/mail read cfg.path("config.json").
     # point at our tmp root/config.json (missing -> empty dict -> not_configured)
     # create empty config.json so reads do not fail
@@ -60,8 +62,7 @@ try:
     check('rag pull since empty', len(r3.get('entries', [])) == 0)
 
     # ---- server routes on 8671 ----
-    s = socket.socket(); s.settimeout(0.5)
-    busy = (s.connect_ex(('127.0.0.1', 8671)) == 0); s.close()
+    busy = False  # dynamic port, always free
     if busy:
         lines.append('SKIP server routes: 8671 busy')
     else:
@@ -77,7 +78,7 @@ try:
         srv = web.make_server(cfg, routes)
         th = threading.Thread(target=srv.serve_forever, daemon=True); th.start()
         time.sleep(0.5)
-        base = 'http://127.0.0.1:8671'
+        base = 'http://127.0.0.1:%d' % PORT
         def call(path, method='GET', body=None):
             data = None
             headers = {}

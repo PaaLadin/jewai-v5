@@ -100,7 +100,7 @@ function submitInput(val) {
         state = 4;
         typeText(i18n[lang].agentCount);
     } else if (state === 4) {
-        config.agentCount = parseInt(val) || 4;
+        config.agentCount = parseInt(val) || 1;
         state = 5;
         typeText(i18n[lang].chatPort);
     } else if (state === 5) {
@@ -171,14 +171,8 @@ function submitInput(val) {
                             if (attempts < 30) {
                                 setTimeout(tryRedirect, 500);
                             } else {
-                                typeText('Mainframe did not respond after 15s. Click to open: ' + mfUrl);
-                                // Add clickable link
-                                const link = document.createElement('a');
-                                link.href = mfUrl;
-                                link.target = '_blank';
-                                link.textContent = mfUrl;
-                                link.style.color = '#33ff33';
-                                document.body.appendChild(link);
+                                typeText('Mainframe did not respond after 15s. Redirecting to ' + mfUrl + ' (browser will retry)...');
+                                setTimeout(() => { window.location.href = mfUrl; }, 800);
                             }
                         });
                 };

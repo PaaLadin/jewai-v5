@@ -29,11 +29,23 @@ check('adapter qwen', isinstance(_adapter_for('qwen'), Qwen))
 check('adapter alice', isinstance(_adapter_for('alice'), Alice))
 check('adapter unknown -> deepseek', isinstance(_adapter_for('nonsense'), DeepSeek))
 
-# test 2: subprocess E --once (E cdp not running) - should exit cleanly, no traceback
+# test 2: subprocess --once against isolated config (cdp=9999 dead, not live 9122)
+import json as _j, os as _o, tempfile as _tf
+_iso_cfg_data = _j.loads((ROOT / 'config.json').read_text(encoding='utf-8'))
+for _L in _iso_cfg_data.get('channels', {}):
+    _iso_cfg_data['channels'][_L]['cdp'] = 9999
+_iso_dir = Path(_tf.mkdtemp(prefix='v5run_'))
+_iso_cfg = _iso_dir / 'config.json'
+_iso_cfg.write_text(_j.dumps(_iso_cfg_data, indent=2, ensure_ascii=False), encoding='utf-8')
+_iso_env = _o.environ.copy()
+_iso_env['JEWAI_CONFIG'] = str(_iso_cfg)
 r = subprocess.run([sys.executable, str(RUN), '--channel', 'A', '--once'],
                    capture_output=True, text=True, timeout=30,
                    encoding='utf-8', errors='replace',
+                   env=_iso_env,
                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0)
+import shutil as _sh
+_sh.rmtree(_iso_dir, ignore_errors=True)
 check('E --once exit 2', r.returncode == 2, 'rc=%d stdout=%r' % (r.returncode, (r.stdout or '')[:120]))
 check('E --once no traceback', 'Traceback' not in (r.stderr or ''), (r.stderr or '')[:200])
 check('E --once has no_chat_target', 'no_chat_target' in (r.stdout or ''), (r.stdout or '')[:120])

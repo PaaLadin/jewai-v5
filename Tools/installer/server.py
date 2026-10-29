@@ -45,7 +45,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             else:
                 log("Same directory, skip copy.")
             base_port = int(cfg.get('basePort', 8666))  # 11B: v5 default
-            n = cfg.get('agentCount', 4)
+            n = int(cfg.get('agentCount', 1))
             chat_port = cfg.get('chatPort', 8670)
             proxy_port = cfg.get('proxyPort', 9999)
             for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Templates', 'logs', 'Projects', 'Archive', 'Profiles']:
@@ -220,9 +220,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if not agent_port: continue
             run_py = os.path.join(target, 'Bridge', 'run.py')
             if os.path.exists(run_py):
-                spawn(f"Agent {L}", [run_py, '--channel', L], target)
+                spawn(f"Bridge {L}", [run_py, '--channel', L], target)
             else:
-                log(f"Agent {L}: Bridge/run.py not found, skipped.")
+                log(f"Bridge {L}: Bridge/run.py not found, skipped.")
+            # 11B: also start HTTP agent (agent.py, port <agent>) per channel
+            agent_py = os.path.join(target, 'Profiles', L, 'extension', 'agent.py')
+            if not os.path.exists(agent_py):
+                agent_py = os.path.join(target, 'Templates', 'extension', 'agent.py')
+            if os.path.exists(agent_py):
+                spawn(f"Agent {L}", [agent_py, str(agent_port)], target)
+            else:
+                log(f"Agent {L}: agent.py not found (HTTP /ping will be DOWN).")
         launcher_py = os.path.join(target, 'Tools', 'launcher.py')
         if os.path.exists(launcher_py):
             env_l = os.environ.copy()

@@ -374,3 +374,90 @@ Operator reboots PC (kill all Chrome, full restart). 11B persisted state.
 - [x] install run_install end-to-end (tempdir, A/B): structure, config, launchers, templates - all OK.
 - [x] stale Tools/launchers removed before regen.
 - [ ] Operator acceptance test in real folder (P12).
+
+
+## 2026-10-29 18:18 - installer: default agentCount = 1 (было 4)
+
+**Баг (оператор):** при молчаливом Enter в строке "[3/5] Number of agents (1-10)" дефолт = 4. Должен быть 1.
+- [ ] app.js: `config.agentCount = parseInt(val) || 4;` -> `|| 1` (и в i18n подсказке e.g. 1, не 4).
+- [ ] проверить, нет ли 4 ещё где-то (server.py `n = cfg.get("agentCount", 4)`).
+- [ ] после фикса: пустой Enter -> 1 агент.
+
+### Замечено при тесте (не баг, но к сведению)
+- UI спрашивает [1/5]..[6/6], а SUMMARY пишет "Ports: 8666/8670/6699 Agents: 4".
+- Поле [5/6] DoH proxy port подписано "(e.g. 9999)", но SUMMARY пишет 6699 - оператор ввёл 6699, ок.
+- Проверить: SUMMARY должен показывать реально введённые значения (agentCount, dohPort), сейчас агент=4 при пустом вводе.
+
+
+## 2026-10-29 18:23 - install test (1 agent, C:\JewAI_v5): 3 bugs
+
+### BUG 1: installer redirect не сработал - CORS
+Симптом: "Mainframe did not respond after 15s". Вручную 8670 открывается.
+Причина: installer на 8660, fetch("http://127.0.0.1:8670/api/health") - cross-origin.
+        Mainframe/web.py НЕ отдаёт Access-Control-Allow-Origin, нет do_OPTIONS.
+        Браузер блокирует -> catch -> timeout 15s -> fallback.
+- [ ] Fix: Mainframe/web.py: CORS headers (loopback -> "*"), do_OPTIONS preflight.
+- [ ] Verify: health fetch из 8660 работает, redirect срабатывает.
+
+### BUG 2: fallback "Click to open" - не кликается, не гиперссылка
+Симптом: "Click to open: http://127.0.0.1:8670/" - текст, не ссылка; клик не работает.
+Причина: app.js создаёт <a> и appendChild(document.body), но CRT-терминал имеет
+        overlay (::after, scanlines, pointer-events: none) + <a> не в потоке терминала.
+- [ ] Fix: убрать <a>; fallback = window.location.href = mfUrl (прямой редирект).
+        Если сервер не готов - браузер сам покажет connection refused, оператор F5.
+
+### BUG 3: agent :8666 DOWN, cdp :9122 UP
+Симптом: Chrome поднялся (CDP отвечает), Bridge/run.py --channel A не подключился к вкладке.
+        Панель: lastId (empty), cmds ?.
+Гипотезы (проверить):
+  a) вкладка ещё грузилась (deepseek медленный), find_chat timeout мал.
+  b) URL вкладки не chat.deepseek.com (about:blank / restore-last-session восстановил старую).
+  c) Adapter.HOST != фактический URL.
+- [ ] Проверить: CDP /json/list -> URL вкладки A.
+- [ ] Проверить: Bridge/cdp.py find_chat timeout/retry.
+- [ ] Проверить: Bridge/run.py continuous loop - backoff растёт до 10с, tick не происходит.
+- [ ] Возможно: Chrome стартует быстрее, чем deepseek готов; нужен wait-for-chat в launcher.
+
+### Что работает
+- Installer: 1 агент (Lola), ports 8666/8670/9999 - правильно.
+- Installation complete, Launch complete.
+- Mainframe 8670: панель открылась, CRT работает, 1 карточка A (Lola).
+- Chrome поднялся (CDP 9122 UP).
+- Кнопки START/STOP/REBOOT/CHROME на карточке есть.
+
+
+## 2026-10-29 18:23 - install test (1 agent, C:\JewAI_v5): 3 bugs
+
+### BUG 1: installer redirect не сработал - CORS
+Симптом: "Mainframe did not respond after 15s". Вручную 8670 открывается.
+Причина: installer на 8660, fetch("http://127.0.0.1:8670/api/health") - cross-origin.
+        Mainframe/web.py НЕ отдаёт Access-Control-Allow-Origin, нет do_OPTIONS.
+        Браузер блокирует -> catch -> timeout 15s -> fallback.
+- [ ] Fix: Mainframe/web.py: CORS headers (loopback -> "*"), do_OPTIONS preflight.
+- [ ] Verify: health fetch из 8660 работает, redirect срабатывает.
+
+### BUG 2: fallback "Click to open" - не кликается, не гиперссылка
+Симптом: "Click to open: http://127.0.0.1:8670/" - текст, не ссылка; клик не работает.
+Причина: app.js создаёт <a> и appendChild(document.body), но CRT-терминал имеет
+        overlay (::after, scanlines, pointer-events: none) + <a> не в потоке терминала.
+- [ ] Fix: убрать <a>; fallback = window.location.href = mfUrl (прямой редирект).
+        Если сервер не готов - браузер сам покажет connection refused, оператор F5.
+
+### BUG 3: agent :8666 DOWN, cdp :9122 UP
+Симптом: Chrome поднялся (CDP отвечает), Bridge/run.py --channel A не подключился к вкладке.
+        Панель: lastId (empty), cmds ?.
+Гипотезы (проверить):
+  a) вкладка ещё грузилась (deepseek медленный), find_chat timeout мал.
+  b) URL вкладки не chat.deepseek.com (about:blank / restore-last-session восстановил старую).
+  c) Adapter.HOST != фактический URL.
+- [ ] Проверить: CDP /json/list -> URL вкладки A.
+- [ ] Проверить: Bridge/cdp.py find_chat timeout/retry.
+- [ ] Проверить: Bridge/run.py continuous loop - backoff растёт до 10с, tick не происходит.
+- [ ] Возможно: Chrome стартует быстрее, чем deepseek готов; нужен wait-for-chat в launcher.
+
+### Что работает
+- Installer: 1 агент (Lola), ports 8666/8670/9999 - правильно.
+- Installation complete, Launch complete.
+- Mainframe 8670: панель открылась, CRT работает, 1 карточка A (Lola).
+- Chrome поднялся (CDP 9122 UP).
+- Кнопки START/STOP/REBOOT/CHROME на карточке есть.

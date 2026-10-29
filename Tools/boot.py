@@ -115,7 +115,18 @@ def boot_bridge(cfg, letter: str, dry: bool) -> dict:
     p = subprocess.Popen(args, cwd=str(ROOT), stdin=subprocess.DEVNULL,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                          creationflags=_detached_flags())
-    return {"target": "bridge:" + letter, "ok": True, "pid": p.pid}
+    # 11B: also start HTTP agent.py (port <agent>) so /ping, /read, /write work
+    agent_py = ROOT / "Profiles" / letter / "extension" / "agent.py"
+    if not agent_py.exists():
+        agent_py = ROOT / "Templates" / "extension" / "agent.py"
+    agent_pid = None
+    if agent_py.exists():
+        a_args = [_pythonw(), str(agent_py), str(ch.agent_port)]
+        ap = subprocess.Popen(a_args, cwd=str(ROOT), stdin=subprocess.DEVNULL,
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                              creationflags=_detached_flags())
+        agent_pid = ap.pid
+    return {"target": "bridge:" + letter, "ok": True, "pid": p.pid, "agent_pid": agent_pid}
 
 
 def main() -> int:

@@ -12,4 +12,6 @@ function Log($m) { Write-Host ("[" + (Get-Date -Format "HH:mm:ss") + "] " + $m) 
 Set-Location $Root
 Log "start-A: agent=8666 cdp=9122"
 python Tools\launcher.py --channel A
+$agentPy = Join-Path $Root "Profiles\A\extension\agent.py"
+if (Test-Path $agentPy) { Start-Process pythonw -ArgumentList @($agentPy, "8666") -WorkingDirectory $Root -WindowStyle Hidden; Log "agent A :8666 started" }
 python Bridge\run.py --channel A --once
