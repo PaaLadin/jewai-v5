@@ -31,7 +31,31 @@ DEFAULT_START_URL = {
 }
 
 
-def _chrome_exe() -> Path:
+def _chrome_exe(cfg=None) -> Path:
+    # 11B: priority
+    # 1) config.chrome_path override (for tests / custom installs)
+    # 2) Chrome for Testing in <root>/tools/chrome-for-testing/chrome.exe
+    # 3) regular Chrome in standard locations
+    if cfg is not None:
+        try:
+            override = getattr(cfg, "chrome_path", None) or None
+            if not override:
+                # config.json may have it as plain key
+                import json as _j
+                raw = _j.loads((cfg.root / "config.json").read_text(encoding="utf-8"))
+                override = raw.get("chrome_path")
+            if override:
+                p = Path(override)
+                if p.exists():
+                    return p
+        except Exception:
+            pass
+        try:
+            cft = cfg.path("tools", "chrome-for-testing", "chrome.exe")
+            if cft.exists():
+                return cft
+        except Exception:
+            pass
     cands = [
         Path(os.environ.get("PROGRAMFILES", r"C:\Program Files")) / "Google" / "Chrome" / "Application" / "chrome.exe",
         Path(os.environ.get("PROGRAMFILES(X86)", r"C:\Program Files (x86)")) / "Google" / "Chrome" / "Application" / "chrome.exe",
@@ -40,7 +64,7 @@ def _chrome_exe() -> Path:
     for c in cands:
         if c.exists():
             return c
-    raise FileNotFoundError("chrome.exe not found in standard locations")
+    raise FileNotFoundError("chrome.exe not found (config.chrome_path, tools/chrome-for-testing/chrome.exe, standard locations all missing)")
 
 
 def _cdp_up(port: int, timeout: float = 0.7) -> bool:
@@ -62,7 +86,7 @@ def wait_cdp(port: int, wait_sec: float = 15.0) -> bool:
 
 def launch(cfg, letter: str, no_proxy: bool = False, dry: bool = False) -> dict:
     ch = cfg.channel(letter)
-    chrome = _chrome_exe()
+    chrome = _chrome_exe(cfg)
     # 11B: per-agent chrome dir under Profiles/<L>/chrome
     profile = cfg.channel_path(letter, "chrome")
     profile.mkdir(parents=True, exist_ok=True)

@@ -41,3 +41,7 @@ stop-*.bat
 restart-*.bat
 server-*.bat
 create-shortcut.bat
+
+# Chrome for Testing binary (downloaded, not in git)
+tools/chrome-for-testing/
+tools/chrome-win64.zip
