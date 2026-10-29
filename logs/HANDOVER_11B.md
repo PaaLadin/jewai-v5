@@ -110,3 +110,50 @@ Next: reboot -> diagnose Chrome C (read-only) -> then operator runs install.
 - Agents/: NOT created (correct).
 - .agent_token: created.
 - Ready for operator acceptance test in real folder.
+
+
+## 2026-10-29 04:25 - FINAL REPORT (готово к приёмке)
+
+### Приёмка: открыть C:\jewai\Tools\installer\install.ps1, установить в НОВУЮ папку.
+
+### Что должно быть после установки:
+- Новая папка (например C:\JewAI_v5_test_YYYYMMDD).
+- config.json, .agent_token, Tools/launchers/ (start-all.ps1, stop-all.ps1, server-start.ps1, start-<L>.ps1).
+- Profiles/<L>/{chrome,config,logs,docs,extension} для каждого агента.
+- Templates/{project,roadmap,extension}.
+- install.log без FATAL.
+- Браузер откроется на http://127.0.0.1:8660 (инсталлятор).
+
+### После install:
+1. В инсталляторе нажать "Launch" (POST /api/launch).
+2. Или вручную: cd <target>; Tools\launchers\start-all.ps1.
+3. Mainframe откроется на 8670 (должен показать CRT-терминал, зелёный на чёрном).
+4. Проверить /api/status: каналы по числу агентов, cdp 9122+, agent 8666+.
+
+### Что протестировано (smoke, ночь):
+- 21/21 тестов pass.
+- install run_install в tempdir (A+B): структура, per-channel config, launchers, templates, .agent_token - OK.
+- svc.py: start watchdog -> pid + state=on -> status alive=true -> stop -> state=off.
+- /roadmap/<name>: 200 для существующего, 403 на escape, 404 на missing.
+- Mainframe server на свободном порту: health 200, все ключевые роуты OK.
+
+### Что НЕ тестировалось (требует живого Chrome+агента):
+- Реальная связка Chrome + extension + Bridge (агент в чате).
+- ALIVE в живом чате (kick через CDP).
+- Recovery reload на живой панели.
+- Autorestart на живом агенте.
+- Всё выше - P12, оператор утром.
+
+### Git:
+- a2332ca: основной (70 files, +2301/-343).
+- 2d87e01: fix stale launchers.
+- 90263c9: docs smoke PASS.
+- Дерево чистое.
+
+### Если что-то не поднялось - смотреть:
+- <target>/install.log
+- http://127.0.0.1:8670/api/health
+- http://127.0.0.1:8670/api/status
+- Порт 8670 занят? netstat -ano | findstr 8670
+- Порт 8660 (installer) занят? netstat -ano | findstr 8660
+- Chrome/CDP: http://127.0.0.1:9122/json/version (по каналу)
