@@ -7,7 +7,7 @@ sys.path.insert(0, str(ROOT))
 
 from Bridge.exec import Block, parse_blocks, Ledger, execute, safe_path, OpError
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_edge.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_edge.txt')
 lines = []
 fails = 0
 

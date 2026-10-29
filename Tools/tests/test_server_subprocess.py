@@ -10,7 +10,7 @@ import json, os, shutil, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 
 ROOT = Path(r'C:/JewAI')
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_server_subprocess.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_server_subprocess.txt')
 lines = []
 fails = 0
 
@@ -76,7 +76,9 @@ try:
         check('GET /api/status 200', code == 200, str(code))
         try: j = json.loads(body)
         except Exception: j = {}
-        check('status 6 channels', len(j.get('channels', {})) == 6, str(len(j.get('channels', {}))))
+        import sys as _s; _s.path.insert(0, str(ROOT)); from Core.config import load as _lc
+        _n = len(_lc().letters)
+        check('status dynamic channels', len(j.get('channels', {})) == _n, str(len(j.get('channels', {}))) + ' vs ' + str(_n))
 
         code, body = get('/', base)
         check('GET / 200', code == 200, str(code))

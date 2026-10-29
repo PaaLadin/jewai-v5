@@ -3,7 +3,11 @@
   "name": "JewAI Agent Bridge",
   "version": "5.0.0",
   "description": "Local bridge between LLM chat and filesystem. v5.",
-  "permissions": ["storage", "sidePanel", "tabs"],
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "tabs"
+  ],
   "host_permissions": [
     "https://chat.deepseek.com/*",
     "https://chat.qwen.ai/*",
@@ -12,27 +16,49 @@
     "http://127.0.0.1:8667/*",
     "http://127.0.0.1:8668/*",
     "http://127.0.0.1:8669/*",
+    "http://127.0.0.1:8670/*",
     "http://127.0.0.1:8671/*",
-    "http://127.0.0.1:8672/*"
+    "http://127.0.0.1:8672/*",
+    "http://127.0.0.1:8673/*",
+    "http://127.0.0.1:8674/*",
+    "http://127.0.0.1:8675/*"
   ],
-  "background": { "service_worker": "background.js" },
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
-      "matches": ["https://chat.deepseek.com/*"],
-      "js": ["content_deepseek.js"],
+      "matches": [
+        "https://chat.deepseek.com/*"
+      ],
+      "js": [
+        "content_deepseek.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://chat.qwen.ai/*"],
-      "js": ["content_qwen.js"],
+      "matches": [
+        "https://chat.qwen.ai/*"
+      ],
+      "js": [
+        "content_qwen.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://alice.yandex.ru/*"],
-      "js": ["content_alice.js"],
+      "matches": [
+        "https://alice.yandex.ru/*"
+      ],
+      "js": [
+        "content_alice.js"
+      ],
       "run_at": "document_idle"
     }
   ],
-  "side_panel": { "default_path": "sidepanel.html" },
-  "action": { "default_title": "JewAI - open panel" }
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "JewAI - open panel"
+  }
 }

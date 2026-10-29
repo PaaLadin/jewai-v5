@@ -12,7 +12,7 @@ from Bridge.cdp import CDPError, CDP, find_chat
 from Bridge.read import read_text, read_textarea, read_heartbeat, current_url
 from Tools.launcher import launch, wait_cdp, _cdp_up, DEFAULT_START_URL
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_cdp_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_cdp_test.txt')
 lines = []
 fails = 0
 

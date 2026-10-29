@@ -1,6 +1,6 @@
 """Run all v5 tests, produce summary. Exit 0 if all pass, 1 otherwise.
 
-Usage: python C:/DeepSeek/sandbox/_v5/run_all_tests.py
+Usage: python C:/jewai/Tools/run_all_tests.py
 """
 import subprocess, sys, time
 from pathlib import Path

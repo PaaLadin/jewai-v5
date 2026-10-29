@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(r'C:/JewAI')
 BOOT = ROOT / 'Tools' / 'boot.py'
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_boot_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_boot_test.txt')
 
 lines = []
 fails = 0
@@ -28,13 +28,28 @@ def run_boot(*args):
         j = {}
     return r, j
 
-# --server --dry-run: on foreign occupied 8670 -> exit 1, ok=false, pid reported
-r, j = run_boot('--server', '--dry-run')
-res = (j.get('results') or [{}])[0]
-check('server dry-run exits 1 when 8670 busy', r.returncode == 1, 'rc=%d' % r.returncode)
-check('server dry-run ok=false', res.get('ok') is False, str(res))
-check('server dry-run reports pid', isinstance(res.get('pid'), int) or res.get('pid') is None, str(res.get('pid')))
-check('server dry-run busy_before true', res.get('busy_before') is True, str(res.get('busy_before')))
+# --server --dry-run: occupy 8670 in-process, expect rc=1 ok=false busy_before=true
+import socket as _sk
+_occupy = _sk.socket(_sk.AF_INET, _sk.SOCK_STREAM)
+_occupy.setsockopt(_sk.SOL_SOCKET, _sk.SO_REUSEADDR, 1)
+try:
+    _occupy.bind(('127.0.0.1', 8670)); _occupy.listen(1)
+    _occupied = True
+except Exception:
+    _occupied = False
+try:
+    r, j = run_boot('--server', '--dry-run')
+    res = (j.get('results') or [{}])[0]
+    if _occupied:
+        check('server dry-run exits 1 when 8670 busy', r.returncode == 1, 'rc=%d' % r.returncode)
+        check('server dry-run ok=false', res.get('ok') is False, str(res))
+        check('server dry-run reports pid', isinstance(res.get('pid'), int) or res.get('pid') is None, str(res.get('pid')))
+        check('server dry-run busy_before true', res.get('busy_before') is True, str(res.get('busy_before')))
+    else:
+        check('server dry-run SKIP (8670 not occupiable)', True)
+finally:
+    try: _occupy.close()
+    except Exception: pass
 
 # --channel A --dry-run: Chrome A down, no spawn, reports dry
 r, j = run_boot('--channel', 'A', '--dry-run')

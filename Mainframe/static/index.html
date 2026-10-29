@@ -1,72 +1,48 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>JewAI // MAINFRAME</title>
-<link rel="stylesheet" href="style.css?v=2">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JewAI v5 // MAINFRAME</title>
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<div class="crt">
-  <div class="topbar">
-    <div class="top-left">JewAI // MAINFRAME v5</div>
-    <div class="top-center" id="clock">--:--:--</div>
-    <div class="top-right" id="netstat">СЕТЬ: OK</div>
+<header>
+  <h1>JewAI v5 // MAINFRAME</h1>
+  <div><span id="status-line">loading...</span> · <span id="clock"></span></div>
+</header>
+<nav>
+  <button data-tab="launchpad" class="active">ПУЛЬТ</button>
+  <button data-tab="mnemo">МНЕМОСХЕМА</button>
+  <button data-tab="chat">ЧАТ</button>
+  <button data-tab="roadmap">ПРОЕКТЫ</button>
+  <button data-tab="llm">LLM</button>
+</nav>
+<main>
+  <div id="tab-launchpad" class="tab">
+    <div class="grid" id="lp-grid"></div>
   </div>
-  <div class="tabs">
-    <button class="tab active" data-tab="pult">ПУЛЬТ</button>
-    <button class="tab" data-tab="chat">ЧАТ</button>
-    <button class="tab" data-tab="pers">ПЕРСОНАЛЬНЫЕ</button>
-    <button class="tab" data-tab="logs">ЛОГИ</button>
-    <button class="tab" data-tab="projects">ПРОЕКТЫ</button>
+  <div id="tab-mnemo" class="tab hidden">
+    <div class="grid" id="mnemo-grid"></div>
   </div>
-  
-  <div class="screen active" id="screen-pult">
-    <div class="pult-wrap">
-       <div class="panel-title">СТАТУС КАНАЛОВ</div>
-       <div id="chanList">Загрузка...</div>
+  <div id="tab-chat" class="tab hidden">
+    <div class="chat-box" id="chat-box"></div>
+    <div class="chat-input">
+      <input id="chat-input" placeholder="Сообщение в общий чат (broadcast)">
+      <button id="chat-send">SEND</button>
     </div>
   </div>
-  
-  <div class="screen" id="screen-chat">
-    <div class="chat-wrap">
-      <div class="chat-feed" id="chatFeed"></div>
-      <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="введите сообщение...">
-        <button id="chatSend">&gt;_</button>
-      </div>
+  <div id="tab-roadmap" class="tab hidden">
+    <div class="grid" id="projects-list"></div>
+  </div>
+  <div id="tab-llm" class="tab hidden">
+    <div class="stub">
+      <h2>LLM</h2>
+      <p>Тут будет ЛЛМ.</p>
+      <p style="color:#666; font-size:11px;">Ручной старт из панели (TODO).</p>
     </div>
   </div>
-
-  <div class="screen" id="screen-pers">
-    <div style="display:flex; gap:20px;">
-      <div style="width:200px; border-right:1px solid #33ff33; padding-right:10px;" id="persList">Загрузка...</div>
-      <div style="flex:1;">
-         <div id="persTitle" style="margin-bottom:10px; border-bottom:1px solid #33ff33;">Выберите агента</div>
-         <div class="chat-feed" id="persFeed"></div>
-         <div class="chat-input">
-            <input type="text" id="persInput" placeholder="сообщение агенту...">
-            <button id="persSend">&gt;_</button>
-         </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="screen" id="screen-logs">
-    <div class="logs-wrap">
-      <div style="margin-bottom:10px;">
-        <button class="pbtn log-btn active" onclick="loadLog('chat')">ЧАТ</button>
-        <button class="pbtn log-btn" onclick="loadLog('agent')">АГЕНТ</button>
-        <button class="pbtn log-btn" onclick="loadLog('svc')">СЕРВИСЫ</button>
-      </div>
-      <pre id="logBody">выберите лог...</pre>
-    </div>
-  </div>
-
-  <div class="screen" id="screen-projects">
-     <iframe id="projectsFrame" src="/fs/Projects/" style="width:100%; height:70vh; border:1px solid #33ff33; background:#050805; color:#33ff33;"></iframe>
-  </div>
-</div>
-<script src="app_audio.js?v=2"></script>
-<script src="app.js?v=2"></script>
+</main>
+<script src="/app.js"></script>
 </body>
 </html>

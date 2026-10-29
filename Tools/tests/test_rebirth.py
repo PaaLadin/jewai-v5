@@ -11,7 +11,7 @@ from Rebirth.table import Table, default_table_template, _inc_series, _inc_range
 from Rebirth.master import Master, GateVerdict, set_ready
 from Rebirth.onboard import pick_neighbor, onboard_message
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_rebirth_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_rebirth_test.txt')
 lines = []
 fails = 0
 

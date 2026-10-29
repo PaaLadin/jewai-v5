@@ -65,7 +65,7 @@ check('Bridge.daemon', _bridge_daemon)
 check('Adapters.deepseek', _adapters)
 check('Tools.launcher', _tools_launcher)
 
-out = Path(r'C:/DeepSeek/logs/D/_v5_imports.txt')
+out = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_imports.txt')
 lines = []
 ok_n = 0
 for name, status, err in results:

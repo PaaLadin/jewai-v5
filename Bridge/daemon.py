@@ -37,12 +37,12 @@ class Daemon:
         self.letter = letter.upper()
         self.ch = cfg.channel(self.letter)
         self.adapter = adapter
-        logs = cfg.path("logs")
-        bridge_logs = logs / "bridge"
+        # 11B: per-agent ledger in Profiles/<L>/logs
+        bridge_logs = cfg.channel_path(self.letter, "logs")
         bridge_logs.mkdir(parents=True, exist_ok=True)
         self.ledger = Ledger(
             ledger_path=bridge_logs / f"ledger_{self.letter}.json",
-            stale_log_path=bridge_logs / "stale_blocks.log",
+            stale_log_path=bridge_logs / f"stale_{self.letter}.log",
         )
         self.poll_ms = int(cfg.timeouts.get("cdp_poll", 2000))
         self.stable_ms = int(cfg.timeouts.get("stable_ms", 1200))

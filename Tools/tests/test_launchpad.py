@@ -9,7 +9,7 @@ import dataclasses
 from Core.config import load as load_config
 from Mainframe import launchpad
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_launchpad_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_launchpad_test.txt')
 lines = []
 fails = 0
 
@@ -28,7 +28,7 @@ try:
     b = st.get('blocks', {})
     check('has server', 'server' in b)
     check('server is self', b.get('server', {}).get('self') is True)
-    for L in 'ABCDEF':
+    for L in cfg.letters:
         check('agent:' + L, 'agent:' + L in b)
         check('chrome:' + L, 'chrome:' + L in b)
     check('doh block', 'doh' in b)

@@ -9,7 +9,7 @@ from Core.config import Config, Channel
 from Bridge.exec import Block
 from Bridge.daemon import Daemon
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_daemon_timing.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_daemon_timing.txt')
 lines = []
 fails = 0
 

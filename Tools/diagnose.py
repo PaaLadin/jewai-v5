@@ -94,7 +94,7 @@ for path in ["/api/health", "/api/status", "/api/llm", "/style.css"]:
 # --- browser process (Chrome on C profile) ---
 ln("")
 ln("=== Chrome profile C ===")
-prof = ROOT / "Profiles" / "C"
+prof = ROOT / "Profiles" / "C" / "chrome"  # 11B: per-agent chrome dir
 if prof.exists():
     pref = prof / "Default" / "Preferences"
     ln("  profile dir: %s" % ("exists" if prof.is_dir() else "missing"))

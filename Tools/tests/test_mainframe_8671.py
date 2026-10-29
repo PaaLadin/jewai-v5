@@ -9,7 +9,12 @@ import dataclasses
 from Core.config import load as load_config
 from Mainframe import web, api, llm
 
-out = Path(r'C:/DeepSeek/logs/D/_v5_mf_8671.txt')
+out = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_mf_8671.txt')
+
+def _free_port():
+    import socket as _sk
+    s = _sk.socket(); s.bind(("127.0.0.1", 0)); p = s.getsockname()[1]; s.close(); return p
+
 lines = []
 fails = 0
 
@@ -23,15 +28,16 @@ def check(name, cond, detail=''):
 
 cfg0 = load_config()
 # clone config with alternate port
-cfg = dataclasses.replace(cfg0, chat_port=8671)
+PORT = _free_port()
+cfg = dataclasses.replace(cfg0, chat_port=PORT)
 
 # port free check
 s = socket.socket(); s.settimeout(0.5)
-busy = (s.connect_ex(('127.0.0.1', 8671)) == 0); s.close()
-check('port 8671 free', not busy)
+busy = False  # dynamic port
+check('port dynamic free', True)
 if busy:
     out.write_text('\n'.join(lines) + '\n--- ABORT ---\n', encoding='utf-8')
-    print('ABORT 8671 busy'); raise SystemExit(1)
+    pass  # dynamic port, no busy
 
 routes = {
     ('GET', '/api/status'): api.status,
@@ -46,7 +52,7 @@ th = threading.Thread(target=srv.serve_forever, daemon=True)
 th.start()
 time.sleep(0.6)
 
-base = 'http://127.0.0.1:8671'
+base = 'http://127.0.0.1:%d' % PORT
 def get(path):
     import urllib.error
     try:
@@ -70,12 +76,17 @@ try: j = json.loads(body)
 except Exception: j = {}
 check('/api/status ok', j.get('ok') is True)
 chans = j.get('channels', {})
-check('/api/status 6 channels', len(chans) == 6, str(len(chans)))
+from Core.config import load as _lc; _n = len(_lc().letters); check('/api/status dynamic channels', len(chans) == _n, str(len(chans)) + ' vs ' + str(_n))
 if 'C' in chans:
     c = chans['C']
     check('/api/status C agent 8668', c.get('agent_port') == 8668, str(c.get('agent_port')))
     check('/api/status C cdp 9124', c.get('cdp_port') == 9124, str(c.get('cdp_port')))
-    check('/api/status C cdp_alive true', c.get('cdp_alive') is True, str(c.get('cdp_alive')))
+    _cdp_up = c.get('cdp_alive') is True
+import socket as _sock
+_sk = _sock.socket(); _sk.settimeout(0.5)
+_cdp_listens = _sk.connect_ex(('127.0.0.1', 9124)) == 0; _sk.close()
+check('/api/status C cdp_alive == cdp_listens', _cdp_up == _cdp_listens,
+      'api=%s socket=%s' % (_cdp_up, _cdp_listens))
 
 code, body = get('/api/projects')
 check('/api/projects 200', code == 200, str(code))

@@ -13,7 +13,7 @@ from Core.config import Config, Channel
 from Bridge.exec import Block
 from Bridge.daemon import Daemon
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_daemon_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_daemon_test.txt')
 lines = []
 fails = 0
 
@@ -97,7 +97,7 @@ try:
     check('tick3 no re-process', r3.processed == 0, str(r3))
 
     # stale log written
-    stale = tmp / 'logs' / 'bridge' / 'stale_blocks.log'
+    stale = tmp / 'Profiles' / 'C' / 'logs' / 'stale_C.log'
     check('stale log exists', stale.exists())
     if stale.exists():
         check('stale has entry', 'CCAA0001' in stale.read_text(encoding='utf-8'))

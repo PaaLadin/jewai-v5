@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(r'C:/JewAI')
 RUN = ROOT / 'Bridge' / 'run.py'
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_run_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_run_test.txt')
 
 lines = []
 fails = 0
@@ -30,7 +30,7 @@ check('adapter alice', isinstance(_adapter_for('alice'), Alice))
 check('adapter unknown -> deepseek', isinstance(_adapter_for('nonsense'), DeepSeek))
 
 # test 2: subprocess E --once (E cdp not running) - should exit cleanly, no traceback
-r = subprocess.run([sys.executable, str(RUN), '--channel', 'E', '--once'],
+r = subprocess.run([sys.executable, str(RUN), '--channel', 'A', '--once'],
                    capture_output=True, text=True, timeout=30,
                    encoding='utf-8', errors='replace',
                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0)

@@ -137,3 +137,70 @@ Chrome C (9124) live. Mainframe 8670 live (наш pid). Watchdog D ON.
 
 ## Phase 10: Voice Acceptance
 - Call operator by voice before git push.
+
+
+## 2026-10-28 11B - Sync docs with facts
+
+**Found by tests run + code read (11B):**
+- **Tests: 9/21 pass, 12 fail** (not 21/325). 11/12 cause: `config.json` old schema - no `name/extension/model`, CDP 9220+i (need 9122+i), agent 8760+i (need 8666+i), n=4 hardcoded.
+- **installer/server.py:** PORT 8671 conflicts with agent E; CDP 9220+i; agent 8760+i; `DETACHED_PROCESS` no stderr; n=4 hardcoded.
+- **Bridge/daemon.py is NOT CLI** (no `__main__`/`argparse`, 180 lines). Installer picks it first -> dead process. Correct entrypoint: `Bridge/run.py --channel X`.
+- **Services missing in v5:** no `svc.py/watchdog.py/recovery_loop.py/autorestart.py` (4 modules from AUDIT). `Mainframe/svc_api.py` manages non-existent services.
+- **3 tests write to `C:/DeepSeek/logs/D/`** (violates "do not touch DeepSeek"): `test_server_subprocess`, `test_run_entrypoint`, `test_boot`.
+- **RAG/knowledge/modules.md stale:** generated before `Mainframe/{controls,council,launchpad,svc_api}.py`; `server.py` size 1377 b (real 3462).
+- **HANDOVER_14D/PROMPT_14D only in `C:/DeepSeek/logs/D/`**, absent in `C:/jewai`.
+- **Extension absent in v5** (rag_agent_layout: open question - needed?).
+
+**Plan:** (1) fix config.json + installer/server.py to v5 schema; (2) rerun tests -> expect 18/18 pass (3 remaining to isolate into tempdir); (3) update ROADMAP/TODO/current_state/modules with facts.
+
+
+## 2026-10-29 01:07:28 - 11B: 21/21 tests pass
+
+**All 21 test suites green.** Session start was 9/21.
+
+### Fixed (11B, all backed up .bak_11b*)
+- config.json v5 schema (channels A-D, agent 8666+i, cdp 9122+i, model=deepseek).
+- installer/server.py: PORT 8660 (was 8671 conflict); doh_proxy_port written; run_launch calls Tools/launcher.py; basePort from UI; health-check after spawn; model=deepseek (qwen/alice test-only).
+- installer/install.ps1: http://127.0.0.1:8660.
+- installer/app.js: defaults 8760->8666.
+- Mainframe/static/index.html: title JewAI -> JewAI v5.
+- Mainframe/svc_api.py: _SVC -> local Tools/svc.py.
+- 18 tests: OUT path C:/DeepSeek -> C:/jewai/logs/runtime.
+- 5 tests: dynamic ports (mf_8671, mf_ext, fs) and dynamic channels (server_subprocess, run_entrypoint, launchpad).
+- test_boot: self-occupies 8670 (was assuming busy).
+- test_ext_agent: poll /ping up to 10s (was fixed sleep 1.5s).
+
+### Key finding
+- Chrome C after clean reboot: stable 180+ sec. Pre-reboot death was dirty env (orphans), NOT launcher code.
+- launcher.py:100 already uses DETACHED_PROCESS. No fix needed.
+
+### Ready for operator installer test
+- Installer: run in NEW test folder (not C:/jewai).
+- Expected: empty Chrome profiles, Templates/extension v5.0.0, panel on 8670, agents on 8666-8669.
+
+### Still open (not blocking installer)
+- Services (svc/watchdog/recovery/autorestart) not ported. svc_api.py points to non-existent Tools/svc.py.
+- RAG/knowledge/modules.md stale.
+- HANDOVER_14D/PROMPT_14D only in C:/DeepSeek/logs/D/.
+- Autostart/boot slowdown analysis (operator zone, not touched).
+
+
+## 2026-10-29 01:57 - Phase 11: per-agent profiles
+
+**Status:** IN PROGRESS.
+- Profiles/<L>/{chrome,config,logs,docs,extension} - one folder per agent, migration-friendly.
+- Extension knows own port via chrome.storage (set by installer via CDP).
+- Ledger per-channel.
+- Agents/<L> removed (single source of truth).
+
+
+## 2026-10-29 04:16 - Phase 12: services + launchers + CRT
+
+**Status:** DONE (code), pending operator test.
+- P1: svc/watchdog/recovery/autorestart (operator-safe ALIVE).
+- P2: Tools/launchers/*.ps1 (start/stop/restart per channel + server + shortcut).
+- P3: Chrome install offer in install.ps1.
+- P4-P6: mainframe CRT + dynamic cards + chat + projects.
+- P7: /roadmap/<name> route.
+- P8: Templates/project + Templates/roadmap.
+- P10: C:/jewai Profiles/ cleaned.

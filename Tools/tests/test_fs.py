@@ -9,7 +9,7 @@ import dataclasses
 from Core.config import load as load_config
 from Mainframe import web, controls
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_fs_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_fs_test.txt')
 lines = []
 fails = 0
 
@@ -27,12 +27,14 @@ try:
     outside = tmp.parent / ('outside_' + Path(tmp).name + '.txt')
     outside.write_text('secret', encoding='utf-8')
 
+    import socket as _sk
+    _s = _sk.socket(); _s.bind(('127.0.0.1', 0)); PORT = _s.getsockname()[1]; _s.close()
     cfg0 = load_config()
-    cfg = dataclasses.replace(cfg0, root=tmp, chat_port=8671)
+    cfg = dataclasses.replace(cfg0, root=tmp, chat_port=PORT)
 
     # port check
     s = socket.socket(); s.settimeout(0.3)
-    busy = (s.connect_ex(('127.0.0.1', 8671)) == 0); s.close()
+    busy = (s.connect_ex(('127.0.0.1', PORT)) == 0); s.close()
     if busy:
         OUT.write_text('\n'.join(lines) + '\nABORT port busy\n', encoding='utf-8')
         print('ABORT'); sys.exit(1)
@@ -41,7 +43,7 @@ try:
     th = threading.Thread(target=srv.serve_forever, daemon=True); th.start()
     time.sleep(0.4)
 
-    base = 'http://127.0.0.1:8671'
+    base = 'http://127.0.0.1:%d' % PORT
     def get(path):
         try:
             with urllib.request.urlopen(base + path, timeout=5) as r:

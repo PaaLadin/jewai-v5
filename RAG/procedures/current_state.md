@@ -1,28 +1,22 @@
-# Current state (13D -> 14D, final)
+# Current state (2026-10-29 02:23:14, 11B)
 
-## Готово
+## per-agent layout (NEW)
+- Profiles/<L>/{chrome, config, logs, docs, extension} - one folder per agent.
+- Profiles/<L>/config/config.json - per-channel config (channel, name, prefix, agent_port, cdp_port, agent_url, extension, model, root, chat_port).
+- Profiles/<L>/extension/ - per-channel extension copy.
+- Profiles/<L>/logs/ledger_<L>.json + stale_<L>.log - per-channel replay-guard.
+- Agents/<L> - REMOVED (single source of truth).
+- Migration: move Profiles/<L> -> agent fully moved.
 
-F0, F1, F2, F3 (mainframe P0+P1), F4 (CDP cycle + tests), F5 partial (stubs+doh_proxy),
-extension, layout. 21 тест, 325 проверок.
+## Extension knows own port
+- Installer writes per-channel config.
+- Tools/launcher.py after CDP start pushes agentUrl/token/channel/name into chrome.storage.local via CDP.
+- sidepanel.html: autodetect port 8666-8675 if storage empty.
+- manifest host_permissions: 8666-8675 (was 8666-8669+8671-8672).
 
-## Частично
+## Config / core
+- Core/config.py: channel_root(L), channel_path(L, *parts), channel_config(L).
+- Installer ignores .agent_token (does not copy from source).
 
-F5: real config (llm host:port, mail password). Шаблоны в Templates/*.example.json.
-
-## Откат / план
-
-F6: Chrome A/B/D/E/F потушены, активен C (9124). Агенты не запускались.
-F7: git 2 коммита, push не выполнялся.
-
-## Структура
-
-Profiles (browser) / Agents (personal) / Templates (source).
-Core/, Bridge/, Adapters/, Mainframe/, Rebirth/, Tools/.
-
-## Не делать без ОК
-
-1. Спавнить агентов Bridge/run --channel.
-2. Писать в живой чат C.
-3. Push в GitHub.
-4. Убивать чужие процессы.
-5. Раскатывать A/B/D/E/F не по одному.
+## Tests: see last run
+- 21/21 pass before refactor. Refactor in progress.

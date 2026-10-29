@@ -57,10 +57,27 @@ class Config:
     def path(self, *parts: str) -> Path:
         return self.root.joinpath(*parts)
 
+    def channel_root(self, letter: str) -> Path:
+        """Per-agent root: <root>/Profiles/<L>."""
+        return self.root / "Profiles" / letter.upper()
+
+    def channel_path(self, letter: str, *parts: str) -> Path:
+        """Per-agent path: <root>/Profiles/<L>/<parts...>."""
+        return self.channel_root(letter).joinpath(*parts)
+
+    def channel_config(self, letter: str) -> dict:
+        """Load per-agent config: Profiles/<L>/config/config.json."""
+        p = self.channel_path(letter, "config", "config.json")
+        if not p.exists():
+            return {}
+        import json as _json
+        return _json.loads(p.read_text(encoding="utf-8"))
+
+
 
 # ---- загрузка ----
 
-_DEFAULT_CONFIG_PATH = Path("C:/JewAI/config.json")
+_DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
 
 
 def load(config_path: Path | str | None = None) -> Config:

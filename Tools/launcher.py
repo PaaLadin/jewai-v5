@@ -63,7 +63,8 @@ def wait_cdp(port: int, wait_sec: float = 15.0) -> bool:
 def launch(cfg, letter: str, no_proxy: bool = False, dry: bool = False) -> dict:
     ch = cfg.channel(letter)
     chrome = _chrome_exe()
-    profile = cfg.path("Profiles", letter)
+    # 11B: per-agent chrome dir under Profiles/<L>/chrome
+    profile = cfg.channel_path(letter, "chrome")
     profile.mkdir(parents=True, exist_ok=True)
     ext = cfg.path(ch.extension)
     start_url = DEFAULT_START_URL.get(ch.model, "https://chat.deepseek.com/")
@@ -100,7 +101,57 @@ def launch(cfg, letter: str, no_proxy: bool = False, dry: bool = False) -> dict:
         creationflags=nw | (subprocess.DETACHED_PROCESS if sys.platform == "win32" else 0),
     )
     ok = wait_cdp(ch.cdp_port, wait_sec=20.0)
-    return {"ok": ok, "pid": p.pid, "cdp": ch.cdp_port, "first_run": first_run}
+    storage_ok = False
+    if ok:
+        storage_ok = _push_storage(cfg, letter, ch)
+    return {"ok": ok, "pid": p.pid, "cdp": ch.cdp_port, "first_run": first_run, "storage": storage_ok}
+
+
+def _push_storage(cfg, letter: str, ch) -> bool:
+    """Push agentUrl/token/channel/name into chrome.storage.local via CDP."""
+    try:
+        import json as _json
+        import urllib.request as _ur
+        with _ur.urlopen("http://127.0.0.1:%d/json/list" % ch.cdp_port, timeout=5) as r:
+            targets = _json.loads(r.read().decode("utf-8"))
+        ext_target = None
+        for t in targets:
+            u = t.get("url", "")
+            if u.startswith("chrome-extension://") and "sidepanel" in u:
+                ext_target = t; break
+        if not ext_target:
+            for t in targets:
+                if t.get("url", "").startswith("chrome-extension://"):
+                    ext_target = t; break
+        if not ext_target:
+            return False
+        token = ""
+        tok_path = cfg.path(".agent_token")
+        if tok_path.exists():
+            token = tok_path.read_text(encoding="utf-8").strip()
+        payload = {
+            "agentUrl": "http://127.0.0.1:%d" % ch.agent_port,
+            "token": token,
+            "channel": letter,
+            "name": ch.name,
+        }
+        expr = ("chrome.storage.local.set(%s).then(() => 'ok').catch(e => 'err:' + e)"
+                % _json.dumps(payload))
+        try:
+            import websocket
+        except Exception:
+            return False
+        ws = websocket.create_connection(ext_target["webSocketDebuggerUrl"], timeout=5)
+        try:
+            cmd = _json.dumps({"id": 1, "method": "Runtime.evaluate",
+                               "params": {"expression": expr, "awaitPromise": True, "returnByValue": True}})
+            ws.send(cmd)
+            resp = ws.recv()
+            return '"result"' in resp
+        finally:
+            ws.close()
+    except Exception:
+        return False
 
 
 def main() -> int:

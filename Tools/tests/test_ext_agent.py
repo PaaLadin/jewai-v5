@@ -10,7 +10,7 @@ import json, os, shutil, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 
 SRC_AGENT = Path(r'C:/JewAI/Templates/extension/agent.py')
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_ext_agent_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_ext_agent_test.txt')
 lines = []
 fails = 0
 
@@ -50,7 +50,20 @@ try:
                             cwd=str(ext), env=env,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform=='win32' else 0)
-    time.sleep(1.5)
+    # wait for agent ready: poll /ping up to 10s (was fixed sleep 1.5s, flaky under load)
+    _deadline = time.time() + 10.0
+    _ready = False
+    while time.time() < _deadline:
+        try:
+            _r = urllib.request.urlopen('http://127.0.0.1:%d/ping' % TEST_PORT, timeout=1)
+            if _r.status == 200:
+                _ready = True
+                break
+        except Exception:
+            pass
+        time.sleep(0.3)
+    if not _ready:
+        pass  # proceed; calls below will surface the failure with details
 
     def call(path, body=None, token_hdr=None):
         url = 'http://127.0.0.1:%d%s' % (TEST_PORT, path)

@@ -8,7 +8,7 @@ const i18n = {
     en: {
         welcome: "JEWAI OS v5 // SYSTEM INSTALLER\n\nSelect language / Выберите язык [en/ru]: ",
         path: "\n[1/5] Installation path (e.g. C:\\JewAI_v5): ",
-        basePort: "\n[2/5] Base port for agents (e.g. 8760): ",
+        basePort: "\n[2/5] Base port for agents (e.g. 8666): ",
         agentCount: "\n[3/5] Number of agents (1-10): ",
         chatPort: "\n[4/5] Mainframe chat port (e.g. 8670): ",
         proxyPort: "\n[5/6] DoH proxy port (e.g. 9999): ",
@@ -96,7 +96,7 @@ function submitInput(val) {
         state = 3;
         typeText(i18n[lang].basePort);
     } else if (state === 3) {
-        config.basePort = parseInt(val) || 8760;
+        config.basePort = parseInt(val) || 8666;
         state = 4;
         typeText(i18n[lang].agentCount);
     } else if (state === 4) {

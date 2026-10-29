@@ -9,7 +9,7 @@ from Adapters.qwen import Qwen
 from Adapters.alice import Alice
 from Bridge.exec import Block
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_adapters_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_adapters_test.txt')
 lines = []
 fails = 0
 

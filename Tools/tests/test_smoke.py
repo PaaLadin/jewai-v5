@@ -8,7 +8,7 @@ sys.path.insert(0, str(ROOT))
 from Bridge.exec import (Block, parse_blocks, Ledger, execute, safe_path, OpError)
 
 H = '#' * 3
-out_path = Path(r'C:/DeepSeek/logs/D/_v5_smoke.txt')
+out_path = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_smoke.txt')
 lines = []
 fails = 0
 

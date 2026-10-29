@@ -9,7 +9,7 @@ import dataclasses
 from Core.config import load as load_config
 from Mainframe import council
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_council_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_council_test.txt')
 lines = []
 fails = 0
 

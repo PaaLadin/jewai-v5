@@ -18,7 +18,8 @@ from typing import Any
 
 from Core.config import Config
 
-_SVC = Path(r"C:/DeepSeek/sandbox/svc.py")
+# 11B: Services not yet ported to v5. Use local Tools/svc.py when available.
+_SVC = Path(__file__).resolve().parent.parent / "Tools" / "svc.py"
 
 
 def _nw() -> int:

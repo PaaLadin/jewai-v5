@@ -1084,3 +1084,55 @@ Watchdog D: ON (pid 17360). Recovery D: ON (pid 7444).
 
 **Ссылки в RAG:**
 - RAG/procedures/current_state.md
+
+## 2026-10-28 21:26 - 11B sync: config + installer fixes
+**Session:** 11B (Boris). Context: recovery after 13D deployment collapse.
+- Ran `Tools/run_all_tests.py`: was **9/21** (docs said 21/325 - false).
+- Root: `config.json` old schema (no name/extension/model, CDP 9220+i, agent 8760+i, n=4). `Core/config.py:81` KeyError name.
+- Fixed `C:/jewai/config.json` -> v5 schema (channels A-D, agent 8666+i, cdp 9122+i, name/extension/model). Backup `config.json.bak_11b_*`.
+- Fixed `Tools/installer/server.py`: PORT 8671->8660 (E conflict), channels v5 ports, agent entrypoint -> `Bridge/run.py --channel L` (was `daemon.py` first, dead process), config v5 fields. Backup `server.py.bak_11b`. py_compile OK.
+- Fixed tests OUT path: 18 test files wrote to `C:/DeepSeek/logs/D/` (violation). Rewritten to `C:/jewai/logs/runtime/`. Backups `.bak_11b`, py_compile OK.
+- Tests after config fix: **15/21 pass, 6 fail** (3 = 8671 busy from orphaned installer pid 18276; 3 = OUT path now fixed). Awaiting kill 18276.
+- Docs updated: ROADMAP.md, TODO.md (appended fact block).
+- **Not fixed (P0 backlog):** Services (svc/watchdog/recovery/autorestart) absent in v5; RAG/knowledge/modules.md stale; extension absent (open question).
+
+
+## 2026-10-29 01:07:28 - 11B: 21/21 tests, installer ready
+
+**Phase:** stabilization + test fixes + installer P0-P2.
+- All 21 test suites pass. Session start: 9/21.
+- 8 P0-P2 fixes in installer; dynamic ports/channels in tests; OUT paths DeepSeek->jewai.
+- Chrome C was not buggy; pre-reboot death was env pollution.
+- Ready for operator installer test in NEW folder.
+- Open: Services port, RAG modules.md, HANDOVER_14D copy.
+
+
+## 2026-10-29 01:57 - REFAСTOR: per-agent profiles (start)
+
+**Phase:** per-agent layout + multi-agent isolation fix.
+- Bug: single Templates/extension for all -> extension does not know own port/channel. Ledger shared.
+- Plan: Profiles/<L>/{chrome,config,logs,docs,extension}. Agents/<L> removed.
+- Target: 3h to working install+agent.
+
+
+## 2026-10-29 02:23:14 - per-agent layout: code done
+
+**Phase:** per-agent isolation refactor.
+- Installer writes Profiles/<L>/{chrome,config,logs,docs,extension}.
+- Per-channel config; extension copied per agent; .agent_token ignored in copy.
+- Config.channel_root/path/config; daemon ledger per-agent.
+- Launcher pushes agentUrl/token/channel/name into chrome.storage via CDP.
+- Sidepanel autodetects port 8666-8675 if storage empty.
+- Manifest host_permissions extended to 8666-8675.
+- Fixed duplicate block in Core/config.py.
+- Tests pending.
+
+
+## 2026-10-29 04:16 - overnight: services + launchers + CRT mainframe
+
+**Phase:** P1-P10 (services, launchers, Chrome offer, roadmap route, templates, mainframe).
+- Tools/gen_launchers.py: 17 .ps1 config-driven; installer calls it.
+- Tools/svc.py + watchdog/recovery/autorestart: operator-safe (no force, no operator-typing reboot).
+- Mainframe static CRT + dynamic cards + chat tab + projects tab + LLM stub.
+- /roadmap/<name> route; Templates/project + Templates/roadmap.
+- Profiles/* from C:/jewai cleaned.

@@ -9,7 +9,7 @@ import dataclasses
 from Core.config import load as load_config
 from Mainframe import web, api, llm, mail, rag_channel, council, health, svc_api
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_mf_ext_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_mf_ext_test.txt')
 lines = []
 fails = 0
 
@@ -21,11 +21,12 @@ def check(name, cond, detail=''):
 tmp = Path(tempfile.mkdtemp(prefix='v5mfx_'))
 try:
     cfg0 = load_config()
-    cfg = dataclasses.replace(cfg0, root=tmp, chat_port=8671)
+    import socket as _sk
+    _s0 = _sk.socket(); _s0.bind(("127.0.0.1", 0)); PORT = _s0.getsockname()[1]; _s0.close()
+    cfg = dataclasses.replace(cfg0, root=tmp, chat_port=PORT)
 
-    # port free check
-    s = socket.socket(); s.settimeout(0.3)
-    busy = (s.connect_ex(('127.0.0.1', 8671)) == 0); s.close()
+    # port check (dynamic PORT chosen above; always free)
+    busy = False
     if busy:
         OUT.write_text('\n'.join(lines) + '\n--- ABORT port busy ---\n', encoding='utf-8')
         print('ABORT'); sys.exit(1)
@@ -44,7 +45,7 @@ try:
     th = threading.Thread(target=srv.serve_forever, daemon=True); th.start()
     time.sleep(0.5)
 
-    base = 'http://127.0.0.1:8671'
+    base = 'http://127.0.0.1:%d' % PORT
     def call(path, method='GET', body=None):
         data = json.dumps(body).encode('utf-8') if body is not None else None
         headers = {'Content-Type': 'application/json'} if data else {}
@@ -61,7 +62,7 @@ try:
     code, j = call('/api/status')
     check('/api/status 200', code == 200, str(code))
     chans = j.get('channels', {})
-    check('status 6 channels', len(chans) == 6, str(len(chans)))
+    from Core.config import load as _lc0; _n0 = len(_lc0().letters); check('status dynamic channels', len(chans) == _n0, str(len(chans)) + ' vs ' + str(_n0))
     if 'C' in chans:
         c = chans['C']
         check('status C prefix CCAA', c.get('prefix') == 'CCAA', str(c.get('prefix')))
@@ -74,7 +75,7 @@ try:
     check('/api/health 200', code == 200, str(code))
     check('health ok', j.get('ok') is True)
     matrix = j.get('matrix', {})
-    check('health matrix 6', len(matrix) == 6, str(len(matrix)))
+    check('health matrix dynamic', len(matrix) == _n0, str(len(matrix)) + ' vs ' + str(_n0))
     if 'C' in matrix:
         h = matrix['C']
         for f in ('content', 'agent', 'watchdog', 'recovery', 'lastId', 'cmds_from_start'):

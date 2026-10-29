@@ -8,7 +8,7 @@ sys.path.insert(0, str(ROOT / 'Tools'))
 
 from Tools import doh_proxy
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_doh_test.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_doh_test.txt')
 lines = []
 fails = 0
 

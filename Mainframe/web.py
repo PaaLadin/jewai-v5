@@ -53,6 +53,22 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         path = self.path.split("?", 1)[0]
+        # /roadmap/<name> raw file serving from Projects/<name>/ROADMAP.{html,md}
+        if path.startswith("/roadmap/"):
+            import pathlib as _pl
+            name = path.split("/roadmap/", 1)[1].strip("/")
+            if "/" in name or name.startswith(".."):
+                return self._send(403, b"forbidden", "text/plain")
+            for base_rel in ("Projects", "project"):
+                base = self.cfg.path(base_rel)
+                if not base.exists():
+                    continue
+                for fn, ctype in (("ROADMAP.html", "text/html; charset=utf-8"),
+                                   ("ROADMAP.md", "text/markdown; charset=utf-8")):
+                    f = base / name / fn
+                    if f.exists():
+                        return self._send(200, f.read_bytes(), ctype)
+            return self._send(404, b"roadmap not found", "text/plain")
         # /fs/ raw file serving (non-JSON, delegates to controls.fs_read)
         if path.startswith("/fs/"):
             try:

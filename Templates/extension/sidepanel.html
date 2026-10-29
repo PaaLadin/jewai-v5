@@ -22,11 +22,28 @@ button { cursor: pointer; margin-top: 6px; }
 <script>
 const els = { url: document.getElementById('agentUrl'), token: document.getElementById('token'), status: document.getElementById('status') };
 function setStatus(text, ok) { els.status.textContent = text; els.status.className = ok ? 'ok' : 'err'; }
+async function autodetect() {
+  for (let port = 8666; port <= 8675; port++) {
+    try {
+      const r = await fetch('http://127.0.0.1:' + port + '/ping', { cache: 'no-store' });
+      if (r.ok) { return 'http://127.0.0.1:' + port; }
+    } catch (e) {}
+  }
+  return '';
+}
 async function load() {
   const s = await chrome.storage.local.get({ agentUrl: '', token: '', paused: false });
-  els.url.value = s.agentUrl || '';
+  let url = s.agentUrl || '';
+  if (!url) {
+    setStatus('detecting...', true);
+    url = await autodetect();
+    if (url) {
+      await chrome.storage.local.set({ agentUrl: url });
+    }
+  }
+  els.url.value = url;
   els.token.value = s.token || '';
-  setStatus(s.paused ? 'paused' : 'ready', true);
+  setStatus(url ? (s.paused ? 'paused' : 'ready') : 'no agent found (enter URL manually)', !!url);
 }
 document.getElementById('save').addEventListener('click', async () => {
   const agentUrl = els.url.value.trim();

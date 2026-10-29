@@ -14,7 +14,7 @@ import dataclasses
 from Core.config import load as load_config
 from Mainframe import llm, mail
 
-OUT = Path(r'C:/DeepSeek/logs/D/_v5_f5_configured.txt')
+OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_f5_configured.txt')
 lines = []
 fails = 0
 
