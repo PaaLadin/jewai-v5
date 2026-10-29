@@ -18,19 +18,57 @@ JewAI v5 - переписанный с нуля мультиагентный м�
 
 ## Карта документов
 
+### Обязательно для агента (в этом порядке)
+
 | Документ | Что там |
 |---|---|
-| `architecture/ARCHITECTURE.md` | Общая архитектура, потоки данных, порты |
-| `architecture/MODULES.md` | Все модули с контрактами |
-| `architecture/AUDIT.md` | Аудит старого проекта (контракты + костыли) |
+| `procedures/BEHAVIOR.md` | Правила поведения (общий) |
+| `procedures/SYSTEM_MESSAGES.md` | Системные маркеры ([ALIVE?], [MEETING], [PAUSE-ALL], [AGENT REPORT]) - **не путать с оператором** |
+| `procedures/KICK_PROTOCOL.md` | Как агенты общаются (p2p / broadcast / оператор) - **не путать транспорты** |
+| `procedures/ALIVE_AND_SERVICES.md` | Watchdog, recovery, autorestart (не перебивают оператора) |
+| `procedures/STOP_WORD.md` | Стоп-слово (только из живого чата) |
+
+### Architecture
+
+| Документ | Что там |
+|---|---|
+| `architecture/ARCHITECTURE.md` | Слои, порты, потоки данных |
+| `architecture/MODULES.md` | Все модули (auto-generated) |
+| `architecture/AUDIT.md` | Аудит старого проекта (44 КБ контрактов) |
+
+### Установка и операции
+
+| Документ | Что там |
+|---|---|
 | `procedures/INSTALL.md` | Установка с нуля |
-| `procedures/OPERATIONS.md` | Команды запуска/остановки, лаунчеры |
-| `procedures/SYSTEM_KEYS.md` | Токены, порты, env-переменные |
-| `procedures/BEHAVIOR.md` | Правила поведения агентов |
-| `procedures/TROUBLESHOOTING.md` | Починка типовых поломок |
-| `procedures/current_state.md` | Текущее состояние (обновляется) |
-| `procedures/agent_layout.md` | Структура папок агента |
-| `knowledge/modules.md` | Индекс модулей (auto-generated) |
+| `procedures/OPERATIONS.md` | Команды, лаунчеры, API |
+| `procedures/SYSTEM_KEYS.md` | Токены, порты, env, поля конфигов |
+| `procedures/TROUBLESHOOTING.md` | Починка поломок |
+| `procedures/current_state.md` | Текущее состояние |
+| `procedures/agent_layout.md` | Структура Profiles/<L> |
+
+### Мост и грабли
+
+| Документ | Что там |
+|---|---|
+| `procedures/BRIDGE_LIMITS.md` | Лимиты моста (write >1.5K, литеральные ###, кириллица) |
+| `procedures/PYTHON_PITFALLS.md` | Грабли Python (ASCII-only, sha LF/CRLF, DETACHED) |
+| `procedures/REPLAY_STALE.md` | Повторное исполнение старых блоков |
+
+### Сбои и перерождение
+
+| Документ | Что там |
+|---|---|
+| `procedures/STUCK_STATES.md` | 5 типов стопоров SPA |
+| `procedures/REBIRTH.md` | Перерождение (триггеры, гейт, lock, CDP cycle) |
+| `procedures/CHAT_HANDOVER.md` | Бэкап старых чатов |
+
+### Справочники
+
+| Документ | Что там |
+|---|---|
+| `INDEX.md` | Оглавление |
+| `knowledge/modules.md` | Индекс модулей (auto) |
 
 ## Главные принципы v5
 
@@ -43,14 +81,15 @@ JewAI v5 - переписанный с нуля мультиагентный м�
 
 ## С чего начать чтение
 
-- **Новичок** -> `architecture/ARCHITECTURE.md`, потом `procedures/INSTALL.md`.
-- **Оператор** -> `procedures/OPERATIONS.md` + `procedures/TROUBLESHOOTING.md`.
-- **Агент (LLM в чате)** -> `procedures/BEHAVIOR.md` (обязательно первым).
-- **Разработчик** -> `architecture/AUDIT.md` + `architecture/MODULES.md`.
+- **Агент** -> BEHAVIOR -> SYSTEM_MESSAGES -> KICK_PROTOCOL -> ALIVE_AND_SERVICES
+- **Новичок** -> ARCHITECTURE -> INSTALL -> OPERATIONS
+- **Оператор** -> OPERATIONS -> TROUBLESHOOTING
+- **Разработчик** -> AUDIT -> MODULES -> ARCHITECTURE
 
 ## Текущая версия
 
 - VERSION: 0.1.0-dev
 - 21 тест / 0 fail
+- 25 RAG-документов
 - JewAI v5, 2026-10-29
 
