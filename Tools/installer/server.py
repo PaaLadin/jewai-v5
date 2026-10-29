@@ -148,6 +148,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 with open(ch_cfg_path, 'w', encoding='utf-8') as f:
                     json.dump(ch_cfg, f, indent=2, ensure_ascii=False)
             log("Per-agent configs saved.")
+            # 11B: copy Chrome for Testing to target (if present in source)
+            cft_src = os.path.join(ROOT, 'tools', 'chrome-for-testing')
+            cft_dst = os.path.join(target, 'tools', 'chrome-for-testing')
+            if os.path.isdir(cft_src) and os.path.isfile(os.path.join(cft_src, 'chrome.exe')):
+                try:
+                    if os.path.isdir(cft_dst):
+                        shutil.rmtree(cft_dst, ignore_errors=True)
+                    shutil.copytree(cft_src, cft_dst, dirs_exist_ok=True)
+                    log(f"Chrome for Testing copied to {cft_dst}")
+                    # set chrome_path in target config.json
+                    tc = os.path.join(target, 'config.json')
+                    with open(tc, 'r', encoding='utf-8') as f:
+                        _cfg = json.load(f)
+                    _cfg['chrome_path'] = os.path.join(cft_dst, 'chrome.exe')
+                    with open(tc, 'w', encoding='utf-8') as f:
+                        json.dump(_cfg, f, indent=2, ensure_ascii=False)
+                    log(f"chrome_path set to CfT: {_cfg['chrome_path']}")
+                except Exception as _e:
+                    log(f"CfT copy failed: {_e}")
+            else:
+                log("Chrome for Testing not found in source (tools/chrome-for-testing); using regular Chrome")
             # 11B: generate launchers (start/stop/restart per channel + server)
             # 11B: remove stale launchers copied from source before regenerating
             stale_la = os.path.join(target, 'Tools', 'launchers')
