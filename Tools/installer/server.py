@@ -39,7 +39,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             log(f"Target: {target}")
             if ROOT.lower() != target.lower():
                 log("Copying files...")
-                ignore = shutil.ignore_patterns('.git', '__pycache__', '*.pyc', 'logs', 'runtime', 'Agents', 'Profiles', 'Archive', 'media', 'backups', '.agent_token')
+                ignore = shutil.ignore_patterns('.git', '__pycache__', '*.pyc', 'logs', 'runtime', 'Agents', 'Profiles', 'Archive', 'media', 'backups', '.agent_token', 'start-*.bat', 'stop-*.bat', 'restart-*.bat', 'server-*.bat', 'create-shortcut.bat')
                 shutil.copytree(ROOT, target, dirs_exist_ok=True, ignore=ignore)
                 log("Files copied.")
             else:

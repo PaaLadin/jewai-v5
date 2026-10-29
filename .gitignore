@@ -34,3 +34,10 @@ Thumbs.db
 logs/council/
 
 .agent_token
+
+# generated root-level .bat wrappers
+start-*.bat
+stop-*.bat
+restart-*.bat
+server-*.bat
+create-shortcut.bat

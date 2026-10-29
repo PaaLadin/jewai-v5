@@ -157,3 +157,12 @@ Next: reboot -> diagnose Chrome C (read-only) -> then operator runs install.
 - Порт 8670 занят? netstat -ano | findstr 8670
 - Порт 8660 (installer) занят? netstat -ano | findstr 8660
 - Chrome/CDP: http://127.0.0.1:9122/json/version (по каналу)
+
+
+## 2026-10-29 16:52 - root bats + launcher fix
+
+- install.bat -> root (was Tools/installer/).
+- Launchers: .ps1 in Tools/launchers/, .bat wrappers in root (double-click).
+- Fixed $Root bug in .ps1 (was Tools, now correct root).
+- 17 .ps1 + 17 .bat + install.bat = 18 .bat in root.
+- Verified: $Root = C:/jewai, config.json found, 18 .bat.

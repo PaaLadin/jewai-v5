@@ -1,6 +1,6 @@
 # Операции: запуск, остановка, управление
 
-## Лаунчеры (Tools/launchers/)
+## Лаунчеры (корень + Tools/launchers/)
 
 Генерируются `Tools/gen_launchers.py` из `config.json`.
 
