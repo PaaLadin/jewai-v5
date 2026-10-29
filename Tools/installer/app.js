@@ -151,7 +151,38 @@ function submitInput(val) {
             }).then(r => r.json()).then(res => {
                 state = 12;
                 typeText(i18n[lang].launchDone.replace('{0}', config.chatPort));
-                window.open('http://127.0.0.1:' + config.chatPort + '/', '_blank');
+                const mfUrl = 'http://127.0.0.1:' + config.chatPort + '/';
+                typeText('Waiting for Mainframe on ' + mfUrl + ' ...');
+                // Poll mainframe health up to 15s, then redirect current window
+                let attempts = 0;
+                const tryRedirect = () => {
+                    attempts++;
+                    fetch(mfUrl + 'api/health', {cache: 'no-store'})
+                        .then(r => r.ok ? r.json() : Promise.reject('not ok'))
+                        .then(j => {
+                            if (j && j.ok !== false) {
+                                typeText('Mainframe ready. Opening ' + mfUrl + ' in this window...');
+                                setTimeout(() => { window.location.href = mfUrl; }, 400);
+                            } else {
+                                throw new Error('health not ok');
+                            }
+                        })
+                        .catch(() => {
+                            if (attempts < 30) {
+                                setTimeout(tryRedirect, 500);
+                            } else {
+                                typeText('Mainframe did not respond after 15s. Click to open: ' + mfUrl);
+                                // Add clickable link
+                                const link = document.createElement('a');
+                                link.href = mfUrl;
+                                link.target = '_blank';
+                                link.textContent = mfUrl;
+                                link.style.color = '#33ff33';
+                                document.body.appendChild(link);
+                            }
+                        });
+                };
+                tryRedirect();
             }).catch(err => {
                 state = 12;
                 typeText(i18n[lang].fail.replace('{0}', err.toString()));

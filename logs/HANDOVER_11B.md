@@ -166,3 +166,12 @@ Next: reboot -> diagnose Chrome C (read-only) -> then operator runs install.
 - Fixed $Root bug in .ps1 (was Tools, now correct root).
 - 17 .ps1 + 17 .bat + install.bat = 18 .bat in root.
 - Verified: $Root = C:/jewai, config.json found, 18 .bat.
+
+
+## 2026-10-29 17:13 - installer: redirect to mainframe after Launch
+
+- app.js: after /api/launch poll /api/health up to 15s.
+- On health OK -> window.location.href = mainframe URL (same window).
+- On 15s timeout -> clickable link (fallback).
+- Removed window.open(_blank).
+- NOTE: restart installer to load new app.js.
