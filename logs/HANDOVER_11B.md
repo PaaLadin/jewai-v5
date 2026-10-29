@@ -175,3 +175,28 @@ Next: reboot -> diagnose Chrome C (read-only) -> then operator runs install.
 - On 15s timeout -> clickable link (fallback).
 - Removed window.open(_blank).
 - NOTE: restart installer to load new app.js.
+
+
+## 2026-10-29 19:43 - installer self-kill (chatPort=8660)
+
+**Симптом:** installer Launch -> "TypeError: Failed to fetch". install.log: "Killing old processes on port 8660..."
+**Корень:** оператор ввёл chatPort=8660 = порт самого installer. run_launch убил себя.
+
+**FIX1 preflight validation** (run_install):
+- chat_port == installer_port (8660) -> ValueError до начала install.
+- proxy_port == installer/chat -> ValueError.
+- base_port+i, cdp_port+i == installer/chat/proxy -> ValueError.
+
+**FIX2 self-protection** (run_launch):
+- skip kill if chat_port == PORT (log WARNING).
+- getpid: не убивать свой PID даже при случайном совпадении.
+
+**FIX3 UI validation** (app.js):
+- chatPort == 8660 -> "ERROR: chat port 8660 is the installer port. Use 8670".
+- proxy == installer/chat -> error.
+- base == installer/chat -> error.
+
+**FIX4 proxy default 9999 -> 9899** (app.js + server.py, 3 места).
+**FIX5 hint text** [5/6] 9999 -> 9899 (en + ru).
+
+**21/21 tests pass after all fixes.**

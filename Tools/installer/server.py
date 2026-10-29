@@ -46,8 +46,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 log("Same directory, skip copy.")
             base_port = int(cfg.get('basePort', 8666))  # 11B: v5 default
             n = int(cfg.get('agentCount', 1))
-            chat_port = cfg.get('chatPort', 8670)
-            proxy_port = cfg.get('proxyPort', 9999)
+            chat_port = int(cfg.get('chatPort', 8670))
+            proxy_port = int(cfg.get('proxyPort', 9899))
+
+            # 11B: preflight port validation (installer must not kill itself)
+            installer_port = PORT  # module-level, 8660
+            if chat_port == installer_port:
+                raise ValueError(
+                    "chat_port (%d) == installer port (%d). "
+                    "Choose another chat port (e.g. 8670)." % (chat_port, installer_port)
+                )
+            if proxy_port == installer_port or proxy_port == chat_port:
+                raise ValueError(
+                    "proxy_port (%d) conflicts with installer (%d) or chat (%d)." % (proxy_port, installer_port, chat_port)
+                )
+            for _i in range(n):
+                _ap = base_port + _i
+                _cp = 9122 + _i
+                if _ap in (installer_port, chat_port, proxy_port):
+                    raise ValueError("agent port %d conflicts (installer/chat/proxy)" % _ap)
+                if _cp in (installer_port, chat_port, proxy_port):
+                    raise ValueError("cdp port %d conflicts (installer/chat/proxy)" % _cp)
             for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Templates', 'logs', 'Projects', 'Archive', 'Profiles']:
                 os.makedirs(os.path.join(target, d), exist_ok=True)
             letters = list("ABCDEFGHIJ")[:n]
@@ -182,7 +201,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         with open(cfg_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
         chat_port = config.get('chat_port', 8670)
-        proxy_port = config.get('proxy_port', 9999)
+        proxy_port = config.get('proxy_port', 9899)
         letters = config.get('letters', [])
         channels = config.get('channels', {})
         def spawn(name, args, cwd):
@@ -200,8 +219,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         mf = os.path.join(target, 'Mainframe', 'server.py')
         if os.path.exists(mf):
             log("Killing old processes on port " + str(chat_port) + "...")
-            kill_cmd = f"Get-NetTCPConnection -LocalPort {chat_port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Where-Object {{$_ -ne 0}} | ForEach-Object {{ Stop-Process -Id $_ -Force }}"
-            subprocess.run(['powershell', '-c', kill_cmd], capture_output=True)
+            # 11B: never kill self (installer runs on PORT, chat_port might equal it)
+            self_pid = os.getpid()
+            kill_cmd = ("Get-NetTCPConnection -LocalPort " + str(chat_port) +
+                        " -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | "
+                        "Where-Object {$_ -ne 0 -and $_ -ne " + str(self_pid) + "} | "
+                        "ForEach-Object { Stop-Process -Id $_ -Force }")
+            if int(chat_port) == int(PORT):
+                log("WARNING: chat_port == installer port; skipping kill (would kill self).")
+            else:
+                subprocess.run(['powershell', '-c', kill_cmd], capture_output=True)
             time.sleep(1)
             env = os.environ.copy()
             env["JEWAI_CONFIG"] = os.path.join(target, "config.json")

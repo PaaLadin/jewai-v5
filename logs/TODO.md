@@ -461,3 +461,31 @@ Operator reboots PC (kill all Chrome, full restart). 11B persisted state.
 - Mainframe 8670: панель открылась, CRT работает, 1 карточка A (Lola).
 - Chrome поднялся (CDP 9122 UP).
 - Кнопки START/STOP/REBOOT/CHROME на карточке есть.
+
+
+## 2026-10-29 19:27 - installer proxyPort default рассинхрон
+
+**Проблема (оператор):** тестовая установка поднимает doh_proxy на 9999. Source config.json = 9899.
+Плохо: installer не наследует значение из source, а берёт свой дефолт.
+
+- [ ] app.js: `config.proxyPort = parseInt(val) || 9999` -> `|| 9899` (совпасть с source).
+- [ ] server.py: `proxy_port = cfg.get("proxyPort", 9999)` -> `9899`.
+- [ ] Или лучше: installer при открытии подгружает source config.json и подставляет proxyPort/dohProxyPort оттуда (без угадывания).
+- [ ] Проверить, что в target config.json пишутся одинаковые `proxy_port` и `doh_proxy_port`.
+- [ ] В SUMMARY installer показывать именно те порты, что уйдут в конфиг (не хардкод из формы).
+
+### Отдельно: agent.py в новом тесте
+- Старая установка (18:19) поднимает только Bridge/run.py. FIX3/FIX7 (agent.py) применены позже.
+- [ ] На новой установке проверить: agent.py в процессах, agent :8666 UP.
+
+
+## 2026-10-29 19:43 - installer self-kill + proxy port fix
+
+**Из теста: chatPort=8660 -> installer убил сам себя (Failed to fetch).**
+- [x] server.py run_install: preflight port validation (chat != installer, proxy != installer/chat, agent/cdp != conflicts).
+- [x] server.py run_launch: skip kill if chat_port == PORT, getpid self-protect.
+- [x] app.js: validate chatPort 8660 -> error до запуска.
+- [x] proxyPort default 9999 -> 9899 (app.js + server.py line 50 + line 204).
+- [x] hint text [5/6] 9999 -> 9899 (en + ru).
+- [x] 21/21 tests pass.
+- [ ] Оператор: перезапустить installer, повторить тест.
