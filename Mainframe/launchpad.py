@@ -186,10 +186,14 @@ def boot(cfg: Config, target: str) -> dict:
             return {"ok": False, "error": "bad channel"}
         if _tcp(ch.agent_port):
             return {"ok": True, "target": target, "already": True}
-        script = cfg.path("Templates", "extension", "agent.py")
+        # 11B: prefer per-channel extension; fallback to Templates
+        script = cfg.channel_path(L, "extension", "agent.py")
+        if not script.exists():
+            script = cfg.path("Templates", "extension", "agent.py")
         if not script.exists():
             return {"ok": False, "error": "agent.py not found", "path": str(script)}
-        ext_dir = cfg.path("Agents", L, "extension")
+        # cwd = Profiles/<L>/extension (per-agent layout); Agents/ no longer used
+        ext_dir = cfg.channel_path(L, "extension")
         ext_dir.mkdir(parents=True, exist_ok=True)
         return _spawn(cfg, [_pythonw(), str(script), str(ch.agent_port)], ext_dir, target)
     if target.startswith("chrome:"):
