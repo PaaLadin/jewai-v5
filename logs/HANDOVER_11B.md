@@ -97,3 +97,16 @@ Next: reboot -> diagnose Chrome C (read-only) -> then operator runs install.
 - Приёмка.
 
 **Бэкапы:** все правки .bak_11b_* в C:/jewai.
+
+
+## 2026-10-29 04:23 - smoke install OK
+
+- End-to-end install in tempdir (2 channels A/B): PASS.
+- Structure: Profiles/<L>/{chrome,config,logs,docs,extension} - all present.
+- Per-channel config keys correct (agent/cdp/name/prefix/agent_url).
+- Launchers: 11 files (start-all, stop-all, server-start/stop, create-shortcut + start/stop/restart per A,B).
+- Stale launchers from source removed before regen.
+- Templates/{project,roadmap,extension}: copied.
+- Agents/: NOT created (correct).
+- .agent_token: created.
+- Ready for operator acceptance test in real folder.

@@ -367,3 +367,10 @@ Operator reboots PC (kill all Chrome, full restart). 11B persisted state.
 - [x] P1-P11, P13, P14.
 - [ ] P12: end-to-end install (оператор).
 - [ ] Приёмка (оператор).
+
+
+## 2026-10-29 04:23 - smoke install PASS
+
+- [x] install run_install end-to-end (tempdir, A/B): structure, config, launchers, templates - all OK.
+- [x] stale Tools/launchers removed before regen.
+- [ ] Operator acceptance test in real folder (P12).
