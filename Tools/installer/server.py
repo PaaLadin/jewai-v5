@@ -130,6 +130,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     json.dump(ch_cfg, f, indent=2, ensure_ascii=False)
             log("Per-agent configs saved.")
             # 11B: generate launchers (start/stop/restart per channel + server)
+            # 11B: remove stale launchers copied from source before regenerating
+            stale_la = os.path.join(target, 'Tools', 'launchers')
+            if os.path.isdir(stale_la):
+                shutil.rmtree(stale_la, ignore_errors=True)
+                log("Removed stale Tools/launchers before regenerating.")
             gen_l = os.path.join(target, 'Tools', 'gen_launchers.py')
             if os.path.exists(gen_l):
                 try:

@@ -72,3 +72,28 @@ Next: reboot -> diagnose Chrome C (read-only) -> then operator runs install.
 **Тесты:** прогон после всех правок (см. TODO).
 **Бэкапы:** все правки с .bak_11b_*.
 **Дальше (утро):** приёмка + end-to-end install (P12) + commit (P11).
+
+
+## 2026-10-29 04:21 - FINAL: готово к приёмке
+
+**Коммит:** a2332ca (70 files, +2301/-343). Дерево чистое.
+**Тесты:** 21/21 pass, 0 fail (~58s).
+
+**Сделано за ночь (пункты 1-11):**
+- 1: Tools/svc.py + watchdog.py + recovery.py + autorestart.py (ALIVE с operator-typing guard).
+- 2: Tools/gen_launchers.py -> 17 .ps1 в Tools/launchers/; инсталлятор вызывает.
+- 3: Chrome not found -> offer download + pause (install.ps1).
+- 4-6: mainframe CRT (green-on-black, scanlines), динамические карточки по config.letters, START/STOP/REBOOT, мнемосхема, чат (общий broadcast), имена из config.
+- 7: /roadmap/<name> route (ROADMAP.html/md из Projects/).
+- 8: Templates/project/ + Templates/roadmap/ (шаблоны).
+- 9: LLM tab stub "Тут будет ЛЛМ".
+- 10: Profiles/* из C:/jewai снесены (A-F).
+- 11: git commit a2332ca.
+- 13: Agents/ убран из инсталлятора.
+- 14: --load-extension + --hide-crash-restore-bubble при init профиля.
+
+**Осталось (с оператором утром):**
+- 12: end-to-end install в новую папку + запуск.
+- Приёмка.
+
+**Бэкапы:** все правки .bak_11b_* в C:/jewai.

@@ -358,3 +358,12 @@ Operator reboots PC (kill all Chrome, full restart). 11B persisted state.
 - [ ] Git commit.
 - [ ] P12: end-to-end install + run (утром с оператором).
 - [ ] P11: финальный коммит после приёмки.
+
+
+## 2026-10-29 04:21 - FINAL overnight commit a2332ca
+
+- [x] 21/21 тестов зелёные.
+- [x] Коммит a2332ca (70 files).
+- [x] P1-P11, P13, P14.
+- [ ] P12: end-to-end install (оператор).
+- [ ] Приёмка (оператор).
