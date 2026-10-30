@@ -206,7 +206,7 @@ def op_write(root: Path, b: Block) -> dict[str, Any]:
                         "bytes": len(body.encode("utf-8"))}
         except Exception:
             pass
-    p.write_text(body, encoding="utf-8")
+    p.write_text(body, encoding="utf-8", newline="\n")
     return {"ok": True, "path": str(p), "bytes": len(body.encode("utf-8")),
             "sha256": _sha256(p)}
 

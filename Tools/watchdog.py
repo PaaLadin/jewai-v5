@@ -82,6 +82,25 @@ def _kick(port: int, text: str) -> bool:
         return False
 
 
+
+def _operator_typing(port: int) -> bool:
+    """True if operator has non-empty textarea. Skip ALIVE then."""
+    try:
+        from Bridge.cdp import connect
+        cdp = connect(port)
+        try:
+            expr = ("(() => { const ts = document.querySelectorAll('textarea');"
+                    "for (const t of ts) { if (t.value && t.value.trim().length > 0"
+                    " && !t.readOnly && !t.getAttribute('readonly')) return 'busy'; }"
+                    "return 'idle'; })()")
+            return cdp.eval_expr(expr) == "busy"
+        finally:
+            try: cdp.close()
+            except Exception: pass
+    except Exception:
+        return False
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--channel", required=True)
@@ -123,8 +142,12 @@ def main() -> int:
             else:
                 now = time.time()
                 if (not silence_pinged) and (now - last_alive_at >= a.alive_repeat):
-                    # operator-typing guard: kick refuses if busy (returns False)
-                    ok = _kick(ch.cdp_port, ALIVE_TEXT)
+                    if _operator_typing(ch.cdp_port):
+                        print("[watchdog %s] operator typing, skip ALIVE" % a.channel, flush=True)
+                        last_alive_at = now
+                        silence_pinged = True
+                    else:
+                        ok = _kick(ch.cdp_port, ALIVE_TEXT)
                     print("[watchdog %s] ALIVE sent=%s" % (a.channel, ok), flush=True)
                     if ok:
                         silence_pinged = True

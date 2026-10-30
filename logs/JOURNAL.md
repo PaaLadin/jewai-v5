@@ -1136,3 +1136,13 @@ Watchdog D: ON (pid 17360). Recovery D: ON (pid 7444).
 - Mainframe static CRT + dynamic cards + chat tab + projects tab + LLM stub.
 - /roadmap/<name> route; Templates/project + Templates/roadmap.
 - Profiles/* from C:/jewai cleaned.
+
+
+## 2026-10-30 00:23 - 11B final session
+
+**Phase:** installer end-to-end + Chrome for Testing.
+- CfT 158.0.8127.2 downloaded, --load-extension verified.
+- launcher _chrome_exe(cfg), installer copies CfT + sets chrome_path.
+- push_storage 3-retry, install.bat guard, launchpad per-channel fix.
+- 21/21 tests, tree clean, 25 commits ahead.
+- Open: storage=False, panel TODO (operator), git push.

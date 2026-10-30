@@ -513,3 +513,24 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - [ ] Ideal: sidepanel auto-open right on chat load.
 - [ ] Missing key functions (agree list with operator).
 - [ ] Mnemo: verify all blocks and links.
+
+
+## 2026-10-30 00:22 - 11B close: session summary
+
+**Operator: off for 30 min. 11B finalizing for possible rebirth.**
+
+### Fixed tonight (v5, 25 commits ahead of origin)
+- CfT 158.0.8127.2: downloaded, --load-extension verified (extension loads).
+- launcher: _chrome_exe(cfg) priority = chrome_path > CfT > regular Chrome.
+- installer: copies CfT to target, sets chrome_path in config.json.
+- launcher: push_storage 3-retry (was 1 shot).
+- install.bat: guard (detect test copy, warn).
+- launchpad: agent START per-channel extension (Profiles/<L>, not Templates).
+- 21/21 tests pass, tree clean.
+
+### Open (for 12B)
+- Install STRICTLY from C:\jewai\install.bat into NEW folder. C:\JewAI_v5 is stale.
+- storage=False: extension loads but sidepanel "not connected" — retry may not help if extension target not ready in 4s. Possible: wait for target up to 10s.
+- DeepSeek redirect chat.deepseek.com -> www.deepseek.com/en — behavior for unauth, login manually.
+- Panel v5 Mainframe: TODO list (agree with operator).
+- Git push: 25 commits ahead of PaaLadin/jewai-v5.

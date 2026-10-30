@@ -200,3 +200,18 @@ Next: reboot -> diagnose Chrome C (read-only) -> then operator runs install.
 **FIX5 hint text** [5/6] 9999 -> 9899 (en + ru).
 
 **21/21 tests pass after all fixes.**
+
+
+## 2026-10-30 00:23 - FINAL: ready for handover
+
+**22 commits of session:** CfT, installer fixes, launchpad fix, push_storage retry, install.bat guard.
+**21/21 tests pass, tree clean.**
+
+**Open for next session:**
+1. Install STRICTLY from C:\jewai\install.bat into NEW folder (not test copy).
+2. Chrome for Testing works (--load-extension OK), but storage=False -> sidepanel not connected. Diagnostic: check if extension target appears in CDP /json/list within 4s; if not, increase wait in _push_storage.
+3. DeepSeek redirects chat.deepseek.com -> www.deepseek.com/en (unauth behavior); login manually.
+4. Panel v5 Mainframe TODO: agree list with operator, then implement.
+5. Git push C:\jewai -> PaaLadin/jewai-v5 (25 commits ahead).
+
+Dixi. 11B (Борис), 2026-10-30 00:23.

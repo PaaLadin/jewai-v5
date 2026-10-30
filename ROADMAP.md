@@ -204,3 +204,21 @@ Chrome C (9124) live. Mainframe 8670 live (наш pid). Watchdog D ON.
 - P7: /roadmap/<name> route.
 - P8: Templates/project + Templates/roadmap.
 - P10: C:/jewai Profiles/ cleaned.
+
+
+## 2026-10-30 00:23 - 11B final: CfT + install fixes + tests
+
+### Сделано (коммиты 5c14703, 9b13509, 764ba01, dcbde1b)
+- Chrome for Testing 158.0.8127.2: downloaded to tools/chrome-for-testing, --load-extension verified.
+- launcher.py: _chrome_exe(cfg) priority = chrome_path > CfT > regular Chrome.
+- installer: copies CfT to target + sets chrome_path.
+- launcher: push_storage 3-retry.
+- install.bat: guard (detect test copy, warn).
+- launchpad: agent START per-channel extension (Profiles/<L>, not Templates).
+- 21/21 tests pass.
+
+### Открыто
+- storage=False: extension loads but sidepanel not connected (retry may not help if target not ready).
+- Install STRICTLY from C:\jewai\install.bat into NEW folder.
+- Panel v5 Mainframe: TODO (agree with operator).
+- Git push: 25 commits ahead of PaaLadin/jewai-v5.

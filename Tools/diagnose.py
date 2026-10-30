@@ -112,13 +112,74 @@ if tests_dir.exists():
 else:
     ln("  Tools/tests/ MISSING")
 
-# --- blockers ---
+# --- chat_attached (12B: live) ---
 ln("")
-ln("=== blockers (require operator OK) ===")
-ln("  1. 8670 process 5304 (foreign Mainframe) - kill+restart needed")
-ln("  2. Ф2 live-send to chat C")
-ln("  3. Ф6 rollout A/B/D/E/F")
-ln("  4. Ф7 GitHub push")
+ln("=== chat_attached ===")
+try:
+    with urllib.request.urlopen("http://127.0.0.1:8670/api/health", timeout=5) as r:
+        h = json.loads(r.read().decode("utf-8"))
+    for L in ("A", "B", "C", "D", "E", "F"):
+        row = h.get("matrix", {}).get(L, {})
+        agent = row.get("agent")
+        lastid = row.get("lastId")
+        tag = "attached" if (agent and lastid) else ("idle" if agent else "down")
+        ln("  %s: agent=%s lastId=%s -> %s" % (L, agent, lastid, tag))
+except Exception as e:
+    ln("  /api/health unreachable: " + type(e).__name__)
+
+# --- blockers (12B: live) ---
+ln("")
+ln("=== blockers (live) ===")
+blockers = []
+# 8670
+if not http_ok("http://127.0.0.1:8670/api/health"):
+    blockers.append("8670: panel /api/health non-200")
+# per-channel: agent up + chat not attached
+try:
+    with urllib.request.urlopen("http://127.0.0.1:8670/api/health", timeout=5) as r:
+        h = json.loads(r.read().decode("utf-8"))
+    for L in ("A", "B", "C", "D", "E", "F"):
+        row = h.get("matrix", {}).get(L, {})
+        if row.get("agent") and row.get("lastId") is None:
+            blockers.append("%s: agent up, lastId null (chat not attached or no commands yet)" % L)
+except Exception:
+    pass
+# git
+try:
+    import subprocess
+    r1 = subprocess.run(["git", "-C", str(ROOT), "rev-list", "--count", "origin/main..HEAD"],
+                        capture_output=True, text=True, timeout=8,
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+    n = (r1.stdout or "").strip()
+    if n.isdigit() and int(n) > 0:
+        blockers.append("git: %s commits ahead of origin/main" % n)
+    r2 = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain"],
+                        capture_output=True, text=True, timeout=8,
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+    if (r2.stdout or "").strip():
+        blockers.append("git: uncommitted changes (%d lines)" % len(r2.stdout.splitlines()))
+except Exception:
+    pass
+# bridge dupes (best effort)
+try:
+    import subprocess
+    ps = ("Get-CimInstance Win32_Process -Filter \"Name='python.exe' OR Name='pythonw.exe'\""
+          " | Where-Object { $_.CommandLine -like '*Bridge\\run.py*' }"
+          " | Group-Object { ($_.CommandLine -split '--channel ')[1] }"
+          " | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name }")
+    r3 = subprocess.run(["powershell", "-NoProfile", "-Command", ps],
+                        capture_output=True, text=True, timeout=10,
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+    for ch_name in (r3.stdout or "").split():
+        blockers.append("bridge: duplicate --channel %s" % ch_name.strip())
+except Exception:
+    pass
+
+if blockers:
+    for b in blockers:
+        ln("  - " + b)
+else:
+    ln("  (none)")
 
 OUT.write_text("\n".join(lines), encoding="utf-8")
 print("WROTE", OUT)

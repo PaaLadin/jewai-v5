@@ -109,6 +109,10 @@ def boot_bridge(cfg, letter: str, dry: bool) -> dict:
     ch = cfg.channel(letter)
     if not _cdp_up(ch.cdp_port):
         return {"target": "bridge:" + letter, "ok": False, "reason": "no cdp"}
+    # 12B: idempotency - if agent.py already holds agent_port, skip spawn.
+    if _tcp(ch.agent_port):
+        return {"target": "bridge:" + letter, "ok": True,
+                "already": True, "agent_port": ch.agent_port}
     if dry:
         return {"target": "bridge:" + letter, "ok": True, "dry": True}
     args = [_pythonw(), str(ROOT / "Bridge" / "run.py"), "--channel", letter]
@@ -126,7 +130,13 @@ def boot_bridge(cfg, letter: str, dry: bool) -> dict:
                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                               creationflags=_detached_flags())
         agent_pid = ap.pid
-    return {"target": "bridge:" + letter, "ok": True, "pid": p.pid, "agent_pid": agent_pid}
+    # 12B: wait for agent_port up to 10s so next boot_bridge sees "already"
+    for _ in range(40):
+        time.sleep(0.25)
+        if _tcp(ch.agent_port):
+            break
+    return {"target": "bridge:" + letter, "ok": True, "pid": p.pid,
+            "agent_pid": agent_pid, "agent_port_up": _tcp(ch.agent_port)}
 
 
 def main() -> int:

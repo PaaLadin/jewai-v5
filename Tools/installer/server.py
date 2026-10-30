@@ -69,6 +69,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     raise ValueError("cdp port %d conflicts (installer/chat/proxy)" % _cp)
             for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Templates', 'logs', 'Projects', 'Archive', 'Profiles']:
                 os.makedirs(os.path.join(target, d), exist_ok=True)
+                # 12B: ensure logs/JOURNAL.md and logs/TODO.md
+                for tpl_name in ('JOURNAL.md', 'TODO.md'):
+                    tpl_src = os.path.join(ROOT, 'Templates', 'logs', tpl_name)
+                    tpl_dst = os.path.join(target, 'logs', tpl_name)
+                    if os.path.exists(tpl_src) and not os.path.exists(tpl_dst):
+                        shutil.copyfile(tpl_src, tpl_dst)
+                        log(f"Seeded logs/{tpl_name}")
             letters = list("ABCDEFGHIJ")[:n]
             chrome_paths = [
                 r"C:\Program Files\Google\Chrome\Application\chrome.exe",
