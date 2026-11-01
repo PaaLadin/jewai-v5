@@ -1,49 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>JewAI v5 agent</title>
+<title>JewAI v5</title>
 <style>
-body { font-family: monospace; background: #111; color: #eee; margin: 10px; font-size: 12px; }
-h2 { color: #4a8a5a; margin: 8px 0; }
-label { display: block; margin: 6px 0 2px; color: #888; }
-input, button { width: 100%; background: #222; color: #eee; border: 1px solid #444; padding: 4px; font-family: monospace; box-sizing: border-box; }
-button { cursor: pointer; margin-top: 6px; }
-.ok { color: #4a8a5a; } .err { color: #b33; }
+  :root { --metal-dark: #222; --metal-light: #444; --crt-green: #33ff33; --led-red: #ff2222; --led-green: #22ff22; --led-yellow: #ffcc00; --text-dim: #555; }
+  html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+  body { background: #111; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; }
+  .monitor { flex: 1; display: flex; flex-direction: column; padding: 5px; gap: 5px; box-sizing: border-box; background: var(--metal-dark); border: 3px solid var(--metal-light); border-radius: 6px; overflow: hidden; }
+  
+  .agent-header { flex-shrink: 0; background: #000; border: 2px solid #333; padding: 4px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .agent-letter { font-size: 32px; font-weight: bold; color: var(--crt-green); text-shadow: 0 0 10px var(--crt-green); line-height: 1; }
+  .agent-name { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  
+  .crt-screen { flex: 1; min-height: 80px; background: #051005; border: 2px solid #111; border-radius: 4px; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  .crt-screen::before { content: " "; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); background-size: 100% 4px; z-index: 2; pointer-events: none; }
+  .crt-header { display: flex; justify-content: space-between; padding: 2px 4px; font-size: 9px; color: var(--crt-green); border-bottom: 1px solid #222; z-index: 3; background: #051005; }
+  .crt-content { flex: 1; padding: 4px; font-size: 11px; line-height: 1.3; color: var(--crt-green); text-shadow: 0 0 2px var(--crt-green); overflow-y: auto; white-space: pre-wrap; z-index: 1; }
+  .crt-content::-webkit-scrollbar { width: 6px; }
+  .crt-content::-webkit-scrollbar-track { background: #051005; }
+  .crt-content::-webkit-scrollbar-thumb { background: var(--crt-green); border-radius: 3px; }
+  .scroll-lock-label { cursor: pointer; display: flex; align-items: center; gap: 2px; color: #888; font-size: 9px; }
+  .scroll-lock-label input { cursor: pointer; accent-color: var(--crt-green); margin: 0; }
+  
+  /* Растягиваем колонки равномерно */
+  .bottom-panel { flex-shrink: 0; display: grid; grid-template-columns: 35% 65%; gap: 5px; align-items: stretch; }
+  .panel-left, .panel-right { display: flex; flex-direction: column; justify-content: space-between; gap: 4px; background: #111; border: 1px solid #333; border-radius: 4px; padding: 4px; box-sizing: border-box; height: 100%; }
+  
+  .walk-sign { flex-shrink: 0; background: #000; border: 2px solid #b8860b; border-radius: 4px; display: flex; justify-content: center; align-items: center; height: 60px; width: 100%; cursor: pointer; box-sizing: border-box; }
+  .sign-svg { width: 100%; height: 100%; }
+  .svg-dont { fill: var(--text-dim); font-family: sans-serif; font-weight: bold; font-size: 22px; transition: all 0.2s; }
+  .svg-walk { fill: var(--text-dim); font-family: sans-serif; font-weight: bold; font-size: 26px; transition: all 0.2s; }
+  .walk-sign.paused .svg-dont { fill: var(--led-red); }
+  .walk-sign.running .svg-walk { fill: #fff; }
+  .walk-sign.error .svg-dont { fill: var(--led-red); }
+  
+  .led-row { flex-shrink: 0; height: 26px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #ccc; font-weight: bold; border-bottom: 1px solid #222; }
+  .led-group { display: flex; gap: 3px; }
+  .led { width: 14px; height: 14px; border-radius: 50%; background: #222; }
+  .led.red { background: var(--led-red); box-shadow: 0 0 5px var(--led-red); }
+  .led.green { background: var(--led-green); box-shadow: 0 0 5px var(--led-green); }
+  
+  .pause-btn { flex-shrink: 0; height: 60px; background: #222; border: 2px solid #555; border-radius: 4px; cursor: pointer; display: flex; justify-content: center; align-items: center; width: 100%; box-sizing: border-box; margin-bottom: 2px; }
+  .pause-btn svg { height: 30px; }
+  .icon-pause, .icon-play { fill: #444; transition: fill 0.2s; }
+  .pause-btn.active .icon-pause { fill: var(--led-yellow); }
+  .pause-btn:not(.active) .icon-play { fill: var(--led-green); }
+  
+  .reboot-btn { flex-shrink: 0; height: 28px; width: 100%; padding: 0; background: #4a1111; border: 1px solid #882222; color: #ffaaaa; font-weight: bold; font-size: 12px; cursor: pointer; border-radius: 3px; margin-bottom: 2px; }
+  .reboot-btn:active { transform: translateY(1px); }
+  
+  .control-row { flex-shrink: 0; height: 30px; display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .switch { position: relative; width: 34px; height: 20px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; border-radius: 20px; transition: .4s; border: 1px solid #000; }
+  .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: #888; border-radius: 50%; transition: .4s; }
+  input:checked + .slider { background-color: #113311; }
+  input:checked + .slider:before { transform: translateX(14px); background-color: var(--led-green); }
+  
+  .control-row input[type="number"] { flex: 1; height: 100%; width: 100%; background: #000; border: 1px solid #444; color: var(--crt-green); font-family: inherit; padding: 0 4px; text-align: center; font-size: 13px; box-sizing: border-box; }
+  .unit-label { font-size: 11px; color: #666; white-space: nowrap; }
+  .btn-save { height: 100%; background: #333; border: 1px solid #555; color: #aaa; font-size: 11px; padding: 0 6px; cursor: pointer; border-radius: 3px; box-sizing: border-box; flex-shrink: 0; }
+  
+  .self-test-btn { flex-shrink: 0; width: 100%; padding: 8px; background: #222; border: 1px solid #555; color: #aaa; font-weight: bold; font-size: 12px; letter-spacing: 1px; cursor: pointer; border-radius: 4px; box-sizing: border-box; }
+  .metal-plate { flex-shrink: 0; text-align: center; font-size: 8px; color: #666; background: #2a2a2a; border: 1px solid #111; padding: 2px; border-radius: 2px; }
+  
+  .input-row { flex-shrink: 0; display: flex; gap: 4px; height: 26px; }
+  .input-row input { flex: 1; background: #000; border: 1px solid #444; color: var(--crt-green); padding: 0 4px; font-family: inherit; font-size: 10px; box-sizing: border-box; }
+  .input-row button { background:#333; border:1px solid #555; color:#aaa; padding: 0 8px; cursor:pointer; font-size:10px; font-family:inherit; border-radius: 3px; box-sizing: border-box; }
 </style>
 </head>
 <body>
-<h2>JewAI v5 agent</h2>
-<div><label>Agent URL</label><input id="agentUrl" placeholder="http://127.0.0.1:8666"></div>
-<div><label>Token</label><input id="token" placeholder="from .agent_token"></div>
-<div><label>Status</label><div id="status">not connected</div></div>
-<button id="save">Save + ping</button>
-<button id="pause">Toggle pause</button>
-<script>
-const els = { url: document.getElementById('agentUrl'), token: document.getElementById('token'), status: document.getElementById('status') };
-function setStatus(text, ok) { els.status.textContent = text; els.status.className = ok ? 'ok' : 'err'; }
-async function load() {
-  const s = await chrome.storage.local.get({ agentUrl: '', token: '', paused: false });
-  els.url.value = s.agentUrl || '';
-  els.token.value = s.token || '';
-  setStatus(s.paused ? 'paused' : 'ready', true);
-}
-document.getElementById('save').addEventListener('click', async () => {
-  const agentUrl = els.url.value.trim();
-  const token = els.token.value.trim();
-  await chrome.storage.local.set({ agentUrl, token });
-  try {
-    const r = await fetch(agentUrl + '/ping', { headers: { 'X-Token': token } });
-    const j = await r.json();
-    setStatus('ping: ' + (j.ok ? 'OK v' + j.version : 'FAIL'), !!j.ok);
-  } catch (e) { setStatus('ping ERR: ' + e, false); }
-});
-document.getElementById('pause').addEventListener('click', async () => {
-  const s = await chrome.storage.local.get({ paused: false });
-  await chrome.storage.local.set({ paused: !s.paused });
-  setStatus(!s.paused ? 'paused' : 'ready', true);
-});
-load();
-</script>
+<div class="monitor">
+  <header class="agent-header"><div class="agent-letter" id="agent-letter">?</div><div class="agent-name" id="agent-name">UNKNOWN</div></header>
+  <main class="crt-screen">
+    <div class="crt-header"><span>LOG</span><label class="scroll-lock-label"><input type="checkbox" id="scroll-lock"> LOCK</label></div>
+    <div class="crt-content" id="crt-log"><div>[SYS] Инициализация...</div></div>
+  </main>
+  <footer class="bottom-panel">
+    <div class="panel-left">
+      <div class="walk-sign" id="walk-sign"><svg viewBox="0 0 100 60" class="sign-svg"><text x="50" y="22" text-anchor="middle" class="svg-dont" id="svg-dont">DON'T</text><text x="50" y="50" text-anchor="middle" class="svg-walk" id="svg-walk">WALK</text></svg></div>
+      <div class="led-row"><span>CDP</span><div class="led-group"><div class="led red" id="led-cdp"></div></div></div>
+      <div class="led-row"><span>WATCHDOG</span><div class="led-group"><div class="led red" id="led-wd"></div></div></div>
+      <div class="led-row"><span>RECOVERY</span><div class="led-group"><div class="led red" id="led-rec"></div></div></div>
+    </div>
+    <div class="panel-right">
+      <button class="pause-btn" id="btn-pause"><svg viewBox="0 0 40 20"><rect x="8" y="2" width="6" height="16" rx="1" class="icon-pause" /><rect x="16" y="2" width="6" height="16" rx="1" class="icon-pause" /><polygon points="26,2 36,10 26,18" class="icon-play" /></svg></button>
+      <button class="reboot-btn" id="btn-reboot">REBOOT</button>
+      <div class="control-row"><label class="switch"><input type="checkbox" id="sw-wd"><span class="slider"></span></label><span class="unit-label">(сек)</span><input type="number" id="inp-wd" value="300"><button class="btn-save" id="save-wd">SAVE</button></div>
+      <div class="control-row"><label class="switch"><input type="checkbox" id="sw-rec"><span class="slider"></span></label><span class="unit-label">(сек)</span><input type="number" id="inp-rec" value="60"><button class="btn-save" id="save-rec">SAVE</button></div>
+    </div>
+  </footer>
+  <button class="self-test-btn" id="btn-selftest">SELF-TEST</button>
+  <div class="input-row"><input id="agentUrl" placeholder="http://127.0.0.1:8666"><button id="btnSaveUrl">PING</button></div>
+  <footer class="metal-plate">JEWAI v5 // REV 0.1.0-dev</footer>
+</div>
+<script src="app.js"></script>
 </body>
 </html>
