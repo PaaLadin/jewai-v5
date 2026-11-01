@@ -156,3 +156,19 @@ async function typeAndSend(text) {
 console.log('[jewai-v5-deepseek] content script loaded v' + V);
 setInterval(scan, POLL_MS);
 window.addEventListener('load', () => setTimeout(scan, 800));
+// --- checkStuck v5 ---
+function checkStuck() {
+  if (window.location.href.includes('/a/chat/s/')) {
+    const bodyText = document.body.innerText || '';
+    if (bodyText.includes('Server is temporarily unavailable') || bodyText.includes('This model is currently unavailable')) {
+      const buttons = Array.from(document.querySelectorAll('button, div[role="button"]'));
+      const retryBtn = buttons.find(b => b.innerText && (b.innerText.includes('Continue') || b.innerText.includes('Retry')));
+      if (retryBtn && !retryBtn.dataset.clicked) {
+        retryBtn.dataset.clicked = 'true';
+        retryBtn.click();
+        console.log('[jewai-v5] Clicked Retry/Continue');
+      }
+    }
+  }
+}
+setInterval(checkStuck, 2000);

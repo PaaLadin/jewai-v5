@@ -568,3 +568,12 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
   - Проверить локальное время.
   - Если время с 22:00 до 08:00 — ОТМЕНИТЬ голосовой вызов (не будить).
   - Если время с 08:00 до 22:00 — поднять громкость до 15 и ВЫЗВАТЬ.
+
+## 12B: Extension UI (TODO)
+- [ ] Добавить индикатор "content no answer" в боковую панель (сейчас есть только CDP и health.py).
+- [ ] Портировать `checkStuck` (авто-клик Continue/Retry/Regenerate) из v4 в `content_deepseek.js`.
+\n- [ ] Вывод версии и порта агента при инициализации панели (BIOS-like check).
+- [x] Портирован checkStuck в content_deepseek.js (авто-клик Continue/Retry).
+- [x] Добавлен BIOS-лог при старте панели (вывод версии и порта).
+- [x] Исправлено отображение имени агента (читается из chrome.storage.local).
+- [x] Кнопка PING теперь выводит результат в лог.
