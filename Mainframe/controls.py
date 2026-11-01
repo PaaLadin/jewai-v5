@@ -121,3 +121,13 @@ def roadmap_set(cfg: Config, body: dict) -> dict:
     p.parent.mkdir(parents=True, exist_ok=True)
     _write_json(p, state)
     return {"ok": True, "file": str(p), "keys": len(state)}
+def pause_get(cfg, ch: str) -> dict:
+    p = _state_path(cfg, "pause_" + ch.upper())
+    d = _read_json(p, {})
+    return {"ok": True, "channel": ch.upper(), "on": bool(d.get("on")), "ts": d.get("ts")}
+
+def pause_set(cfg, ch: str, on: bool) -> dict:
+    p = _state_path(cfg, "pause_" + ch.upper())
+    d = {"on": bool(on), "ts": time.time()}
+    _write_json(p, d)
+    return {"ok": True, "channel": ch.upper(), "on": bool(on), "ts": d["ts"]}

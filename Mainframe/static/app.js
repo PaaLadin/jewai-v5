@@ -1,145 +1,145 @@
-// JewAI v5 mainframe - dynamic by config.letters
-const API = '';
 let state = { channels: {}, letters: [] };
-let chatData = [];
+let currentLetter = 'A';
 
 async function fetchJSON(path, opts) {
-  const r = await fetch(API + path, opts);
+  const r = await fetch(path, opts);
   return await r.json();
 }
 
-function renderTabs() {
-  document.querySelectorAll('nav button').forEach(b => {
-    b.onclick = () => {
-      document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      document.querySelectorAll('main .tab').forEach(t => t.classList.add('hidden'));
-      document.getElementById('tab-' + b.dataset.tab).classList.remove('hidden');
-      if (b.dataset.tab === 'chat') loadChat();
-      if (b.dataset.tab === 'roadmap') loadProjects();
-    };
-  });
-}
-
-function blockCard(L, ch) {
-  const agentOn = ch.agent_alive;
-  const cdpOn = ch.cdp_alive;
-  const cmds = ch.cmds_from_start ?? '?';
-  const lastId = ch.lastId ?? '(empty)';
-  const agentDot = `<span class="dot ${agentOn ? 'on' : 'off'}"></span>`;
-  const cdpDot = `<span class="dot ${cdpOn ? 'on' : 'off'}"></span>`;
-  return `
-    <div class="card" id="card-${L}">
-      <h3>${L} · ${ch.name || L}</h3>
-      <div class="kv">
-        <span class="k">agent</span><span>${agentDot} :${ch.agent_port} ${agentOn?'UP':'DOWN'}</span>
-        <span class="k">cdp</span><span>${cdpDot} :${ch.cdp_port} ${cdpOn?'UP':'DOWN'}</span>
-        <span class="k">lastId</span><span>${lastId}</span>
-        <span class="k">cmds</span><span>${cmds}</span>
-      </div>
-      <div class="btn-row">
-        <button onclick="ctl('boot','agent:${L}')">START</button>
-        <button onclick="ctl('stop','agent:${L}')">STOP</button>
-        <button onclick="ctl('restart','agent:${L}')">REBOOT</button>
-        <button onclick="ctl('boot','chrome:${L}')">CHROME</button>
-      </div>
-    </div>`;
-}
-
-function renderLaunchpad() {
-  const letters = state.letters || [];
-  const cards = letters.map(L => blockCard(L, state.channels[L] || {})).join('');
-  document.getElementById('lp-grid').innerHTML = cards;
-}
-
-function renderMnemonic() {
-  const letters = state.letters || [];
-  const dots = letters.map(L => {
-    const ch = state.channels[L] || {};
-    const ok = ch.agent_alive && ch.cdp_alive;
-    return `<div class="card" style="text-align:center;">
-      <div class="dot ${ok?'on':'off'}" style="width:20px;height:20px;"></div>
-      <h3 style="margin-top:6px;">${L}</h3>
-      <div>${ch.name||L}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('mnemo-grid').innerHTML = dots;
+function crtLog(msg) {
+  const log = document.getElementById('crt-log');
+  const t = new Date().toLocaleTimeString();
+  log.innerHTML += `\n[${t}] ${msg}`;
+  log.scrollTop = log.scrollHeight;
 }
 
 async function refresh() {
   try {
     const j = await fetchJSON('/api/status');
     state.channels = j.channels || {};
-    const letters = Object.keys(state.channels).sort();
-    state.letters = letters;
-    renderLaunchpad();
-    renderMnemonic();
-    document.getElementById('status-line').textContent =
-      `${letters.length} agents · ${new Date().toLocaleTimeString()}`;
+    state.letters = Object.keys(state.channels).sort();
+    if (!state.letters.includes(currentLetter) && state.letters.length > 0) {
+      currentLetter = state.letters[0];
+    }
+    renderCockpit();
+    document.getElementById('crt-time').textContent = new Date().toLocaleTimeString();
   } catch (e) {
-    document.getElementById('status-line').textContent = 'STATUS ERR: ' + e;
+    crtLog('STATUS ERR: ' + e);
   }
 }
 
+function renderCockpit() {
+  const ch = state.channels[currentLetter] || {};
+  document.getElementById('portrait-L').textContent = currentLetter;
+  document.getElementById('portrait-name-L').textContent = ch.name || 'UNKNOWN';
+  setLED('led-alive', ch.agent);
+  setLED('led-cdp', ch.content);
+  setLED('led-wd', ch.watchdog);
+  document.getElementById('val-cmds').textContent = ch.cmds_from_start !== null ? ch.cmds_from_start : '---';
+  document.getElementById('crt-ch').textContent = currentLetter;
+
+  const log = document.getElementById('crt-log');
+  log.innerHTML = `> CHANNEL: ${currentLetter} (${ch.name || '?'})\n` +
+                  `> LAST ID: ${ch.lastId || '(none)'}\n` +
+                  `> CMDS:    ${ch.cmds_from_start ?? '?'}\n` +
+                  `> ALIVE:   ${ch.agent ? 'YES' : 'NO'}\n` +
+                  `> CDP:     ${ch.content ? 'YES' : 'NO'}\n` +
+                  `> WD:      ${ch.watchdog ? 'ON' : 'OFF'}\n` +
+                  `> REC:     ${ch.recovery ? 'ON' : 'OFF'}\n` +
+                  `--------------------------------\n` +
+                  `WAITING FOR TELEMETRY...\n`;
+}
+
+function setLED(id, isOn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = isOn ? 'led on' : 'led off';
+}
+
 async function ctl(action, target) {
+  crtLog(`> EXEC: ${action} ${target}`);
   try {
     const j = await fetchJSON('/api/' + action, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({target})
+      body: JSON.stringify({target, channel: currentLetter})
     });
-    console.log(action, target, j);
-    setTimeout(refresh, 500);
+    crtLog(`> RESULT: ${JSON.stringify(j).substring(0, 80)}`);
+    setTimeout(refresh, 1000);
   } catch (e) {
-    alert(action + ' ' + target + ': ' + e);
+    crtLog(`> FAIL: ${e}`);
   }
 }
 
-async function loadChat() {
+async function pauseChannel() {
+  crtLog(`> EXEC: PAUSE ${currentLetter}`);
   try {
-    const j = await fetchJSON('/api/messages');
-    const msgs = j.messages || [];
-    const box = document.getElementById('chat-box');
-    box.innerHTML = msgs.map(m => `<div class="chat-msg"><span class="from">${m.from||'?'}</span> → ${m.to||'ALL'}: ${m.text||''}</div>`).join('');
-    box.scrollTop = box.scrollHeight;
-  } catch (e) { console.error(e); }
+    const j = await fetchJSON('/api/pause', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({channel: currentLetter, on: true})
+    });
+    crtLog(`> RESULT: ${JSON.stringify(j).substring(0, 80)}`);
+    await fetchJSON('/api/send', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({from: 'operator', to: currentLetter, text: '[SYS] PAUSE ON. Оператор приостановил канал.'})
+    });
+    crtLog('> PAUSE ON. Agent notified.');
+  } catch (e) {
+    crtLog(`> PAUSE FAIL: ${e}`);
+  }
 }
 
-async function sendChat() {
-  const inp = document.getElementById('chat-input');
-  const text = inp.value.trim();
-  if (!text) return;
+async function resumeChannel() {
+  crtLog(`> EXEC: RESUME ${currentLetter}`);
   try {
-    await fetchJSON('/api/send', {method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({from: 'operator', to: 'ALL', text})});
-    inp.value = '';
-    loadChat();
-  } catch (e) { alert('send failed: ' + e); }
+    const j = await fetchJSON('/api/resume', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({channel: currentLetter})
+    });
+    crtLog(`> RESULT: ${JSON.stringify(j).substring(0, 80)}`);
+    await fetchJSON('/api/send', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({from: 'operator', to: currentLetter, text: '[SYS] PAUSE OFF. Работа продолжается.'})
+    });
+    crtLog('> RESUME OK.');
+  } catch (e) {
+    crtLog(`> RESUME FAIL: ${e}`);
+  }
 }
 
-async function loadProjects() {
+async function runDiagnose() {
+  crtLog('> EXEC: DIAGNOSE');
   try {
-    const j = await fetchJSON('/api/projects');
-    const list = j.projects || [];
-    document.getElementById('projects-list').innerHTML = list.map(p =>
-      `<div class="card"><h3>${p.name}</h3>
-        <div class="btn-row"><a href="${p.url||'#'}" target="_blank" style="color:#33ff33;">Открыть roadmap</a></div>
-      </div>`).join('') || '<div class="stub">Проектов нет</div>';
-  } catch (e) { console.error(e); }
-}
-
-function clock() {
-  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+    const j = await fetchJSON('/api/diagnose', { method: 'POST' });
+    crtLog(`> DIAGNOSE: ${JSON.stringify(j).substring(0, 200)}`);
+  } catch (e) {
+    crtLog(`> DIAGNOSE FAIL: ${e}`);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderTabs();
-  clock();
-  setInterval(clock, 1000);
+  document.getElementById('btn-start').onclick = () => ctl('boot', `agent:${currentLetter}`);
+  document.getElementById('btn-stop').onclick = () => ctl('stop', `agent:${currentLetter}`);
+  document.getElementById('btn-reboot').onclick = () => ctl('restart', `agent:${currentLetter}`);
+  document.getElementById('btn-chrome').onclick = () => ctl('boot', `chrome:${currentLetter}`);
+  document.getElementById('btn-pause').onclick = pauseChannel;
+  document.getElementById('btn-resume').onclick = resumeChannel;
+  document.getElementById('btn-reload').onclick = () => location.reload();
+  document.getElementById('btn-selftest').onclick = runDiagnose;
+
+  document.getElementById('portrait-L').onclick = () => {
+    if (state.letters.length === 0) return;
+    let idx = state.letters.indexOf(currentLetter);
+    idx = (idx + 1) % state.letters.length;
+    currentLetter = state.letters[idx];
+    renderCockpit();
+    crtLog(`> SWITCHED TO CHANNEL ${currentLetter}`);
+  };
+
   refresh();
   setInterval(refresh, 5000);
-  document.getElementById('chat-send').onclick = sendChat;
-  document.getElementById('chat-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') sendChat();
-  });
 });

@@ -51,18 +51,10 @@ def _probe_channel(ch) -> dict:
 
 
 def status(cfg: Config, path: str, body: dict) -> dict:
-    from concurrent.futures import ThreadPoolExecutor
-    chans: dict[str, Any] = {}
-    with ThreadPoolExecutor(max_workers=6) as ex:
-        futures = {letter: ex.submit(_probe_channel, ch) for letter, ch in cfg.channels.items()}
-        for letter, fut in futures.items():
-            try:
-                chans[letter] = fut.result(timeout=5)
-            except Exception:
-                chans[letter] = {"name": "", "agent_port": 0, "cdp_port": 0,
-                                 "agent_alive": False, "cdp_alive": False,
-                                 "error": "timeout"}
-    return {"ok": True, "ts": time.time(), "channels": chans,
+    from Mainframe import health
+    h = health.collect(cfg)
+    return {"ok": True, "ts": time.time(), "channels": h["matrix"],
+            "alerts": h.get("alerts", []),
             "root": str(cfg.root), "version": cfg.version}
 
 

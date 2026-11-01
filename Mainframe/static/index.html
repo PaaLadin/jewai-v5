@@ -3,46 +3,73 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JewAI v5 // MAINFRAME</title>
+<title>JewAI v5 // CONTROL PANEL</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header>
-  <h1>JewAI v5 // MAINFRAME</h1>
-  <div><span id="status-line">loading...</span> · <span id="clock"></span></div>
-</header>
-<nav>
-  <button data-tab="launchpad" class="active">ПУЛЬТ</button>
-  <button data-tab="mnemo">МНЕМОСХЕМА</button>
-  <button data-tab="chat">ЧАТ</button>
-  <button data-tab="roadmap">ПРОЕКТЫ</button>
-  <button data-tab="llm">LLM</button>
-</nav>
-<main>
-  <div id="tab-launchpad" class="tab">
-    <div class="grid" id="lp-grid"></div>
-  </div>
-  <div id="tab-mnemo" class="tab hidden">
-    <div class="grid" id="mnemo-grid"></div>
-  </div>
-  <div id="tab-chat" class="tab hidden">
-    <div class="chat-box" id="chat-box"></div>
-    <div class="chat-input">
-      <input id="chat-input" placeholder="Сообщение в общий чат (broadcast)">
-      <button id="chat-send">SEND</button>
+
+<div class="cockpit">
+  <!-- ЛЕВАЯ ПАНЕЛЬ: ИНДИКАТОРЫ -->
+  <aside class="panel-left">
+    <div class="portrait-frame">
+      <div class="portrait-status" id="portrait-L">A</div>
+      <div class="portrait-name" id="portrait-name-L">AGENT</div>
     </div>
-  </div>
-  <div id="tab-roadmap" class="tab hidden">
-    <div class="grid" id="projects-list"></div>
-  </div>
-  <div id="tab-llm" class="tab hidden">
-    <div class="stub">
-      <h2>LLM</h2>
-      <p>Тут будет ЛЛМ.</p>
-      <p style="color:#666; font-size:11px;">Ручной старт из панели (TODO).</p>
+    <div class="gauges">
+      <div class="gauge-group">
+        <span class="label">ALIVE</span>
+        <div class="led" id="led-alive"></div>
+      </div>
+      <div class="gauge-group">
+        <span class="label">CDP</span>
+        <div class="led" id="led-cdp"></div>
+      </div>
+      <div class="gauge-group">
+        <span class="label">WATCHDOG</span>
+        <div class="led" id="led-wd"></div>
+      </div>
+      <div class="gauge-group">
+        <span class="label">CMDS</span>
+        <div class="gauge-value" id="val-cmds">0</div>
+      </div>
     </div>
-  </div>
-</main>
+  </aside>
+
+  <!-- ЦЕНТР: CRT-МОНИТОР -->
+  <main class="panel-center">
+    <div class="crt-screen">
+      <div class="crt-header">
+        <span>JEWAI BRIDGE // CHANNEL <span id="crt-ch">A</span></span>
+        <span id="crt-time">00:00:00</span>
+      </div>
+      <div class="crt-content" id="crt-log">
+        <!-- Сюда рендерится Ledger и логи -->
+      </div>
+      <div class="crt-footer">
+        <button id="btn-selftest">DIAGNOSE</button>
+        <button id="btn-ledger-full">EXPAND LEDGER</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ПРАВАЯ ПАНЕЛЬ: ТУМБЛЕРЫ -->
+  <aside class="panel-right">
+    <div class="switches">
+      <button class="switch" id="btn-start">START</button>
+      <button class="switch" id="btn-stop">STOP</button>
+      <button class="switch" id="btn-reboot">REBOOT</button>
+    </div>
+    <div class="switches">
+      <button class="switch" id="btn-pause">PAUSE</button>
+      <button class="switch" id="btn-resume">RESUME</button>
+    </div>
+    <div class="switches">
+      <button class="switch" id="btn-chrome">CHROME</button>
+      <button class="switch" id="btn-reload">RELOAD F5</button>
+    </div>
+  </aside>
+</div>
+
 <script src="/app.js"></script>
 </body>
 </html>
