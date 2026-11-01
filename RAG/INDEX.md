@@ -54,3 +54,5 @@
 
 
 - `procedures/PANEL.md` - Pip-Boy UI: структура, API, логика ламп.
+
+- `procedures/VOICE_CALL.md` - голосовой вызов (mute, громкость, ночь).

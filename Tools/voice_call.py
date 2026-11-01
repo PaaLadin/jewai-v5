@@ -1,9 +1,9 @@
-"""Tools/voice_call.py - голосовой вызов оператора с защитой (громкость/ночь)."""
+"""Tools/voice_call.py - голосовой вызов оператора (снимает mute, поднимает громкость)."""
 import subprocess
 import time
 import sys
 
-PS_GET_VOLUME = """
+PS_SCRIPT = """
 Add-Type -TypeDefinition @'
 using System.Runtime.InteropServices;
 [Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -13,6 +13,12 @@ interface IAudioEndpointVolume {
   int SetMasterVolumeLevelScalar(float fLevel, System.Guid pguidEventContext);
   int GetMasterVolumeLevel(out float pfLevelDB);
   int GetMasterVolumeLevelScalar(out float pfLevel);
+  int SetChannelVolumeLevel(uint nChannel, float fLevelDB, System.Guid pguidEventContext);
+  int SetChannelVolumeLevelScalar(uint nChannel, float fLevel, System.Guid pguidEventContext);
+  int GetChannelVolumeLevel(uint nChannel, out float pfLevelDB);
+  int GetChannelVolumeLevelScalar(uint nChannel, out float pfLevel);
+  int SetMute([MarshalAs(UnmanagedType.Bool)] bool bMute, System.Guid pguidEventContext);
+  int GetMute(out bool pbMute);
 }
 [Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 interface IMMDevice {
@@ -35,6 +41,7 @@ public class Audio {
   }
   public static float GetVolume() { float v; Vol().GetMasterVolumeLevelScalar(out v); return v * 100; }
   public static void SetVolume(float v) { Vol().SetMasterVolumeLevelScalar(v / 100f, System.Guid.Empty); }
+  public static void Unmute() { Vol().SetMute(false, System.Guid.Empty); }
 }
 '@
 """
@@ -44,14 +51,21 @@ def run_ps(script):
 
 def get_volume():
     try:
-        r = run_ps(PS_GET_VOLUME + "\n[Audio]::GetVolume()")
+        r = run_ps(PS_SCRIPT + "\n[Audio]::GetVolume()")
         return int(float(r.stdout.strip()))
     except Exception:
         return -1
 
 def set_volume(val):
     try:
-        run_ps(PS_GET_VOLUME + f"\n[Audio]::SetVolume({val})")
+        run_ps(PS_SCRIPT + f"\n[Audio]::SetVolume({val})")
+        return True
+    except Exception:
+        return False
+
+def unmute():
+    try:
+        run_ps(PS_SCRIPT + "\n[Audio]::Unmute()")
         return True
     except Exception:
         return False
@@ -70,6 +84,10 @@ def speak(text):
         return False
 
 def call_operator(message="Оператор, я закончил. Жду вас."):
+    print("[voice_call] Unmuting system...")
+    unmute()
+    time.sleep(0.5)
+
     vol = get_volume()
     hour = time.localtime().tm_hour
     night = (hour >= 22) or (hour < 8)
