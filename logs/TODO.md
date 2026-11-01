@@ -534,3 +534,29 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - DeepSeek redirect chat.deepseek.com -> www.deepseek.com/en — behavior for unauth, login manually.
 - Panel v5 Mainframe: TODO list (agree with operator).
 - Git push: 25 commits ahead of PaaLadin/jewai-v5.
+
+
+## Релизная подготовка v0.1.0 (от Алисы)
+
+### R1. Легальность
+- [ ] 1.1. Создать LICENSE (MIT/Apache 2.0).
+- [ ] 1.2. Проверить, что правообладатель — Оператор.
+
+### R2. Сборка чужим человеком
+- [ ] 2.1. Собрать requirements.txt (по импортам).
+- [ ] 2.2. README: Quick start (venv -> pip -> install.bat).
+- [ ] 2.3. README: заменить C:/JewAI/ на config.root().
+- [ ] 2.4. Создать config.example.json, а реальный — в .gitignore.
+
+### R3. Версионирование
+- [ ] 3.1. CHANGELOG.md (Keep a Changelog).
+- [ ] 3.2. git tag v0.1.0-dev + GitHub Release.
+
+### R4. Пуш
+- [ ] 4.1. git pull --rebase + push.
+- [ ] 4.2. Скан секретов по git log -p.
+
+### R5. Техдолг
+- [ ] 5.1. Аутентичность источника блока (консилиум).
+- [ ] 5.2. Живой CDP-цикл Rebirth (тест).
+- [ ] 5.3. Тест Watchdog-guard на залипание.

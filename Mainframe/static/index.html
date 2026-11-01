@@ -2,74 +2,94 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JewAI v5 // CONTROL PANEL</title>
+<title>JewAI v5 // CONTROL</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<div class="monitor">
+  <header class="agent-header" title="Текущий агент">
+    <div class="agent-letter" id="agent-letter">A</div>
+    <div class="agent-name" id="agent-name">UNKNOWN</div>
+  </header>
 
-<div class="cockpit">
-  <!-- ЛЕВАЯ ПАНЕЛЬ: ИНДИКАТОРЫ -->
-  <aside class="panel-left">
-    <div class="portrait-frame">
-      <div class="portrait-status" id="portrait-L">A</div>
-      <div class="portrait-name" id="portrait-name-L">AGENT</div>
+  <main class="crt-screen">
+    <div class="crt-header">
+      <span>LOG</span>
+      <label class="scroll-lock-label" title="Остановить автопрокрутку">
+        <input type="checkbox" id="scroll-lock"> SCROLL LOCK
+      </label>
     </div>
-    <div class="gauges">
-      <div class="gauge-group">
-        <span class="label">ALIVE</span>
-        <div class="led" id="led-alive"></div>
-      </div>
-      <div class="gauge-group">
-        <span class="label">CDP</span>
-        <div class="led" id="led-cdp"></div>
-      </div>
-      <div class="gauge-group">
-        <span class="label">WATCHDOG</span>
-        <div class="led" id="led-wd"></div>
-      </div>
-      <div class="gauge-group">
-        <span class="label">CMDS</span>
-        <div class="gauge-value" id="val-cmds">0</div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- ЦЕНТР: CRT-МОНИТОР -->
-  <main class="panel-center">
-    <div class="crt-screen">
-      <div class="crt-header">
-        <span>JEWAI BRIDGE // CHANNEL <span id="crt-ch">A</span></span>
-        <span id="crt-time">00:00:00</span>
-      </div>
-      <div class="crt-content" id="crt-log">
-        <!-- Сюда рендерится Ledger и логи -->
-      </div>
-      <div class="crt-footer">
-        <button id="btn-selftest">DIAGNOSE</button>
-        <button id="btn-ledger-full">EXPAND LEDGER</button>
-      </div>
+    <div class="crt-content" id="crt-log">
+      <div class="log-line">[SYS] Ждем подключения...</div>
     </div>
   </main>
 
-  <!-- ПРАВАЯ ПАНЕЛЬ: ТУМБЛЕРЫ -->
-  <aside class="panel-right">
-    <div class="switches">
-      <button class="switch" id="btn-start">START</button>
-      <button class="switch" id="btn-stop">STOP</button>
-      <button class="switch" id="btn-reboot">REBOOT</button>
+  <footer class="bottom-panel">
+    <div class="panel-left">
+      <div class="walk-sign" id="walk-sign" title="Нажмите для паузы" style="cursor: pointer;">
+        <svg viewBox="0 0 100 60" class="sign-svg">
+          <text x="50" y="22" text-anchor="middle" class="svg-dont" id="svg-dont">DON'T</text>
+          <text x="50" y="50" text-anchor="middle" class="svg-walk" id="svg-walk">WALK</text>
+        </svg>
+      </div>
+      
+      <div class="led-row">
+        <span class="led-label">CDP (Chrome)</span>
+        <div class="led-group">
+          <div class="led red" id="led-cdp-r"></div>
+          <div class="led yellow" id="led-cdp-y"></div>
+          <div class="led green" id="led-cdp-g"></div>
+        </div>
+      </div>
+      <div class="led-row">
+        <span class="led-label">WATCHDOG</span>
+        <div class="led-group">
+          <div class="led red" id="led-wd-r"></div>
+          <div class="led yellow" id="led-wd-y"></div>
+          <div class="led green" id="led-wd-g"></div>
+        </div>
+      </div>
+      <div class="led-row">
+        <span class="led-label">RECOVERY</span>
+        <div class="led-group">
+          <div class="led red" id="led-rec-r"></div>
+          <div class="led yellow" id="led-rec-y"></div>
+          <div class="led green" id="led-rec-g"></div>
+        </div>
+      </div>
     </div>
-    <div class="switches">
-      <button class="switch" id="btn-pause">PAUSE</button>
-      <button class="switch" id="btn-resume">RESUME</button>
-    </div>
-    <div class="switches">
-      <button class="switch" id="btn-chrome">CHROME</button>
-      <button class="switch" id="btn-reload">RELOAD F5</button>
-    </div>
-  </aside>
-</div>
 
+    <div class="panel-right">
+      <button class="pause-btn" id="btn-pause" title="Пауза (СТОП / ПРОДОЛЖАЙ)">
+        <svg viewBox="0 0 40 20" class="pause-icon">
+          <rect x="8" y="2" width="6" height="16" rx="1" class="icon-pause" />
+          <rect x="16" y="2" width="6" height="16" rx="1" class="icon-pause" />
+          <polygon points="26,2 36,10 26,18" class="icon-play" />
+        </svg>
+      </button>
+      
+      <div class="control-row reboot-row">
+        <button class="reboot-btn" id="btn-reboot" title="Перезапустить Chrome и Агента">REBOOT (CDP+AGENT)</button>
+      </div>
+
+      <div class="control-row">
+        <label class="switch"><input type="checkbox" id="sw-wd"><span class="slider"></span></label>
+        <input type="number" id="inp-wd" value="300" title="Watchdog (сек)">
+        <button class="btn-save" id="save-wd" title="Сохранить">SAVE</button>
+      </div>
+
+      <div class="control-row">
+        <label class="switch"><input type="checkbox" id="sw-rec"><span class="slider"></span></label>
+        <input type="number" id="inp-rec" value="60" title="Recovery (сек)">
+        <button class="btn-save" id="save-rec" title="Сохранить">SAVE</button>
+      </div>
+    </div>
+  </footer>
+
+  <button class="self-test-btn" id="btn-selftest" title="Запустить диагностику">SELF-TEST</button>
+
+  <footer class="metal-plate" title="Версия">JEWAI v5 // REV 0.1.0-dev</footer>
+</div>
 <script src="/app.js"></script>
 </body>
 </html>

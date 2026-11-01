@@ -1146,3 +1146,8 @@ Watchdog D: ON (pid 17360). Recovery D: ON (pid 7444).
 - push_storage 3-retry, install.bat guard, launchpad per-channel fix.
 - 21/21 tests, tree clean, 25 commits ahead.
 - Open: storage=False, panel TODO (operator), git push.
+
+
+## 2026-11-01 - Панель управления
+- Внедрен Pip-Boy UI (светофор, тумблеры, логи).
+- Добавлены роуты паузы и диагностики.

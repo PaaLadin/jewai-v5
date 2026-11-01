@@ -222,3 +222,21 @@ Chrome C (9124) live. Mainframe 8670 live (наш pid). Watchdog D ON.
 - Install STRICTLY from C:\jewai\install.bat into NEW folder.
 - Panel v5 Mainframe: TODO (agree with operator).
 - Git push: 25 commits ahead of PaaLadin/jewai-v5.
+
+
+---
+
+## Релизная подготовка v0.1.0 (Внешний аудит Алисы)
+
+**Источник:** канал F (из-за стены).
+**Статус:** в плане, выполнять по фазам (не всё сразу).
+**Правило:** один ход — наш, один — оператора.
+
+- **R1: Легальность.** Создать LICENSE (MIT или Apache 2.0). Указать Оператора как правообладателя.
+- **R2: Сборка чужим человеком.** requirements.txt (только реальные импорты). README: Quick start (venv -> pip install -> install.bat). Заменить хардкод путей на config.root(). Создать config.example.json.
+- **R3: Версионирование.** CHANGELOG.md из JOURNAL. git tag v0.1.0-dev. Первый GitHub Release.
+- **R4: Пуш.** git pull --rebase -> push. Финальный скан секретов (git log -p).
+- **R5: Техдолг безопасности.**
+  - 5.1. Аутентичность источника блока (префикс-канал). *Проектное решение, требует консилиума.*
+  - 5.2. Живой CDP-цикл Rebirth на тестовом канале (create_chat -> send_prompt -> verify -> advance).
+  - 5.3. Тест Watchdog-guard (залипание DOM -> авто-сброс).

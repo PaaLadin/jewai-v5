@@ -1,219 +1,87 @@
 :root {
-  --bg: #2b2b2b;
-  --metal-light: #555;
-  --metal-dark: #1a1a1a;
-  --crt-bg: #051005;
-  --crt-green: #33ff33;
-  --crt-dark-green: #0a2a0a;
-  --led-red: #ff2222;
-  --led-green: #22ff22;
-  --led-grey: #444;
-  --btn-bg: #333;
-  --btn-border: #666;
-  --btn-text: #aaa;
+    --metal-dark: #222; --metal-light: #444; --crt-green: #33ff33;
+    --led-red: #ff2222; --led-green: #22ff22; --led-yellow: #ffcc00;
+    --led-off: #1a1a1a; --text-dim: #555;
 }
+body { margin: 0; background: #111; color: #ccc; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; }
+.monitor { width: 480px; background: var(--metal-dark); border: 8px solid var(--metal-light); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px #000; display: flex; flex-direction: column; padding: 10px; gap: 10px; }
 
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg);
-  color: #ccc;
-  font-family: 'Courier New', Courier, monospace;
-  user-select: none;
-  overflow: hidden;
-}
+/* ВЕРХ */
+.agent-header { background: #000; border: 2px solid #333; padding: 5px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.agent-letter { font-size: 48px; font-weight: bold; color: var(--crt-green); text-shadow: 0 0 10px var(--crt-green); }
+.agent-name { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 2px; }
 
-.cockpit {
-  display: grid;
-  grid-template-columns: 200px 1fr 200px;
-  height: 100vh;
-  background: linear-gradient(135deg, #222 0%, #333 50%, #111 100%);
-  padding: 10px;
-  gap: 10px;
-  box-sizing: border-box;
-}
+/* CRT */
+.crt-screen { background: #051005; border: 4px solid #111; border-radius: 8px; height: 180px; position: relative; display: flex; flex-direction: column; box-shadow: inset 0 0 30px rgba(0,255,0,0.1); overflow: hidden; }
+.crt-screen::before { content: " "; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); background-size: 100% 4px; z-index: 2; pointer-events: none; }
+.crt-header { display: flex; justify-content: space-between; padding: 2px 8px; font-size: 10px; color: var(--crt-green); border-bottom: 1px solid #222; z-index: 3; background: #051005;}
+.crt-content { flex: 1; padding: 8px; font-size: 12px; line-height: 1.4; color: var(--crt-green); text-shadow: 0 0 2px var(--crt-green); overflow-y: auto; white-space: pre-wrap; z-index: 1; }
 
-/* ЛЕВАЯ ПАНЕЛЬ (ДАТЧИКИ) */
-.panel-left {
-  background: var(--metal-dark);
-  border: 3px solid var(--metal-light);
-  border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  box-shadow: inset 0 0 20px #000;
-}
-
-.portrait-frame {
-  border: 2px solid #444;
-  background: #111;
-  padding: 10px;
-  text-align: center;
-  border-radius: 4px;
-}
-.portrait-status {
-  font-size: 48px;
-  color: var(--crt-green);
-  font-weight: bold;
-  text-shadow: 0 0 10px var(--crt-green);
-}
-.portrait-name {
-  font-size: 12px;
-  color: #888;
-}
-
-.gauges {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.gauge-group {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #333;
-  padding-bottom: 5px;
-}
-.gauge-group .label {
-  font-size: 11px;
-  color: #888;
-}
-.led {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--led-grey);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-}
-.led.on { background: var(--led-green); box-shadow: 0 0 10px var(--led-green); }
-.led.off { background: var(--led-red); box-shadow: 0 0 10px var(--led-red); }
-.gauge-value {
-  font-size: 18px;
-  color: var(--crt-green);
-  font-family: monospace;
-}
-
-/* ЦЕНТР (CRT) */
-.panel-center {
-  background: var(--metal-dark);
-  border: 3px solid var(--metal-light);
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: inset 0 0 20px #000;
-  display: flex;
-}
-
-.crt-screen {
-  flex: 1;
-  background: var(--crt-bg);
-  border: 4px solid #111;
-  border-radius: 10px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: inset 0 0 40px rgba(0,255,0,0.1);
-}
-
-/* Скан-линии */
-.crt-screen::before {
-  content: " ";
-  display: block;
-  position: absolute;
-  top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-  z-index: 2;
-  background-size: 100% 2px, 3px 100%;
-  pointer-events: none;
-}
-
-.crt-header, .crt-footer {
-  display: flex;
-  justify-content: space-between;
-  padding: 5px 10px;
-  background: var(--crt-dark-green);
-  color: var(--crt-green);
-  font-size: 12px;
-  border-bottom: 1px solid var(--crt-green);
-}
-.crt-footer { border-top: 1px solid var(--crt-green); border-bottom: none; }
-
-.crt-content {
-  flex: 1;
-  padding: 10px;
-  color: var(--crt-green);
-  font-size: 13px;
-  line-height: 1.4;
-  overflow-y: auto;
-  text-shadow: 0 0 2px var(--crt-green);
-  z-index: 1;
-  white-space: pre-wrap;
-}
-
-/* ПРАВАЯ ПАНЕЛЬ (ТУМБЛЕРЫ) */
-.panel-right {
-  background: var(--metal-dark);
-  border: 3px solid var(--metal-light);
-  border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  box-shadow: inset 0 0 20px #000;
-}
-
-.switches {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.switch {
-  background: var(--btn-bg);
-  border: 2px solid var(--btn-border);
-  border-radius: 6px;
-  color: var(--btn-text);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: bold;
-  padding: 15px 10px;
-  cursor: pointer;
-  text-transform: uppercase;
-  box-shadow: 0 4px 0 #111, inset 0 1px 0 rgba(255,255,255,0.2);
-  transition: all 0.1s;
-  position: relative;
-}
-.switch:active {
-  box-shadow: 0 1px 0 #111, inset 0 1px 0 rgba(255,255,255,0.2);
-  transform: translateY(3px);
-}
-.switch:hover {
-  background: #444;
-}
-/* Эффект как на скрине (зеленая кнопка) */
-.switch.active {
-  background: #33aa33;
-  border-color: #55ff55;
-  color: #000;
-  box-shadow: 0 4px 0 #114411, inset 0 1px 0 rgba(255,255,255,0.5);
-}
-/* Кнопки внутри CRT */
-.crt-footer button {
-  background: #111;
-  border: 1px solid var(--crt-green);
-  color: var(--crt-green);
-  font-family: monospace;
-  cursor: pointer;
-  padding: 2px 8px;
-}
-.crt-footer button:hover {
-  background: var(--crt-green);
-  color: #000;
-}
-
-/* Скроллбар для CRT */
+/* Зеленый скроллбар */
 .crt-content::-webkit-scrollbar { width: 8px; }
-.crt-content::-webkit-scrollbar-track { background: #000; }
+.crt-content::-webkit-scrollbar-track { background: #051005; }
 .crt-content::-webkit-scrollbar-thumb { background: var(--crt-green); border-radius: 4px; }
+
+.scroll-lock-label { cursor: pointer; display: flex; align-items: center; gap: 5px; color: #888; font-size: 9px; }
+.scroll-lock-label input { cursor: pointer; accent-color: var(--crt-green); }
+
+.log-line { margin-bottom: 2px; }
+.log-in { color: #33ff33; } .log-out { color: #ffaa00; } .log-err { color: var(--led-red); }
+
+/* НИЗ (Сетка выравнивания) */
+.bottom-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.panel-left, .panel-right { display: grid; grid-template-rows: 60px 30px 30px 30px; gap: 5px; background: #111; border: 2px solid #333; border-radius: 4px; padding: 10px; }
+
+/* Светофор */
+.walk-sign { background: #000; border: 3px solid #b8860b; border-radius: 6px; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 10px #000; transition: all 0.2s; height: 100%; width: 100%; box-sizing: border-box;}
+.walk-sign:hover { border-color: #ffea00; }
+.sign-svg { width: 100%; height: 100%; }
+.svg-dont { fill: var(--text-dim); font-family: sans-serif; font-weight: bold; font-size: 20px; transition: all 0.2s; }
+.svg-walk { fill: var(--text-dim); font-family: sans-serif; font-weight: bold; font-size: 24px; transition: all 0.2s; }
+.walk-sign.paused .svg-dont { fill: var(--led-red); filter: drop-shadow(0 0 5px var(--led-red)); }
+.walk-sign.running .svg-walk { fill: #fff; filter: drop-shadow(0 0 5px #fff); }
+.walk-sign.error .svg-dont { fill: var(--led-red); filter: drop-shadow(0 0 5px var(--led-red)); }
+
+/* Лампы */
+.led-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #aaa; font-weight: bold; }
+.led-group { display: flex; gap: 4px; }
+.led { width: 12px; height: 12px; border-radius: 50%; background: #222; box-shadow: inset 0 1px 3px #000; }
+.led.red { background: var(--led-red); box-shadow: 0 0 6px var(--led-red); }
+.led.yellow { background: var(--led-yellow); box-shadow: 0 0 6px var(--led-yellow); }
+.led.green { background: var(--led-green); box-shadow: 0 0 6px var(--led-green); }
+
+/* Кнопка паузы (напротив светофора) */
+.pause-btn { height: 100%; background: #222; border: 2px solid #555; border-radius: 6px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 10px #000; transition: all 0.1s; box-sizing: border-box;}
+.pause-btn:active { background: #111; }
+.pause-btn svg { height: 50px; }
+.icon-pause, .icon-play { fill: #444; transition: fill 0.2s; }
+.pause-btn.active .icon-pause { fill: var(--led-yellow); filter: drop-shadow(0 0 5px var(--led-yellow)); }
+.pause-btn:not(.active) .icon-play { fill: var(--led-green); filter: drop-shadow(0 0 5px var(--led-green)); }
+
+/* Строки управления */
+.control-row { display: flex; align-items: center; justify-content: space-between; height: 100%; gap: 5px; }
+.reboot-row { justify-content: center; }
+.reboot-btn { width: 100%; height: 100%; background: #4a1111; border: 2px solid #882222; color: #ffaaaa; font-weight: bold; font-size: 10px; letter-spacing: 1px; cursor: pointer; border-radius: 4px; box-shadow: 0 2px 0 #220000; transition: all 0.1s; }
+.reboot-btn:hover { background: #661111; }
+.reboot-btn:active { box-shadow: 0 0 0 #220000; transform: translateY(2px); }
+
+.switch { position: relative; display: inline-block; width: 34px; height: 20px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; border-radius: 20px; transition: .4s; border: 1px solid #000; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: #888; border-radius: 50%; transition: .4s; }
+input:checked + .slider { background-color: #113311; }
+input:checked + .slider:before { transform: translateX(14px); background-color: var(--led-green); box-shadow: 0 0 5px var(--led-green); }
+
+.control-row input[type="number"] { width: 50px; background: #000; border: 1px solid #444; color: var(--crt-green); font-family: inherit; padding: 4px; text-align: center; font-size: 12px; height: 100%; box-sizing: border-box;}
+.btn-save { background: #333; border: 1px solid #555; color: #aaa; font-family: inherit; font-size: 10px; padding: 0 8px; cursor: pointer; border-radius: 3px; height: 100%; box-sizing: border-box;}
+.btn-save:hover { background: #444; }
+
+/* SELF-TEST */
+.self-test-btn { width: 100%; padding: 10px; background: #222; border: 2px solid #555; color: #aaa; font-weight: bold; letter-spacing: 2px; cursor: pointer; border-radius: 4px; box-shadow: 0 4px 0 #111; transition: all 0.2s; }
+.self-test-btn:active { box-shadow: 0 1px 0 #111; transform: translateY(3px); }
+.self-test-btn.testing { animation: blink-yellow 0.5s infinite alternate; }
+.self-test-btn.success { background: var(--led-green); color: #000; border-color: #fff; }
+.self-test-btn.error { animation: blink-red 0.5s infinite alternate; }
+@keyframes blink-yellow { from { background: #222; color: #aaa; } to { background: var(--led-yellow); color: #000; border-color: #fff; } }
+@keyframes blink-red { from { background: #222; color: #aaa; } to { background: var(--led-red); color: #fff; border-color: #fff; } }
+.metal-plate { text-align: center; font-size: 10px; color: #666; background: #2a2a2a; border: 1px solid #111; padding: 4px; border-radius: 2px; letter-spacing: 1px; text-shadow: 1px 1px 0 #000; }
