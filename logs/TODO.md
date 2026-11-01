@@ -577,3 +577,17 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - [x] Добавлен BIOS-лог при старте панели (вывод версии и порта).
 - [x] Исправлено отображение имени агента (читается из chrome.storage.local).
 - [x] Кнопка PING теперь выводит результат в лог.
+
+## TODO 13B (принял от 12B, 2026-11-01)
+- [ ] Принять UI панели расширения от оператора.
+- [ ] Проверить `checkStuck` (авто-клик Continue/Retry) живьём.
+- [ ] Фазы R1-R5 (Алиса): LICENSE, requirements.txt, CHANGELOG, push, техдолг.
+- [ ] Каналы B-F: настройка и тестирование.
+- [ ] Мелкие баги: Agent v из манифеста, agentName из storage.
+
+## TODO 13B (принял от 12B, 2026-11-01)
+- [ ] Принять UI панели расширения от оператора.
+- [ ] Проверить `checkStuck` (авто-клик Continue/Retry) живьём.
+- [ ] Фазы R1-R5 (Алиса): LICENSE, requirements.txt, CHANGELOG, push, техдолг.
+- [ ] Каналы B-F: настройка и тестирование.
+- [ ] Мелкие баги: Agent v из манифеста, agentName из storage.
