@@ -12,7 +12,9 @@ const els = {
 };
 let isPaused = false;
 let agentName = 'UNKNOWN';
+let agentChannel = '?';
 let agentVersion = chrome.runtime.getManifest().version;
+let lastPingOk = null;
 
 function addLog(msg) {
   const t = new Date().toLocaleTimeString();
@@ -22,41 +24,48 @@ function addLog(msg) {
   }
 }
 
-async function ping() {
+async function ping(silent = false) {
   const url = els.url.value.trim();
   if (!url) {
-    addLog('PING: URL не задан.');
+    if (!silent) addLog('PING: URL не задан.');
     return;
   }
-  addLog(`PING: ${url} ...`);
+  if (!silent) addLog(`PING: ${url} ...`);
   try {
     const r = await fetch(url + '/ping', { cache: 'no-store' });
     const j = await r.json();
     if (j.ok) {
-      const ch = j.channel || '?';
-      addLog(`PING OK: agent v${agentVersion} | ch: ${ch} | port: ${url.split(':').pop()}`);
-      els.letter.textContent = ch;
+      if (!silent || lastPingOk !== true) {
+        addLog(`PING OK: agent v${agentVersion} | ch: ${agentChannel} | port: ${url.split(':').pop()}`);
+      }
+      els.letter.textContent = agentChannel;
       els.name.textContent = agentName;
       els.ledCdp.className = 'led green';
-      els.ledWd.className = 'led red';
-      els.ledRec.className = 'led red';
       if (!isPaused) els.sign.className = 'walk-sign running';
+      lastPingOk = true;
     } else {
       throw new Error('bad response');
     }
   } catch (e) {
-    addLog(`PING FAIL: ${e.message}`);
+    if (!silent || lastPingOk !== false) {
+      addLog(`PING FAIL: ${e.message}`);
+    }
     els.sign.className = 'walk-sign error';
     els.ledCdp.className = 'led red';
+    lastPingOk = false;
   }
 }
 
 async function load() {
   addLog(`BIOS INIT: Agent v${agentVersion}. Проверка коннектов...`);
   const s = await chrome.storage.local.get({ agentUrl: '', paused: false, name: 'UNKNOWN', channel: '?' });
-  agentName = s.name;
-  let url = s.agentUrl || '';
   
+  agentName = s.name || 'UNKNOWN';
+  agentChannel = s.channel || '?';
+  els.letter.textContent = agentChannel;
+  els.name.textContent = agentName;
+  
+  let url = s.agentUrl || '';
   if (!url) {
     addLog('Поиск агента...');
     for (let port = 8666; port <= 8675; port++) {
@@ -74,7 +83,7 @@ async function load() {
   
   if (url) {
     addLog('Агент найден: ' + url);
-    ping();
+    ping(false);
   } else {
     addLog('Агент не найден. Введи URL вручную.');
     els.sign.className = 'walk-sign error';
@@ -93,7 +102,7 @@ function updatePauseUI() {
 
 document.getElementById('btnSaveUrl').onclick = async () => {
   await chrome.storage.local.set({ agentUrl: els.url.value.trim() });
-  ping();
+  ping(false);
 };
 
 els.pause.onclick = async () => {
@@ -101,11 +110,11 @@ els.pause.onclick = async () => {
   await chrome.storage.local.set({ paused: isPaused });
   updatePauseUI();
   addLog(isPaused ? 'PAUSE ON' : 'PAUSE OFF');
-  ping();
+  ping(false);
 };
 
 document.getElementById('btn-reboot').onclick = () => addLog('REBOOT (заглушка)');
-document.getElementById('btn-selftest').onclick = () => { addLog('SELF-TEST (заглушка)'); ping(); };
+document.getElementById('btn-selftest').onclick = () => { addLog('SELF-TEST (заглушка)'); ping(false); };
 
 load();
-setInterval(() => { if (!isPaused) ping(); }, 10000);
+setInterval(() => { if (!isPaused) ping(true); }, 10000);
