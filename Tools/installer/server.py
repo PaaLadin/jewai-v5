@@ -141,12 +141,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 log("Files copied.")
             else:
                 log("Same directory, skip copy.")
-            base_port = int(cfg.get('basePort', 8666))  # 11B: v5 default
+            base_port = int(cfg.get('basePort', 8680))  # 7C B-32: v5 default with 20-agent headroom
             n = int(cfg.get('agentCount', 1))
             chat_port = int(cfg.get('chatPort', 8670))
             proxy_port = int(cfg.get('proxyPort', 9899))
 
-            # 11B: preflight port validation (installer must not kill itself)
+            # 11B + 7C B-32: preflight port validation with AUTO-SHIFT (no hard failure).
             installer_port = PORT  # module-level, 8660
             if chat_port == installer_port:
                 raise ValueError(
@@ -157,13 +157,35 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 raise ValueError(
                     "proxy_port (%d) conflicts with installer (%d) or chat (%d)." % (proxy_port, installer_port, chat_port)
                 )
+            # 7C B-32: auto-shift base_port and cdp_base if they would collide with
+            # installer/chat/proxy within the [base, base+n-1] range.
+            reserved = {installer_port, chat_port, proxy_port}
+            def _range_collides(start, count):
+                return any((start + i) in reserved for i in range(count))
+            if _range_collides(base_port, n):
+                old_base = base_port
+                base_port = max(reserved) + 20
+                # re-check, bump again if needed (paranoid)
+                while _range_collides(base_port, n):
+                    base_port += 20
+                log("B-32 auto-shift: base_port %d conflicted with reserved %s within %d agents; shifted to %d" %
+                    (old_base, sorted(reserved), n, base_port))
+            cdp_base = 9122
+            if _range_collides(cdp_base, n):
+                old_cdp = cdp_base
+                cdp_base = max(reserved) + 20
+                while _range_collides(cdp_base, n):
+                    cdp_base += 20
+                log("B-32 auto-shift: cdp_base %d conflicted within %d agents; shifted to %d" %
+                    (old_cdp, n, cdp_base))
+            # explicit last-line check (should never trigger after shifts)
             for _i in range(n):
                 _ap = base_port + _i
-                _cp = 9122 + _i
-                if _ap in (installer_port, chat_port, proxy_port):
-                    raise ValueError("agent port %d conflicts (installer/chat/proxy)" % _ap)
-                if _cp in (installer_port, chat_port, proxy_port):
-                    raise ValueError("cdp port %d conflicts (installer/chat/proxy)" % _cp)
+                _cp = cdp_base + _i
+                if _ap in reserved:
+                    raise ValueError("agent port %d STILL conflicts after auto-shift" % _ap)
+                if _cp in reserved:
+                    raise ValueError("cdp port %d STILL conflicts after auto-shift" % _cp)
             for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Templates', 'logs', 'Projects', 'Archive', 'Profiles']:
                 os.makedirs(os.path.join(target, d), exist_ok=True)
                 # 12B: ensure logs/JOURNAL.md and logs/TODO.md
@@ -222,7 +244,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 channels[L] = {
                     "name": cname,
                     "agent": base_port + i,
-                    "cdp": 9122 + i,
+                    "cdp": cdp_base + i,
                     "prefix": "AAAA" if L == "A" else L + L + "AA",
                     "extension": "Profiles/" + L + "/extension",
                     "model": "deepseek"  # 11B: default; qwen/alice = test-only, via manual extension swap
