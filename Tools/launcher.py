@@ -171,8 +171,18 @@ def _push_storage(cfg, letter: str, ch) -> bool:
             "channel": letter,
             "name": ch.name,
         }
-        expr = ("chrome.storage.local.set(%s).then(() => 'ok').catch(e => 'err:' + e)"
-                % _json.dumps(payload))
+        # 7C B-24: set + read back + verify actual values
+        expected_keys = ["agentUrl", "token", "channel", "name"]
+        expr = (
+            "(async () => {"
+            "  await chrome.storage.local.set(" + _json.dumps(payload) + ");"
+            "  const s = await chrome.storage.local.get(null);"
+            "  const want = " + _json.dumps(payload) + ";"
+            "  const mism = [];"
+            "  for (const k in want) { if (String(s[k] || '') !== String(want[k] || '')) mism.push(k); }"
+            "  return {ok: mism.length === 0, mism: mism, got: s};"
+            "})()"
+        )
         try:
             import websocket
         except Exception:
@@ -183,7 +193,20 @@ def _push_storage(cfg, letter: str, ch) -> bool:
                                "params": {"expression": expr, "awaitPromise": True, "returnByValue": True}})
             ws.send(cmd)
             resp = ws.recv()
-            return '"result"' in resp
+            # parse response, look for result.result.value.ok === true
+            try:
+                obj = _json.loads(resp)
+                val = obj.get("result", {}).get("result", {}).get("value") or {}
+                if isinstance(val, dict) and val.get("ok") is True:
+                    return True
+                # mismatch — log details
+                if isinstance(val, dict):
+                    print("[launcher] push_storage MISMATCH: %s (got: %s)" %
+                          (val.get("mism"), {k: val.get("got", {}).get(k) for k in expected_keys}),
+                          flush=True)
+                return False
+            except Exception:
+                return False
         finally:
             ws.close()
     except Exception:
