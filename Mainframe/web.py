@@ -103,6 +103,12 @@ class Handler(BaseHTTPRequestHandler):
                 ct = "text/css; charset=utf-8" if path.endswith(".css") else "application/javascript; charset=utf-8"
                 return self._send(200, f.read_bytes(), ct)
             return self._send(404, b"missing", "text/plain")
+        # 7C B-12: wiki page (how-to for beginners)
+        if path in ("/wiki", "/wiki.html", "/help", "/howto"):
+            f = static_dir / "wiki.html"
+            if f.exists():
+                return self._send(200, f.read_bytes(), "text/html; charset=utf-8")
+            return self._send(404, b"wiki.html missing", "text/plain")
         # api
         fn = self.routes.get(("GET", path))
         if fn is not None:

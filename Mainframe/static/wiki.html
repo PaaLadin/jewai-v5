@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>JewAI v5 — Wiki</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0a0a0a; color: #c8c8c8; font-family: 'Segoe UI', sans-serif; }
+  .page { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+  h1 { color: #33ff33; font-size: 24px; border-bottom: 2px solid #1a3a1a; padding-bottom: 8px; }
+  h2 { color: #66cc66; font-size: 18px; margin-top: 32px; border-bottom: 1px solid #1a3a1a; padding-bottom: 4px; }
+  h3 { color: #88aa88; font-size: 15px; margin-top: 20px; }
+  a { color: #66ccff; }
+  code { background: #1a1a2a; color: #99ccff; padding: 1px 5px; border-radius: 2px; font-family: Consolas, monospace; font-size: 13px; }
+  .card { background: #111820; border: 1px solid #1a2a3a; border-radius: 6px; padding: 16px; margin: 12px 0; }
+  .warn { background: #2a1a1a; border-color: #5a2a2a; }
+  .tip { background: #1a2a1a; border-color: #2a5a2a; }
+  ul, ol { line-height: 1.7; }
+  li { margin: 4px 0; }
+  .nav { margin-bottom: 24px; padding: 12px; background: #0d0d18; border-radius: 4px; }
+  .nav a { margin-right: 16px; text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  th, td { padding: 6px 10px; text-align: left; border-bottom: 1px solid #1a1a2a; }
+  th { color: #66cc66; font-weight: 600; }
+  .back { display: inline-block; margin-top: 32px; color: #33ff33; text-decoration: none; padding: 8px 16px; border: 1px solid #33ff33; border-radius: 3px; }
+  .back:hover { background: #1a3a1a; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="nav">
+  <a href="#what">Что это</a>
+  <a href="#channels">Каналы</a>
+  <a href="#login">Логин</a>
+  <a href="#panel">Панель агента</a>
+  <a href="#mainframe">Mainframe</a>
+  <a href="#rebirth">Перерождение</a>
+  <a href="#troubles">Проблемы</a>
+  <a href="#files">Файлы</a>
+</div>
+
+<h1>JewAI v5 — краткая вики</h1>
+<p><em>Для неопытного пользователя. Без технических деталей.</em></p>
+
+<h2 id="what">Что такое JewAI</h2>
+<p>JewAI — это <strong>мост</strong> между браузерным чатом с ИИ (DeepSeek, Qwen, Alice) и твоим компьютером. Ты пишешь агенту в чат задачу, он оформляет её как блок команд, а JewAI выполняет этот блок у тебя на диске и присылает агенту отчёт — что получилось.</p>
+<p>Каждый агент живёт в своём отдельном профиле Chrome. 6 агентов = 6 окон Chrome, у каждого свой логин, свой чат, своя история. Они не мешают друг другу.</p>
+
+<h2 id="channels">Каналы и агенты</h2>
+<p>Агенты обозначаются буквами <code>A</code>, <code>B</code>, <code>C</code>, … (до <code>J</code> — до 10 агентов). У каждого:</p>
+<ul>
+  <li><strong>свой порт агента</strong> (обычно 8680, 8681, …) — панель общается с агентом;</li>
+  <li><strong>свой CDP-порт</strong> (9122, 9123, …) — JewAI управляет браузером;</li>
+  <li><strong>свой профиль Chrome</strong> в <code>C:/JewAI_v5/Profiles/&lt;буква&gt;/chrome/</code>;</li>
+  <li><strong>своя папка логов</strong> в <code>Profiles/&lt;буква&gt;/logs/</code>.</li>
+</ul>
+<div class="card tip">
+<strong>Совет:</strong> имена агентов задаются при установке. Если забыл какое — смотри <code>Profiles/&lt;буква&gt;/config/config.json</code>, поле <code>name</code>.
+</div>
+
+<h2 id="login">Как залогиниться в чат</h2>
+<ol>
+  <li>Открой нужное окно Chrome (его запускает JewAI при первом старте).</li>
+  <li>В адресной строке — <code>chat.deepseek.com</code> (или <code>chat.qwen.ai</code> / <code>alice.yandex.ru</code>).</li>
+  <li>Войди в свой аккаунт.</li>
+  <li>Правый клик по вкладке → «Закрепить».</li>
+</ol>
+<div class="card warn">
+<strong>Не логинь сам Chrome в Google-аккаунт.</strong> Достаточно логина в сам чат. Куки и сессия сохранятся в профиле Chrome этого агента и переживут перезапуск. Google-логин только добавит лишние сервисы и риск смешать куки разных агентов.
+</div>
+
+<h2 id="panel">Панель агента (боковая)</h2>
+<p>В каждом окне Chrome есть иконка <strong>JewAI Agent Bridge</strong>. Клик по ней открывает боковую панель с лампами и кнопками.</p>
+<table>
+  <tr><th>Элемент</th><th>Что делает</th></tr>
+  <tr><td><strong>DON'T / WALK</strong></td><td>Светофор. <em>WALK</em> — мост работает. <em>DON'T</em> — что-то не так (CDP не отвечает / пауза).</td></tr>
+  <tr><td><strong>CDP</strong></td><td>Зелёная = Chrome отвечает. Красная = Chrome не запущен или упал.</td></tr>
+  <tr><td><strong>WATCHDOG</strong></td><td>Зелёная = сторожевой таймер включён. Тумблер рядом — вкл/выкл.</td></tr>
+  <tr><td><strong>RECOVERY</strong></td><td>Зелёная = восстановление включено (если панель зависнет, попробует перезагрузить).</td></tr>
+  <tr><td><strong>PAUSE</strong></td><td>Кнопка pause/play. <em>Пауза</em> останавливает отправку команд агенту — удобно, когда ты сам пишешь ему в чат.</td></tr>
+  <tr><td><strong>REBOOT</strong></td><td>Перезапускает мост канала (Bridge/run.py). Chrome не трогает.</td></tr>
+  <tr><td><strong>SELF-TEST</strong></td><td>Проверка: ping, token, root, config, ledger, svc_state. Все OK — зелёная плашка.</td></tr>
+  <tr><td><strong>PING</strong></td><td>Проверка связи с агентом. В логе появится ответ.</td></tr>
+</table>
+
+<h2 id="mainframe">Mainframe (панель управления)</h2>
+<p>Открывается по адресу <code>http://127.0.0.1:8670/</code>. Показывает все каналы сразу: агенты, Chrome, DoH-прокси, mail-bot, rebirth. Кнопки СТАРТ / СТОП / РЕБУТ для каждого блока. Тут же общий чат (broadcast) и чат по каналам.</p>
+<p><strong>Mainframe — это обзор.</strong> Подробная работа — в боковых панелях агентов.</p>
+
+<h2 id="rebirth">Перерождение (rebirth)</h2>
+<p>Когда чат агента переполняется, JewAI «перерождает» агента: открывает новый чат, отправляет туда промт активации, обновляет таблицу серий. Старый чат остаётся в истории, новый агент продолжает в новом.</p>
+<p>Простыми словами: <em>агент переезжает в новый чат, сохраняя знания через RAG</em> (файлы на диске).</p>
+<div class="card">
+<strong>Порог:</strong> 850 команд в текущей серии. При достижении JewAI готовит передачу: HANDOVER, PROMPT новичку, TODO.
+</div>
+
+<h2 id="troubles">Что делать, если что-то сломалось</h2>
+<div class="card warn">
+<strong>Красная лампа CDP.</strong> Chrome не запущен или упал. Mainframe → кнопка СТАРТ на блоке chrome:&lt;буква&gt;.
+</div>
+<div class="card warn">
+<strong>Красные WATCHDOG / RECOVERY.</strong> Сервисы не запущены. В боковой панели включи тумблеры.
+</div>
+<div class="card warn">
+<strong>SELF-TEST показывает FAIL.</strong> Посмотри какой пункт упал. Частые: <em>token</em> (проверь <code>.agent_token</code> в корне), <em>config</em> (переустанови агента), <em>ledger</em> (директория логов не writable).
+</div>
+<div class="card warn">
+<strong>Панель показывает UNKNOWN или ?.</strong> Нажми PING. Проверь порт агента в поле URL — должен быть твой (например 8681). Если чужой — введи правильный, PING.
+</div>
+<div class="card warn">
+<strong>В чате «Stopped» (DeepSeek).</strong> Content-script автоматически нажимает regenerate, если оператор не печатает. Если не сработало — открой чат, нажми regenerate вручную.
+</div>
+
+<h2 id="files">Где что лежит</h2>
+<table>
+  <tr><th>Путь</th><th>Что</th></tr>
+  <tr><td><code>C:/JewAI_v5/config.json</code></td><td>Главный конфиг: порты, каналы, имена.</td></tr>
+  <tr><td><code>C:/JewAI_v5/Profiles/&lt;L&gt;/config/config.json</code></td><td>Конфиг агента.</td></tr>
+  <tr><td><code>C:/JewAI_v5/Profiles/&lt;L&gt;/chrome/</code></td><td>Профиль Chrome (логины, вкладки, куки).</td></tr>
+  <tr><td><code>C:/JewAI_v5/Profiles/&lt;L&gt;/logs/</code></td><td>Логи, ledger, paused.json, svc-состояния.</td></tr>
+  <tr><td><code>C:/JewAI_v5/logs/</code></td><td>Общие логи.</td></tr>
+  <tr><td><code>C:/JewAI_v5/RAG/</code></td><td>База знаний.</td></tr>
+  <tr><td><code>C:/jewai/</code></td><td>Исходный git-репозиторий.</td></tr>
+</table>
+
+<div class="card tip">
+<strong>Правило:</strong> не удаляй <code>Profiles/&lt;L&gt;/chrome/</code> руками — потеряешь логин. Если нужно сбросить — закрой Chrome, переименуй папку в <code>chrome.bak</code>, перезапусти launcher.
+</div>
+
+<a class="back" href="/">← Назад в Mainframe</a>
+
+</div>
+</body>
+</html>
