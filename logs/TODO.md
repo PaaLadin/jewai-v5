@@ -622,3 +622,5 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - [x] Status schema merge (Mainframe/api.py): name/prefix/model/cdp/agent/agent_port/cdp_port в matrix. test_mainframe_8671 + test_mainframe_ext PASS. 21/21 green.
 - [ ] Push jewai: ahead 3 (b8b0c2f, 5dd4117, a3de8d7). Ждёт GCM-клика оператора.
 - [ ] BUG3a (Bridge/DeepSeek redirect chat->www): решение оператора.
+
+- [ ] BUG3a (Bridge redirect chat->www): НЕ патчу. Причина: fallback на base-domain может прицепить Bridge к неверному табу (DeepSeek + Qwen/Alice на одном CDP). Нужно решение оператора: (а) --no-proxy при первом запуске + ручной логин, (б) фиксированный URL чата /a/chat/s/<id>, (в) fallback только если на порту ровно один page-таб. Файл Bridge/cdp.py не тронут, бэкап .bak_7c_bug3a есть.
