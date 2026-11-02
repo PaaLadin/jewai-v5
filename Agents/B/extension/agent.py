@@ -26,10 +26,26 @@ else:
     else:
         ROOT = HERE
 
-TOKEN_FILE = HERE / ".agent_token"
-if TOKEN_FILE.exists():
+# 7C B-25: one token per installation (root .agent_token wins over per-channel)
+def _find_token_file():
+    # 7C B-25b: prefer ROOT token (install-wide), then per-channel fallback
+    cands = [
+        ROOT / ".agent_token",
+        HERE / ".agent_token",
+    ]
+    for c in cands:
+        try:
+            if c.exists():
+                return c
+        except Exception:
+            pass
+    return None
+
+TOKEN_FILE = _find_token_file()
+if TOKEN_FILE is not None:
     TOKEN = TOKEN_FILE.read_text(encoding="utf-8").strip()
 else:
+    TOKEN_FILE = HERE / ".agent_token"
     TOKEN = secrets.token_urlsafe(32)
     TOKEN_FILE.write_text(TOKEN, encoding="utf-8")
 

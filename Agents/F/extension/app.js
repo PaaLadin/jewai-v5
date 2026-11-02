@@ -92,7 +92,8 @@ async function loadIdentity() {
       agentName = id.name || 'UNKNOWN';
       els.letter.textContent = agentChannel;
       els.name.textContent = agentName;
-      await chrome.storage.local.set({channel: agentChannel, name: agentName, agentUrl: agentBaseUrl});
+      // 7C B-26b: do NOT write storage here — storage is written only by launcher (push_storage),
+      // so autodetect cannot pollute it with the wrong agent's identity.
       addLog('IDENTITY: ch=' + agentChannel + ' name=' + agentName + ' prefix=' + (id.prefix || '?') + ' model=' + (id.model || '?'));
       return true;
     }
@@ -135,14 +136,22 @@ async function load() {
 
   agentBaseUrl = s.agentUrl || '';
   if (!agentBaseUrl) {
-    addLog('Поиск агента...');
+    addLog('Поиск агента (autodetect 8666..8675)...');
+    let foundList = [];
     for (let port = 8666; port <= 8675; port++) {
       try {
         const r = await fetch('http://127.0.0.1:' + port + '/ping', {cache: 'no-store'});
-        if (r.ok) { agentBaseUrl = 'http://127.0.0.1:' + port; break; }
+        if (r.ok) {
+          const j = await r.json().catch(() => ({}));
+          foundList.push({port: port, channel: j.channel || '?', name: j.name || '?'});
+          if (!agentBaseUrl) agentBaseUrl = 'http://127.0.0.1:' + port;
+        }
       } catch (e) { /* next */ }
     }
-    if (agentBaseUrl) await chrome.storage.local.set({agentUrl: agentBaseUrl});
+    if (foundList.length > 0) {
+      addLog('Autodetect: found ' + foundList.length + ' agent(s): ' + JSON.stringify(foundList));
+      addLog('NOT saving to storage (waiting for launcher push). Set URL manually or redeploy.');
+    }
   }
   els.url.value = agentBaseUrl;
 

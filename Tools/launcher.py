@@ -150,17 +150,13 @@ def _push_storage(cfg, letter: str, ch) -> bool:
         import urllib.request as _ur
         with _ur.urlopen("http://127.0.0.1:%d/json/list" % ch.cdp_port, timeout=5) as r:
             targets = _json.loads(r.read().decode("utf-8"))
-        ext_target = None
-        for t in targets:
-            u = t.get("url", "")
-            if u.startswith("chrome-extension://") and "sidepanel" in u:
-                ext_target = t; break
-        if not ext_target:
-            for t in targets:
-                if t.get("url", "").startswith("chrome-extension://"):
-                    ext_target = t; break
-        if not ext_target:
+        # 7C B-27: collect ALL extension targets (SW may be suspended, sidepanel may not exist yet)
+        ext_targets = [t for t in targets if (t.get("url", "") or "").startswith("chrome-extension://")]
+        if not ext_targets:
             return False
+        # prefer sidepanel > any page > any other
+        ext_targets.sort(key=lambda t: (0 if "sidepanel" in t.get("url", "") else
+                                        1 if t.get("type") == "page" else 2))
         token = ""
         tok_path = cfg.path(".agent_token")
         if tok_path.exists():
@@ -187,28 +183,37 @@ def _push_storage(cfg, letter: str, ch) -> bool:
             import websocket
         except Exception:
             return False
-        ws = websocket.create_connection(ext_target["webSocketDebuggerUrl"], timeout=5)
-        try:
-            cmd = _json.dumps({"id": 1, "method": "Runtime.evaluate",
-                               "params": {"expression": expr, "awaitPromise": True, "returnByValue": True}})
-            ws.send(cmd)
-            resp = ws.recv()
-            # parse response, look for result.result.value.ok === true
+        # 7C B-27b: try every extension target until one verifies
+        last_err = ""
+        for tgt in ext_targets:
+            ws_url = tgt.get("webSocketDebuggerUrl")
+            if not ws_url:
+                continue
             try:
-                obj = _json.loads(resp)
-                val = obj.get("result", {}).get("result", {}).get("value") or {}
-                if isinstance(val, dict) and val.get("ok") is True:
-                    return True
-                # mismatch — log details
-                if isinstance(val, dict):
-                    print("[launcher] push_storage MISMATCH: %s (got: %s)" %
-                          (val.get("mism"), {k: val.get("got", {}).get(k) for k in expected_keys}),
-                          flush=True)
-                return False
-            except Exception:
-                return False
-        finally:
-            ws.close()
+                ws = websocket.create_connection(ws_url, timeout=5)
+            except Exception as _e:
+                last_err = "ws connect: %s" % _e
+                continue
+            try:
+                cmd = _json.dumps({"id": 1, "method": "Runtime.evaluate",
+                                   "params": {"expression": expr, "awaitPromise": True, "returnByValue": True}})
+                ws.send(cmd)
+                resp = ws.recv()
+                try:
+                    obj = _json.loads(resp)
+                    val = obj.get("result", {}).get("result", {}).get("value") or {}
+                    if isinstance(val, dict) and val.get("ok") is True:
+                        return True
+                    if isinstance(val, dict):
+                        last_err = "mismatch: %s" % val.get("mism")
+                except Exception as _e:
+                    last_err = "parse: %s" % _e
+            finally:
+                try: ws.close()
+                except Exception: pass
+        if last_err:
+            print("[launcher] push_storage FAILED after %d targets: %s" % (len(ext_targets), last_err), flush=True)
+        return False
     except Exception:
         return False
 
