@@ -9,6 +9,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
     def do_POST(self):
+        if self.path == '/shutdown':
+            # 7C B-03: explicit shutdown (user clicks Close on failure page)
+            try:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(b'{"ok": true, "shutdown": true}')
+                self.wfile.flush()
+            except Exception:
+                pass
+            import threading
+            threading.Timer(0.3, lambda: os._exit(0)).start()
+            return
         if self.path in ('/api/install', '/api/launch'):
             length = int(self.headers.get('Content-Length', 0))
             data = json.loads(self.rfile.read(length).decode('utf-8')) if length else {}
@@ -317,9 +330,38 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         else:
             log("WARNING: Tools/launcher.py not found, Chrome not started.")
         log(f"Launch complete. Mainframe: http://127.0.0.1:{chat_port}/")
+        # 7C B-03: schedule self-shutdown (browser redirects to mainframe, installer no longer needed)
+        def _delayed_shutdown():
+            time.sleep(15)
+            os._exit(0)
+        import threading as _th
+        _th.Thread(target=_delayed_shutdown, daemon=False).start()
+        log("Installer will self-shutdown in 15s.")
         return "\n".join(log_lines)
+
+
+
+def _kill_stale_on_port():
+    my_pid = os.getpid()
+    try:
+        r = subprocess.run(
+            ["powershell", "-c",
+             "Get-NetTCPConnection -LocalPort %d -ErrorAction SilentlyContinue | "
+             "Select-Object -ExpandProperty OwningProcess -Unique" % PORT],
+            capture_output=True, text=True, timeout=10)
+        for line in (r.stdout or "").splitlines():
+            line = line.strip()
+            if line.isdigit():
+                pid = int(line)
+                if pid and pid != my_pid:
+                    subprocess.run(["taskkill", "/PID", str(pid), "/F"],
+                                   capture_output=True, timeout=5)
+    except Exception:
+        pass
+
 
 if __name__ == '__main__':
     os.chdir(HERE)
+    _kill_stale_on_port()
     with http.server.ThreadingHTTPServer(("", PORT), Handler) as httpd:
         httpd.serve_forever()

@@ -146,6 +146,7 @@ typeText(s.replace('{0}', config.root).replace('{1}', config.basePort).replace('
                 } else {
                     state = 12;
                     typeText(i18n[lang].fail.replace('{0}', res.error || 'unknown'));
+                    _scheduleShutdown(60000);
                 }
             }).catch(err => {
                 state = 12;
@@ -154,6 +155,7 @@ typeText(s.replace('{0}', config.root).replace('{1}', config.basePort).replace('
         } else if (['n', 'no', 'нет', 'н'].includes(lower)) {
             state = 12;
             typeText(i18n[lang].cancelled);
+            _scheduleShutdown(60000);
         } else {
             typeText(i18n[lang].invalid);
         }
@@ -244,8 +246,18 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    if (isTyping || state === 0 || state >= 12) return;
-    
+    // 7C B-03: on terminal states (12=fail, 13=cancel, 14=done) Enter closes installer
+    if (state >= 12) {
+        if (e.key === 'Enter') {
+            sfxEnter();
+            try { fetch('/shutdown', {method: 'POST'}); } catch (_) {}
+            setTimeout(() => { try { window.close(); } catch (_) {} }, 400);
+        }
+        return;
+    }
+
+    if (isTyping || state === 0) return;
+
     if (e.key === 'Enter') {
         sfxEnter();
         submitInput(inputBuf);
@@ -259,6 +271,18 @@ document.addEventListener('keydown', (e) => {
         inputText.textContent = inputBuf;
     }
 });
+
+
+
+// 7C B-03: auto-shutdown installer after terminal state
+let _shutdownScheduled = false;
+function _scheduleShutdown(delayMs) {
+    if (_shutdownScheduled) return;
+    _shutdownScheduled = true;
+    setTimeout(() => {
+        try { fetch('/shutdown', {method: 'POST'}); } catch (_) {}
+    }, delayMs);
+}
 
 // Init
 inputLine.style.display = 'none';
