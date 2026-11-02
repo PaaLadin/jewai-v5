@@ -638,3 +638,7 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 
 - [ ] РЕДЕПЛОЙ: установить jewai_5 с новыми фиксами (после возвращения оператора). Проверить: панель показывает канал/имя, PAUSE работает, WATCHDOG/RECOVERY тумблеры, SELF-TEST проходит, REBOOT перезапускает мост, LED'ы корректны.
 - [ ] B-18: масштабируемость 1-10 проверить на редеплое.
+
+- [x] B-28: installer CfT copy locked (WinError 32). Kill chrome по target+ROOT + retry 5x. КОД ГОТОВ.
+- [x] B-29: agent.py _logs_dir() = HERE.parent вместо HERE.parent.parent. Лампы/пауза/ledger теперь работают. КОД ГОТОВ.
+- [ ] B-30: paused state рассинхрон storage vs paused.json. app.js load() -> GET /pause_state. LOW.

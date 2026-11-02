@@ -1210,3 +1210,42 @@ Dixi. C (Семён), 7C, 2026-11-02.
 - B-06 (Mainframe = пульт), B-07/B-08 (onboarding), B-09/B-10 (auth/restore), B-11 (active_chat), B-12 (wiki).
 
 Dixi. C (Семён), 7C, 2026-11-02.
+
+
+## 2026-11-02, запись 7C-003 - Урок: карта потоков данных + B-28/B-29/B-30
+
+**Фаза:** Ф2 (мост + extension)
+
+**Что сделано:**
+- B-28: installer CfT copy locked (WinError 32). Kill chrome по target+ROOT + retry 5x в copytree.
+- B-29: agent.py _logs_dir() читал Profiles/logs вместо Profiles/<L>/logs. Из-за этого:
+  - /svc_status не видел svc_watchdog_<L>.json -> лампы красные, тумблеры возвращались в OFF.
+  - /pause писал в Profiles/logs/paused.json, а daemon.py читает Profiles/<L>/logs/paused.json -> пауза не работала.
+  - SELF-TEST [FAIL] ledger, потому что bridge в paused не создавал ledger.
+  Фикс: HERE.parent вместо HERE.parent.parent (одна строка).
+- B-30 (открыт): paused state рассинхрон storage vs paused.json. app.js load() должен звать GET /pause_state вместо storage.paused.
+
+**Урок (кровью, 3 редеплоя подряд):**
+Перед любым фиксом пути/жизненного цикла — нарисовать карту:
+  кто -> что -> куда пишет -> кто откуда читает.
+Для 5 сущностей: config.json, .agent_token, paused.json, svc_<kind>_<L>.json, ledger_<L>.json.
+Сверить 5x5. B-20 (config path) и B-29 (logs path) — один и тот же баг, найден через час.
+После B-20 не сделал grep по HERE.parent* — получил B-29.
+
+**Урок (B-24):** проверка `'"result"' in resp` — ложная. CDP-ответ всегда содержит result. Проверять result.result.value.ok === true + сравнение всех ожидаемых ключей.
+
+**Урок (B-25):** installer писал root .agent_token, agent.py искал per-channel. Инвариант: один токен на install, приоритет root.
+
+**Урок (B-23):** installer убивал stale Chrome, но не stale python. Инвариант: перед копированием в target убить ВСЕ процессы с target в cmdline (python + chrome + svc).
+
+**Чем проверено:**
+- py_compile agent.py, launcher.py, server.py — OK.
+- run_all_tests.py: 21/21 pass.
+- Аудит agent.py по HERE.parent*: одна оставшаяся строка в _logs_dir (исправлена), fallback на строке 61 безопасен (exists check).
+
+**Что дальше:**
+- Редеплой оператором.
+- Живая проверка: лампы зелёные, тумблеры держатся в ON, SELF-TEST [OK] ledger при paused=false.
+- B-30, B-05..B-12 — бэклог.
+
+Dixi. C (Семён), 7C, 2026-11-02.

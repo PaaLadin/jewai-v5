@@ -97,8 +97,10 @@ def _ch_name():
 
 
 def _logs_dir():
+    # 7C B-29: per-channel logs live in Profiles/<L>/logs (= HERE.parent / "logs"),
+    # NOT Profiles/logs (= HERE.parent.parent). Templates layout falls back to ROOT.
     if CHANNEL_CFG:
-        return HERE.parent.parent / "logs"
+        return HERE.parent / "logs"
     return ROOT / "logs"
 
 

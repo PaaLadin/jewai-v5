@@ -4,14 +4,16 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 PORT = 8660  # 11B: 8671 = agent E in v5
 
 def _kill_chrome_for_target(target, log):
-    """7C B-19: stop Chrome processes whose --user-data-dir is under target/Profiles.
-    Runs before extension copy so --load-extension picks up new files on next launch."""
+    """7C B-19/B-28: stop Chrome whose cmdline is under target OR ROOT (source CfT lock)."""
     import subprocess as _sp
     try:
-        target_norm = os.path.abspath(target).lower()
+        target_norm = os.path.abspath(target).lower().replace("\\", "/")
+        root_norm = os.path.abspath(ROOT).lower().replace("\\", "/")
         ps = (
             "Get-CimInstance Win32_Process -Filter \"Name='chrome.exe'\" | "
-            "Where-Object { $_.CommandLine -and $_.CommandLine.ToLower().Contains('" + target_norm.replace("'", "") + "') } | "
+            "Where-Object { $_.CommandLine -and ( $_.CommandLine.ToLower().Replace('\\','/').Contains('"
+            + target_norm.replace("'", "") + "') -or $_.CommandLine.ToLower().Replace('\\','/').Contains('"
+            + root_norm.replace("'", "") + "') ) } | "
             "Select-Object -ExpandProperty ProcessId"
         )
         r = _sp.run(["powershell", "-NoProfile", "-Command", ps],
@@ -21,14 +23,13 @@ def _kill_chrome_for_target(target, log):
             line = line.strip()
             if line.isdigit():
                 pid = int(line)
-                _sp.run(["taskkill", "/PID", str(pid), "/F"],
-                        capture_output=True, timeout=5)
+                _sp.run(["taskkill", "/PID", str(pid), "/F"], capture_output=True, timeout=5)
                 killed.append(pid)
         if killed:
-            log("B-19: killed stale Chrome pids %s for target %s" % (killed, target_norm))
+            log("B-19/B-28: killed Chrome pids %s (target+ROOT)" % killed)
     except Exception as _e:
         try:
-            log("B-19 kill-chrome failed: %s" % _e)
+            log("kill-chrome failed: %s" % _e)
         except Exception:
             pass
 
@@ -261,9 +262,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             cft_dst = os.path.join(target, 'tools', 'chrome-for-testing')
             if os.path.isdir(cft_src) and os.path.isfile(os.path.join(cft_src, 'chrome.exe')):
                 try:
-                    if os.path.isdir(cft_dst):
-                        shutil.rmtree(cft_dst, ignore_errors=True)
-                    shutil.copytree(cft_src, cft_dst, dirs_exist_ok=True)
+                    _copy_ok = False
+                    _last_err = None
+                    for _try in range(1, 6):
+                        try:
+                            if os.path.isdir(cft_dst):
+                                shutil.rmtree(cft_dst, ignore_errors=True)
+                            shutil.copytree(cft_src, cft_dst, dirs_exist_ok=True)
+                            _copy_ok = True
+                            break
+                        except Exception as _ce:
+                            _last_err = _ce
+                            _we = getattr(_ce, "winerror", 0)
+                            if _we == 32 or "WinError 32" in str(_ce) or "cannot access" in str(_ce).lower():
+                                log("B-28: CfT copy locked (try %d/5), killing chrome and retrying..." % _try)
+                                _kill_chrome_for_target(target, log)
+                                time.sleep(2.5)
+                                continue
+                            raise
+                    if not _copy_ok:
+                        raise _last_err or RuntimeError("CfT copy failed after 5 tries")
                     log(f"Chrome for Testing copied to {cft_dst}")
                     # set chrome_path in target config.json
                     tc = os.path.join(target, 'config.json')

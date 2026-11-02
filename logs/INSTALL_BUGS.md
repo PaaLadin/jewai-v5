@@ -222,3 +222,27 @@ Dixi. C (Семён), 7C, 2026-11-02.
 - **Что сделано (7C, fix):** app.js `_getToken()` из chrome.storage.local, добавляет X-Token в headers для всех POST.
 - **Приоритет:** HIGH (панель не может управлять сервисами).
 
+
+
+### B-29: agent.py не видит svc/pause state (путь на уровень выше)
+
+- **Симптом:** тумблеры WATCHDOG/RECOVERY включаются, но лампы красные, тумблеры возвращаются в OFF. Пауза из панели не останавливает мост.
+- **Факт:** `svc.py start` вернул `{"ok": true, "already": true, "pid": 10708}` — процесс живой, файл `Profiles/A/logs/svc_watchdog_A.json` есть. Но `agent.py /svc_status` возвращает `state=off, alive=false`.
+- **Причина:** в `Templates/extension/agent.py::_logs_dir()` код `HERE.parent.parent / "logs"`.
+  - `HERE = C:/JewAI_v5/Profiles/A/extension`
+  - `HERE.parent = Profiles/A`
+  - `HERE.parent.parent = Profiles`
+  - `_logs_dir() = Profiles/logs` — **не существует**, файлы лежат в `Profiles/A/logs`
+- **Тот же баг в `_pause_path()`:** `/pause` пишет в `Profiles/logs/paused.json`, а `Bridge/daemon.py::_pause_path()` читает `cfg.channel_path(letter, "logs", "paused.json")` = `Profiles/A/logs/paused.json`. Не совпадают → пауза не работает.
+- **Фикс:** `_logs_dir()` = `HERE.parent / "logs"` (= `Profiles/<L>/logs`). Применить к `_pause_path` (через `_logs_dir`) и `_svc_state`.
+- **Приоритет:** HIGH (панель врёт про статус, пауза не работает).
+- **Связано:** B-15 (пауза), B-16 (svc).
+
+
+### B-30: paused state рассинхрон — storage vs paused.json
+
+- **Симптом:** после редеплоя панель показывает PAUSE ON (из chrome.storage.paused=true), но мост работает (paused.json не создан).
+- **Причина:** app.js при load() читает paused из storage. Bridge/daemon.py читает paused.json. Источники не синхронизированы.
+- **Что должно быть:** app.js при load() зовёт GET /pause_state (agent.py читает paused.json) и переопределяет isPaused. Storage.paused — только для UI-кеша.
+- **Приоритет:** LOW (не блокер, UX).
+- **Связано:** B-15, B-29.
