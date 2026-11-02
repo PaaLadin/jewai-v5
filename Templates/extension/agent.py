@@ -189,6 +189,14 @@ class Handler(BaseHTTPRequestHandler):
     def _auth(self):
         return self.headers.get("X-Token") == TOKEN
 
+    def _send_html(self, code, html):
+        d = html.encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(d)))
+        self.end_headers()
+        self.wfile.write(d)
+
     def _j(self, code, obj):
         d = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
