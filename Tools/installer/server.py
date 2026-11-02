@@ -33,6 +33,59 @@ def _kill_chrome_for_target(target, log):
             pass
 
 
+def _kill_python_for_target(target, log):
+    """7C B-23: kill stale agent.py/Bridge/svc/doh processes from previous run of target.
+    Also stale Mainframe (will be restarted by run_launch). Skips installer itself."""
+    import subprocess as _sp
+    try:
+        target_norm = os.path.abspath(target).lower().replace("\\", "/")
+        my_pid = os.getpid()
+        ps = (
+            "Get-CimInstance Win32_Process -Filter \"Name='python.exe' or Name='pythonw.exe'\" | "
+            "Select-Object ProcessId, CommandLine | ConvertTo-Json -Compress"
+        )
+        r = _sp.run(["powershell", "-NoProfile", "-Command", ps],
+                    capture_output=True, text=True, timeout=20)
+        raw = (r.stdout or "").strip()
+        if not raw:
+            return
+        import json as _json
+        try:
+            items = _json.loads(raw)
+        except Exception:
+            return
+        if isinstance(items, dict):
+            items = [items]
+        killed = []
+        for it in items:
+            try:
+                pid = int(it.get("ProcessId"))
+            except Exception:
+                continue
+            if pid == my_pid:
+                continue
+            cmd = (it.get("CommandLine") or "").lower().replace("\\", "/")
+            if target_norm not in cmd:
+                continue
+            # match known components (avoid killing random)
+            if not any(k in cmd for k in ["agent.py", "bridge/run.py", "bridge\\run.py",
+                                          "tools/svc.py", "tools\\svc.py",
+                                          "doh_proxy.py", "mainframe/server.py", "mainframe\\server.py"]):
+                continue
+            try:
+                _sp.run(["taskkill", "/PID", str(pid), "/F"], capture_output=True, timeout=5)
+                killed.append(pid)
+            except Exception:
+                pass
+        if killed:
+            log("B-23: killed stale python pids %s for target %s" % (killed, target_norm))
+    except Exception as _e:
+        try:
+            log("B-23 kill-python failed: %s" % _e)
+        except Exception:
+            pass
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=HERE, **kwargs)
@@ -127,8 +180,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             ]
             chrome_exe = next((p for p in chrome_paths if os.path.exists(p)), None)
             
-            # 7C B-19: kill stale Chrome under target/Profiles before copying new extension
+            # 7C B-19/B-23: kill stale Chrome and python processes from previous run
             _kill_chrome_for_target(target, log)
+            _kill_python_for_target(target, log)
             
             tmpl_ext = os.path.join(target, 'Templates', 'extension')
             for L in letters:

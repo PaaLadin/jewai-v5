@@ -100,6 +100,7 @@ def launch(cfg, letter: str, no_proxy: bool = False, dry: bool = False) -> dict:
         f"--user-data-dir={profile}",
         f"--remote-debugging-port={ch.cdp_port}",
         f"--load-extension={ext}",
+        f"--disable-extensions-except={ext}",
         "--disable-backgrounding-occluded-windows",
         "--disable-renderer-backgrounding",
         "--disable-background-timer-throttling",

@@ -64,6 +64,9 @@ def status(cfg: Config, path: str, body: dict) -> dict:
                 "cdp": ch.cdp_port, "agent": ch.agent_port,
                 "agent_port": ch.agent_port, "cdp_port": ch.cdp_port,
             })
+        # 7C: expose boolean flags for tests and UI (True/False, not None)
+        merged["agent_alive"] = bool(merged.get("agent"))
+        merged["cdp_alive"] = bool(merged.get("content"))
         channels[L] = merged
     return {"ok": True, "ts": time.time(), "channels": channels,
             "alerts": h.get("alerts", []),
