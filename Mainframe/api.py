@@ -53,7 +53,19 @@ def _probe_channel(ch) -> dict:
 def status(cfg: Config, path: str, body: dict) -> dict:
     from Mainframe import health
     h = health.collect(cfg)
-    return {"ok": True, "ts": time.time(), "channels": h["matrix"],
+    matrix = h["matrix"]
+    channels = {}
+    for L, row in matrix.items():
+        merged = dict(row) if isinstance(row, dict) else {}
+        ch = cfg.channels.get(L)
+        if ch is not None:
+            merged.update({
+                "name": ch.name, "prefix": ch.prefix, "model": ch.model,
+                "cdp": ch.cdp_port, "agent": ch.agent_port,
+                "agent_port": ch.agent_port, "cdp_port": ch.cdp_port,
+            })
+        channels[L] = merged
+    return {"ok": True, "ts": time.time(), "channels": channels,
             "alerts": h.get("alerts", []),
             "root": str(cfg.root), "version": cfg.version}
 

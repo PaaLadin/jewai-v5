@@ -605,3 +605,15 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - [ ] Раскатка B-F с оператором (после Ф2).
 - [ ] Проверить checkStuck в content_deepseek.js живьём.
 - [ ] Прогнать rebirth-цикл в рантайме.
+
+
+## 2026-11-02 (7C) - PUSH ОТЛОЖЕН
+
+- Коммит b8b0c2f (docs: 7C actualize ROADMAP+TODO 02.11) НЕ запушен.
+- Причина: GCM (credential.helper=manager) требует интерактивного окна; из фона (detached) висит, с interactive=never отдаёт rc=128.
+- Credentials в Windows Credential Manager есть (git:https://github.com -> PaaLadin), но GCM их не отдаёт неинтерактивно.
+- Что сделать при возвращении оператора:
+  1. cd C:/jewai; git push origin main
+  2. В окне GCM выбрать PaaLadin -> Continue.
+  3. Проверить: git ls-remote origin refs/heads/main -> должен быть b8b0c2f.
+- Push 7fe994c (fix UI silent ping) - прошёл 02.11.2026, HEAD==origin был на 7fe994c.

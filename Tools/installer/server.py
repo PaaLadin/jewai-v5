@@ -284,6 +284,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 agent_py = os.path.join(target, 'Templates', 'extension', 'agent.py')
             if os.path.exists(agent_py):
                 spawn(f"Agent {L}", [agent_py, str(agent_port)], target)
+                # 7C bug3b: verify /ping after spawn (process may be alive but port-busy/dying)
+                _ping_ok = False
+                for _try in range(6):
+                    time.sleep(0.5)
+                    try:
+                        _ur2 = __import__("urllib.request", fromlist=["urlopen"])
+                        _ur2.urlopen(f"http://127.0.0.1:{agent_port}/ping", timeout=1).read()
+                        _ping_ok = True
+                        break
+                    except Exception:
+                        pass
+                if _ping_ok:
+                    log(f"Agent {L} /ping OK on {agent_port}.")
+                else:
+                    log(f"Agent {L} /ping FAILED on {agent_port} after 3s (agent.py exited? port busy? check {agent_py}).")
             else:
                 log(f"Agent {L}: agent.py not found (HTTP /ping will be DOWN).")
         launcher_py = os.path.join(target, 'Tools', 'launcher.py')

@@ -186,6 +186,6 @@ if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8666
     if _port_busy(port):
         print("[guard] port", port, "busy, exit")
-        sys.exit(0)
+        sys.exit(1)
     print("[agent] v" + VERSION + " root=" + str(ROOT) + " port=" + str(port))
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
