@@ -148,12 +148,19 @@ def _svc_state(kind):
         alive = False
         if pid:
             try:
-                r = subprocess.run(["powershell", "-NoProfile", "-Command",
-                    "Get-Process -Id %d -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id" % int(pid)],
-                    capture_output=True, text=True, timeout=5)
-                alive = bool(r.stdout.strip())
+                if sys.platform == "win32":
+                    import ctypes
+                    PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+                    h = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, int(pid))
+                    if h:
+                        ctypes.windll.kernel32.CloseHandle(h)
+                        alive = True
+                else:
+                    import os as _os
+                    _os.kill(int(pid), 0)
+                    alive = True
             except Exception:
-                pass
+                alive = False
         return {"state": d.get("state", "off"), "pid": pid, "alive": alive}
     except Exception:
         return {"state": "off", "alive": False, "pid": None}
@@ -260,9 +267,12 @@ class Handler(BaseHTTPRequestHandler):
             }
             html = html_path.read_text(encoding="utf-8")
             import json as _jj
-            html = html.replace(
-                "/*__JEWAI_ONBOARDING_INFO__*/",
-                _jj.dumps(info, ensure_ascii=False)
+            import re as _re
+            # 7C fix: use lambda replacement so backslashes in json are NOT interpreted by re.sub
+            html = _re.sub(
+                r"/\*__ONB_START__\*/.*?/\*__ONB_END__\*/",
+                lambda _m: _jj.dumps(info, ensure_ascii=False),
+                html, count=1, flags=_re.DOTALL
             )
             return self._send_html(200, html)
         return self._j(404, {"error": "not found"})
@@ -313,7 +323,8 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     args = [sys.executable, svc, "status", "--channel", ch]
                 try:
-                    rr = subprocess.run(args, capture_output=True, text=True, timeout=20)
+                    _nw = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                    rr = subprocess.run(args, capture_output=True, text=True, timeout=20, creationflags=_nw)
                     out = (rr.stdout or "").strip()
                     try:
                         parsed = json.loads(out) if out else {}
@@ -353,6 +364,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not os.path.exists(bridge):
                     return self._j(200, {"ok": False, "error": "Bridge/run.py missing"})
                 try:
+                    _nw2 = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
                     kill = subprocess.run(["powershell", "-NoProfile", "-Command",
                         "Get-CimInstance Win32_Process -Filter \"Name='pythonw.exe' or Name='python.exe'\" | "
                         "Where-Object { $_.CommandLine -like '*Bridge*run.py*--channel*" + ch + "*' } | "

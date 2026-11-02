@@ -257,3 +257,17 @@ Dixi. C (Семён), 7C, 2026-11-02.
   - или SUMMARY в UI заранее показывает «агенты: 8666..8671; конфликт: 8670».
 - **Приоритет:** MEDIUM (UX, не блокер — обход очевиден после подсказки).
 - **Связано:** B-04 (который тоже про «installer должен показывать реальные значения»).
+
+
+### B-35 (HIGH, повтор B-28): CfT copy locked при повторном install поверх (Chrome держит файлы source CfT)
+
+- **Симптом (2026-11-02 21:43):** повторный install поверх C:/JewAI_v5 без ручного закрытия Chrome -> FATAL: WinError 32 на `C:/jewai/Tools/chrome-for-testing/chrome.dll`, `chrome.exe`, `chrome_100_percent.pak`, etc.
+- **Причина:** мой `_kill_chrome_for_target` фильтрует по cmdline с target OR ROOT, но при `install.bat` из C:/jewai ROOT = C:/jewai, а Chrome, который держит файлы CfT в **source** — это Chrome от **предыдущего запуска v5** (из C:/JewAI_v5/Profiles/.../chrome), но его cmdline содержит `--user-data-dir=C:/JewAI_v5/Profiles/<L>/chrome`, не C:/jewai. То есть файлы в `C:/jewai/Tools/chrome-for-testing/` держит Chrome, который был запущен **из source CfT** — это `C:/jewai/tools/chrome-for-testing/chrome.exe`, а user-data-dir у него может быть **от старой установки v5**, то есть cmdline содержит `C:/JewAI_v5` — kill по target должен его покрыть, но **порядок** в коде: `_kill_chrome_for_target(target)` вызывается внутри `run_install` после копирования файлов, а CfT copy идёт раньше → файлы копируются, только потом kill. А надо kill ДО копирования CfT.
+- **Фикс:** порядок в `Tools/installer/server.py::run_install`:
+  1. **Первым делом** — `_kill_chrome_for_target(target, log)` + `_kill_python_for_target(target, log)`.
+  2. Потом copytree core.
+  3. Потом CfT copy с retry.
+  Также: kill должен быть более широким — по `chrome.exe` с любым `--user-data-dir` под `<target>/Profiles/*` ИЛИ `<ROOT>/Profiles/*` ИЛИ просто `<target>` (без `--user-data-dir` — headless CfT запуски).
+- **Приоритет:** HIGH (блокирует любой редеплой поверх без ручного закрытия Chrome). Случай **редкий**, но UX плохой — пользователь видит FATAL.
+- **Связано:** B-19, B-28.
+
