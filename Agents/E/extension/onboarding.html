@@ -5,100 +5,64 @@
 <title>JewAI — первый запуск агента</title>
 <style>
   html, body { margin: 0; padding: 0; background: #0a0a0a; color: #33ff33; font-family: 'Courier New', monospace; min-height: 100vh; }
-  .wrap { max-width: 800px; margin: 0 auto; padding: 40px 24px; }
-  h1 { color: #33ff33; text-shadow: 0 0 8px #33ff33; font-size: 22px; margin-bottom: 8px; }
-  h2 { color: #33cc33; font-size: 16px; margin-top: 28px; border-bottom: 1px solid #1a3a1a; padding-bottom: 4px; }
-  .agent { color: #88ff88; font-size: 18px; margin-bottom: 20px; }
-  .step { border-left: 3px solid #33ff33; padding-left: 12px; margin: 16px 0; }
-  .step-num { color: #33ff33; font-weight: bold; }
-  a { color: #66ccff; }
-  code { background: #1a2a1a; padding: 1px 4px; border-radius: 2px; color: #99ff99; }
-  .note { background: #0d1a0d; border: 1px solid #1a3a1a; padding: 12px; margin: 16px 0; color: #88aa88; font-size: 13px; }
-  .final { background: #0d1a1a; border: 1px solid #1a4a4a; padding: 16px; margin-top: 24px; }
-  button { background: #1a3a1a; color: #33ff33; border: 1px solid #33ff33; padding: 10px 20px; font-family: inherit; font-size: 14px; cursor: pointer; border-radius: 3px; }
-  button:hover { background: #2a4a2a; }
-  .dont-show { margin-top: 32px; padding: 10px; border-top: 1px dashed #1a3a1a; color: #88aa88; font-size: 12px; }
-  .dont-show input { accent-color: #33ff33; margin-right: 6px; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px; }
+  h1 { color: #00ff66; text-shadow: 0 0 10px rgba(0,255,102,0.6); font-size: 22px; margin-bottom: 8px; letter-spacing: 2px; }
+  .lead { color: #66ff88; font-size: 15px; margin-bottom: 8px; }
+  .agent { color: #0a8a3a; font-size: 14px; margin-bottom: 32px; letter-spacing: 1px; }
+  .step { border-left: 3px solid #00ff66; padding: 4px 0 4px 16px; margin: 24px 0; }
+  .step-num { color: #00ff66; font-weight: bold; font-size: 16px; }
+  .step p { margin: 6px 0; line-height: 1.6; }
+  a { color: #33d6ff; }
+  .final { background: #0d1a1a; border: 1px solid #00ff66; padding: 20px; margin-top: 36px; border-radius: 4px; }
+  .final button { background: #00ff66; color: #000; border: none; padding: 12px 28px; font-family: inherit; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 3px; letter-spacing: 1px; }
+  .final button:hover { background: #33ff88; box-shadow: 0 0 12px rgba(0,255,102,0.6); }
+  .dont-show { margin-top: 40px; padding: 10px 0; border-top: 1px dashed #1a3a1a; color: #0a8a3a; font-size: 12px; }
+  .dont-show input { accent-color: #00ff66; margin-right: 6px; }
+  .hint { color: #0a8a3a; font-size: 12px; margin-top: 6px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>JEWAI v5 — ПЕРВЫЙ ЗАПУСК</h1>
+  <p class="lead">JewAI — мост между браузерным чатом и твоим компьютером.</p>
   <div class="agent">Агент: <strong id="agent-name">?</strong> (канал <strong id="agent-channel">?</strong>)</div>
 
-  <h2>Что это</h2>
-  <p>JewAI — мост между браузерным чатом (DeepSeek / Qwen / Alice) и локальными файлами. Агент в чате пишет команды в блоке — мост исполняет их на диске и возвращает отчёт. Каждый канал (A..J) — отдельный Chrome-профиль со своим чатом.</p>
-
-  <h2>Что делать (3 шага)</h2>
-
   <div class="step">
-    <div><span class="step-num">Шаг 1.</span> Открой боковую панель JewAI</div>
-    <p>В правом верхнем углу Chrome есть иконка JewAI (J). Если её нет — открой <code>chrome://extensions/</code> и проверь, что расширение <strong>JewAI Agent Bridge</strong> включено. Нажми на иконку → откроется панель с лампами CDP / WATCHDOG / RECOVERY.</p>
+    <div class="step-num">1. Открой сайд-панель</div>
+    <p>Нажми на иконку расширений в Chrome (пазл, справа от адресной строки) — там будет JewAI Agent Bridge. Нажми на неё — откроется сайд-панель.</p>
+    <p class="hint">Совет: нажми на булавку рядом с JewAI в меню расширений — иконка закрепится, и пазл искать больше не придётся.</p>
   </div>
 
   <div class="step">
-    <div><span class="step-num">Шаг 2.</span> Залогинься в чат</div>
-    <p id="chat-link-block">Открой <a id="chat-link" href="#" target="_blank">чат</a> и войди в аккаунт. <strong>Chromium в Google-аккаунт логинить НЕ надо</strong> — достаточно логина в сам чат. Куки и сессия сохранятся в профиле Chrome для этого канала (<code id="profile-path">Profiles/&lt;L&gt;/chrome</code>) и переживут перезапуск.</p>
-    <p>Когда залогинишься — вернись на эту вкладку и нажми кнопку внизу.</p>
+    <div class="step-num">2. Залогинься в чат</div>
+    <p>Открой <a id="chat-link" href="#" target="_blank">чат</a> и войди в аккаунт. Chromium в Google-аккаунт логинить не обязательно — достаточно логина в сам чат. Куки сохранятся в профиле.</p>
   </div>
 
   <div class="step">
-    <div><span class="step-num">Шаг 3.</span> Закрепи вкладку чата</div>
-    <p>Правый клик по вкладке чата → «Закрепить». Это защитит от случайного закрытия. Если вкладка всё равно пропала — мост может её не найти, но ты всегда можешь открыть вручную по ссылке из шага 2.</p>
+    <div class="step-num">3. Закрепи вкладку чата</div>
+    <p>Правый клик по вкладке чата и выбери Закрепить. Так она не закроется случайно.</p>
   </div>
 
   <div class="final">
     <button id="btn-ready">Готово, открыть чат</button>
   </div>
 
-  <h2>Если что-то не работает</h2>
-  <div class="note">
-    <strong>Красная лампа CDP:</strong> Chrome не отвечает на CDP-порту. Перезапусти launcher канала или проверь порт.<br>
-    <strong>Красные лампы WATCHDOG / RECOVERY:</strong> сервисы не запущены. Включи тумблеры в панели.<br>
-    <strong>SELF-TEST FAIL:</strong> открой панель → SELF-TEST → посмотри какой пункт упал.<br>
-    <strong>Панель показывает «UNKNOWN»:</strong> нажми PING в панели, проверь URL агента (должен быть <code>http://127.0.0.1:&lt;agent_port&gt;</code>).
-  </div>
-
-  <h2>Полезные ссылки</h2>
-  <ul>
-    <li><a href="https://chat.deepseek.com/" target="_blank">DeepSeek</a> — основной чат</li>
-    <li><a href="https://chat.qwen.ai/" target="_blank">Qwen</a> — альтернатива</li>
-    <li><a href="https://alice.yandex.ru/" target="_blank">Alice</a> — русский чат</li>
-    <li>Mainframe (панель управления): <a id="mainframe-link" href="#">http://127.0.0.1:8670/</a></li>
-  </ul>
-
   <div class="dont-show">
     <label><input type="checkbox" id="cb-dont-show"> Не показывать это окно при следующих запусках</label>
   </div>
 </div>
 <script>
-  // When served from agent.py, it injects a JSON blob with {channel, name, port, cdp, model, root, chat_url, mainframe_url}
   const INFO = /*__JEWAI_ONBOARDING_INFO__*/ {"channel":"?","name":"?","port":0,"cdp":0,"model":"deepseek","root":"","chat_url":"https://chat.deepseek.com/","mainframe_url":"http://127.0.0.1:8670/"};
-
   document.getElementById('agent-name').textContent = INFO.name || '?';
   document.getElementById('agent-channel').textContent = INFO.channel || '?';
   document.getElementById('chat-link').textContent = INFO.chat_url || 'чат';
   document.getElementById('chat-link').href = INFO.chat_url || '#';
-  document.getElementById('profile-path').textContent = 'Profiles/' + (INFO.channel || '&lt;L&gt;') + '/chrome';
-  document.getElementById('mainframe-link').textContent = INFO.mainframe_url || '';
-  document.getElementById('mainframe-link').href = INFO.mainframe_url || '#';
-
-  document.getElementById('btn-ready').onclick = () => {
-    window.location.href = INFO.chat_url || 'https://chat.deepseek.com/';
-  };
-
+  document.getElementById('btn-ready').onclick = () => { window.location.href = INFO.chat_url || 'https://chat.deepseek.com/'; };
   document.getElementById('cb-dont-show').onchange = async (e) => {
     if (e.target.checked) {
-      try {
-        await fetch('http://127.0.0.1:' + INFO.port + '/onboarding/disable?channel=' + INFO.channel, {method: 'POST'});
-        alert('Окно больше не будет показываться при следующих запусках. Открыть сейчас?');
-      } catch (err) {
-        alert('Не удалось сохранить флаг: ' + err);
-      }
+      try { await fetch('http://127.0.0.1:' + INFO.port + '/onboarding/disable?channel=' + INFO.channel, {method: 'POST'}); } catch (err) { alert('Не удалось: ' + err); }
     } else {
-      try {
-        await fetch('http://127.0.0.1:' + INFO.port + '/onboarding/enable?channel=' + INFO.channel, {method: 'POST'});
-      } catch (err) {}
+      try { await fetch('http://127.0.0.1:' + INFO.port + '/onboarding/enable?channel=' + INFO.channel, {method: 'POST'}); } catch (err) {}
     }
   };
 </script>

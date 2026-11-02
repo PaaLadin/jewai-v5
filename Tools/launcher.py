@@ -111,15 +111,18 @@ def launch(cfg, letter: str, no_proxy: bool = False, dry: bool = False) -> dict:
     ]
     if not no_proxy:
         args.append(f"--proxy-server=127.0.0.1:{cfg.doh_proxy_port}")
-    # 7C onboarding: on first run OR when flag not set, open /onboarding instead of chat.
-    # Bridge/agent.py serves /onboarding if .flag does not exist. Open it in the same window.
+    # 7C B-33: open onboarding when flag not set, REGARDLESS of first_run.
+    # (Previous version opened onboarding only on empty profile; existing profiles -> chat)
     _onb_flag = profile.parent / "logs" / "onboarding_disabled.flag"
     _want_onboarding = (not _onb_flag.exists())
-    _startup_url = start_url
-    if _want_onboarding and first_run is not None:
-        _startup_url = "http://127.0.0.1:%d/onboarding" % ch.agent_port
-    if first_run:
-        args.append(_startup_url)
+    _onb_url = "http://127.0.0.1:%d/onboarding" % ch.agent_port
+    if _want_onboarding:
+        # Force-open onboarding tab. Chrome with existing profile will also restore
+        # previous tabs; onboarding comes on top.
+        args.append(_onb_url)
+    elif first_run:
+        # No onboarding, but empty profile needs a start URL
+        args.append(start_url)
 
     if dry:
         return {"ok": True, "dry": True, "args": args, "first_run": first_run}
