@@ -617,3 +617,8 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
   2. В окне GCM выбрать PaaLadin -> Continue.
   3. Проверить: git ls-remote origin refs/heads/main -> должен быть b8b0c2f.
 - Push 7fe994c (fix UI silent ping) - прошёл 02.11.2026, HEAD==origin был на 7fe994c.
+
+- [x] BUG3b (agent :8666 DOWN): фикс Templates/extension/agent.py (exit(1) при busy) + installer /ping health-check. Проверено: p1 up, p2 rc=1 [guard] port busy. Коммит 5dd4117.
+- [x] Status schema merge (Mainframe/api.py): name/prefix/model/cdp/agent/agent_port/cdp_port в matrix. test_mainframe_8671 + test_mainframe_ext PASS. 21/21 green.
+- [ ] Push jewai: ahead 3 (b8b0c2f, 5dd4117, a3de8d7). Ждёт GCM-клика оператора.
+- [ ] BUG3a (Bridge/DeepSeek redirect chat->www): решение оператора.
