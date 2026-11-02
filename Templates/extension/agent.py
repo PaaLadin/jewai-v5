@@ -104,6 +104,23 @@ def _logs_dir():
     return ROOT / "logs"
 
 
+def _onboarding_disabled_path():
+    return _logs_dir() / "onboarding_disabled.flag"
+
+
+def _onboarding_is_disabled():
+    return _onboarding_disabled_path().exists()
+
+
+def _chat_url_for_model(model):
+    m = (model or "deepseek").lower()
+    if m == "qwen":
+        return "https://chat.qwen.ai/"
+    if m == "alice":
+        return "https://alice.yandex.ru/"
+    return "https://chat.deepseek.com/"
+
+
 def _pause_path():
     return _logs_dir() / "paused.json"
 
@@ -212,6 +229,34 @@ class Handler(BaseHTTPRequestHandler):
                                  "recovery": _svc_state("recovery")})
         if self.path == "/pause_state":
             return self._j(200, {"ok": True, **_pause_state()})
+        if self.path == "/onboarding/status":
+            return self._j(200, {"ok": True, "disabled": _onboarding_is_disabled(),
+                                 "channel": _ch_letter(), "name": _ch_name()})
+        if self.path.startswith("/onboarding") and "?" not in self.path.split("/onboarding", 1)[1][:1]:
+            # GET /onboarding -> serve HTML with injected INFO
+            html_path = HERE / "onboarding.html"
+            if not html_path.exists():
+                return self._j(404, {"error": "onboarding.html missing"})
+            cfg = CHANNEL_CFG or {}
+            chat_url = _chat_url_for_model(cfg.get("model"))
+            mf_url = "http://127.0.0.1:%s/" % cfg.get("chat_port", 8670)
+            info = {
+                "channel": _ch_letter(),
+                "name": _ch_name(),
+                "port": cfg.get("agent_port"),
+                "cdp": cfg.get("cdp_port"),
+                "model": cfg.get("model"),
+                "root": str(ROOT),
+                "chat_url": chat_url,
+                "mainframe_url": mf_url,
+            }
+            html = html_path.read_text(encoding="utf-8")
+            import json as _jj
+            html = html.replace(
+                "/*__JEWAI_ONBOARDING_INFO__*/",
+                _jj.dumps(info, ensure_ascii=False)
+            )
+            return self._send_html(200, html)
         return self._j(404, {"error": "not found"})
 
     def do_POST(self):
@@ -220,6 +265,20 @@ class Handler(BaseHTTPRequestHandler):
         try:
             b = self._body()
             op = self.path
+            if op == "/onboarding/disable":
+                try:
+                    _onboarding_disabled_path().parent.mkdir(parents=True, exist_ok=True)
+                    _onboarding_disabled_path().write_text("1", encoding="utf-8")
+                    return self._j(200, {"ok": True, "disabled": True})
+                except Exception as e:
+                    return self._j(200, {"ok": False, "error": str(e)})
+            if op == "/onboarding/enable":
+                try:
+                    if _onboarding_disabled_path().exists():
+                        _onboarding_disabled_path().unlink()
+                    return self._j(200, {"ok": True, "disabled": False})
+                except Exception as e:
+                    return self._j(200, {"ok": False, "error": str(e)})
             if op == "/pause":
                 pp = _pause_path()
                 pp.parent.mkdir(parents=True, exist_ok=True)
@@ -262,8 +321,19 @@ class Handler(BaseHTTPRequestHandler):
                 checks.append({"name": "token", "ok": tk_ok})
                 checks.append({"name": "root", "ok": ROOT.exists()})
                 checks.append({"name": "config", "ok": CHANNEL_CFG is not None})
-                led = _logs_dir() / ("ledger_%s.json" % _ch_letter()) if _ch_letter() else None
-                checks.append({"name": "ledger", "ok": bool(led and led.exists())})
+                # 7C fix: ledger file exists only AFTER first processed block.
+                # Test that logs dir is writable instead.
+                _ldir_ok = False
+                try:
+                    _ldir = _logs_dir()
+                    _ldir.mkdir(parents=True, exist_ok=True)
+                    _probe = _ldir / "_selftest_probe.tmp"
+                    _probe.write_text("ok", encoding="utf-8")
+                    _probe.unlink()
+                    _ldir_ok = True
+                except Exception:
+                    _ldir_ok = False
+                checks.append({"name": "ledger", "ok": _ldir_ok})
                 checks.append({"name": "svc_state", "ok": _svc_state("watchdog").get("state") is not None})
                 return self._j(200, {"ok": all(c["ok"] for c in checks), "checks": checks,
                                      "channel": _ch_letter(), "name": _ch_name()})

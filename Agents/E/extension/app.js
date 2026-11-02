@@ -188,14 +188,19 @@ document.getElementById('btnSaveUrl').onclick = async () => {
 };
 
 els.pause.onclick = async () => {
-  isPaused = !isPaused;
+  const target = !isPaused;
   try {
-    await apiPost('/pause', {paused: isPaused, by: 'operator'});
+    const r = await apiPost('/pause', {paused: target, by: 'operator'});
+    if (r.ok) {
+      isPaused = !!r.paused;
+      addLog(isPaused ? 'PAUSE ON (мост остановлен)' : 'PAUSE OFF (мост возобновлён)');
+    } else {
+      addLog('PAUSE FAIL: ' + JSON.stringify(r).slice(0, 120));
+    }
   } catch (e) {
     addLog('PAUSE FAIL: ' + e.message);
   }
   updatePauseUI();
-  addLog(isPaused ? 'PAUSE ON (мост остановлен)' : 'PAUSE OFF (мост возобновлён)');
 };
 
 async function toggleSvc(kind, on, interval, cooldown) {
@@ -258,4 +263,4 @@ els.reboot.onclick = async () => {
 
 load();
 setInterval(() => { if (!isPaused) ping(true); }, 10000);
-setInterval(loadSvcStatus, 10000);
+setInterval(async () => { await loadSvcStatus(); await loadPauseState(); }, 10000);
