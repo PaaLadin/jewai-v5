@@ -38,12 +38,38 @@ VERSION = "5.0.0"
 
 # 7C B-14/B-15/B-16/B-17: channel identity from per-channel config
 CHANNEL_CFG = None
-try:
-    _ch_cfg_path = HERE.parent.parent / "config" / "config.json"
-    if _ch_cfg_path.exists():
-        CHANNEL_CFG = json.loads(_ch_cfg_path.read_text(encoding="utf-8"))
-except Exception:
-    CHANNEL_CFG = None
+# 7C fix: try per-channel layout (Profiles/<L>/config/config.json),
+# then Templates layout (Templates/config/config.json), then root config.json.
+_candidates = [
+    HERE.parent / "config" / "config.json",           # Profiles/<L>/config/config.json (primary)
+    HERE.parent.parent / "config" / "config.json",    # fallback (old layout)
+    ROOT / "config.json",                              # root
+]
+for _cand in _candidates:
+    try:
+        if _cand.exists():
+            CHANNEL_CFG = json.loads(_cand.read_text(encoding="utf-8"))
+            break
+    except Exception:
+        continue
+# if we loaded the root config.json, we need to descend into channels[<L>]
+if CHANNEL_CFG and "channels" in CHANNEL_CFG and "channel" not in CHANNEL_CFG:
+    _my_letter = None
+    try:
+        import os as _os
+        # infer letter from path: .../Profiles/<L>/extension/agent.py
+        _parts = HERE.parts
+        if "Profiles" in _parts:
+            _idx = _parts.index("Profiles")
+            if _idx + 1 < len(_parts):
+                _my_letter = _parts[_idx + 1]
+    except Exception:
+        pass
+    if _my_letter and _my_letter in CHANNEL_CFG["channels"]:
+        _root_cfg = CHANNEL_CFG
+        CHANNEL_CFG = dict(CHANNEL_CFG["channels"][_my_letter])
+        CHANNEL_CFG["channel"] = _my_letter
+        CHANNEL_CFG["root"] = _root_cfg.get("root")
 
 
 def _ch_letter():

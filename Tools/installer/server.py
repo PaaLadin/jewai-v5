@@ -3,6 +3,36 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 PORT = 8660  # 11B: 8671 = agent E in v5
 
+def _kill_chrome_for_target(target, log):
+    """7C B-19: stop Chrome processes whose --user-data-dir is under target/Profiles.
+    Runs before extension copy so --load-extension picks up new files on next launch."""
+    import subprocess as _sp
+    try:
+        target_norm = os.path.abspath(target).lower()
+        ps = (
+            "Get-CimInstance Win32_Process -Filter \"Name='chrome.exe'\" | "
+            "Where-Object { $_.CommandLine -and $_.CommandLine.ToLower().Contains('" + target_norm.replace("'", "") + "') } | "
+            "Select-Object -ExpandProperty ProcessId"
+        )
+        r = _sp.run(["powershell", "-NoProfile", "-Command", ps],
+                    capture_output=True, text=True, timeout=15)
+        killed = []
+        for line in (r.stdout or "").splitlines():
+            line = line.strip()
+            if line.isdigit():
+                pid = int(line)
+                _sp.run(["taskkill", "/PID", str(pid), "/F"],
+                        capture_output=True, timeout=5)
+                killed.append(pid)
+        if killed:
+            log("B-19: killed stale Chrome pids %s for target %s" % (killed, target_norm))
+    except Exception as _e:
+        try:
+            log("B-19 kill-chrome failed: %s" % _e)
+        except Exception:
+            pass
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=HERE, **kwargs)
@@ -96,6 +126,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
             ]
             chrome_exe = next((p for p in chrome_paths if os.path.exists(p)), None)
+            
+            # 7C B-19: kill stale Chrome under target/Profiles before copying new extension
+            _kill_chrome_for_target(target, log)
             
             tmpl_ext = os.path.join(target, 'Templates', 'extension')
             for L in letters:

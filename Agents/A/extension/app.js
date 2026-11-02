@@ -42,10 +42,20 @@ async function apiGet(path) {
   return await r.json();
 }
 
+async function _getToken() {
+  try {
+    const s = await chrome.storage.local.get({token: ''});
+    return s.token || '';
+  } catch (e) { return ''; }
+}
+
 async function apiPost(path, body) {
+  const token = await _getToken();
+  const headers = {'Content-Type': 'application/json'};
+  if (token) headers['X-Token'] = token;
   const r = await fetch(agentBaseUrl + path, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: headers,
     body: JSON.stringify(body || {})
   });
   return await r.json();

@@ -199,3 +199,26 @@ Dixi. C (Семён), 7C, 2026-11-02.
 - **Что проверить:** при install 3-10: в config.json N каналов; per-agent Profiles созданы; Tools/launcher.py запускает все; Tools/svc.py знает все каналы; Mainframe status отдаёт все; панели у каждого Chrome свои.
 - **Приоритет:** MEDIUM. Проверить после B-14..B-17 на тестовой установке 3 канала.
 
+
+
+### B-19: редеплой поверх старой папки — Chrome держит старый extension
+
+- **Симптом:** после повторного install поверх C:/JewAI_v5 у одного Chrome расширение подхватилось (свежий старт), у другого — нет. Sidepanel показывает старую версию app.js (без фиксов).
+- **Причина:** installer `copytree(tmpl_ext, ext_dir, dirs_exist_ok=True)` перезаписывает файлы на диске, но запущенный Chrome держит unpacked extension в памяти. `--load-extension` загружается только при первом запуске профиля.
+- **Что сделано (7C, fix):** installer/server.py — `_kill_chrome_for_target(target, log)` перед копированием extension. Убивает chrome.exe, чей `--user-data-dir` внутри `<target>/Profiles`. При следующем launcher запуске Chrome стартует свежий и подхватывает новый extension.
+- **Приоритет:** HIGH (блокирует любые редеплои с фиксами extension).
+
+### B-20: agent.py не читал per-channel config (sidepanel = ?/UNKNOWN)
+
+- **Симптом:** после install панель показывает букву `?`, имя `UNKNOWN`. Mainframe при этом показывает правильно (A / Один).
+- **Причина:** в `agent.py` путь `HERE.parent.parent / "config" / "config.json"`. Для `Profiles/A/extension/agent.py` это даёт `Profiles/config/config.json` — не существует. Реальный файл: `Profiles/A/config/config.json`.
+- **Что сделано (7C, fix):** каскад кандидатов: `HERE.parent/config` (primary) → `HERE.parent.parent/config` (old) → `ROOT/config.json` + fallback: если корневой config — брать `channels[<L>]` по букве из пути (`Profiles/<L>/extension`).
+- **Приоритет:** HIGH (панель теряет канал/имя).
+
+### B-21: app.js не передавал X-Token в POST (SELF-TEST unauthorized)
+
+- **Симптом:** в логе панели: `SELF-TEST: {"error":"unauthorized"}`, `SVC watchdog START: {"error":"unauthorized"}`. При этом PING работает.
+- **Причина:** `apiPost` в app.js слал только Content-Type. agent.py для POST требует X-Token. GET /ping и /identity — без auth (поэтому работают).
+- **Что сделано (7C, fix):** app.js `_getToken()` из chrome.storage.local, добавляет X-Token в headers для всех POST.
+- **Приоритет:** HIGH (панель не может управлять сервисами).
+
