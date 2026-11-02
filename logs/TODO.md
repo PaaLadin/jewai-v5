@@ -624,3 +624,14 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - [ ] BUG3a (Bridge/DeepSeek redirect chat->www): решение оператора.
 
 - [ ] BUG3a (Bridge redirect chat->www): НЕ патчу. Причина: fallback на base-domain может прицепить Bridge к неверному табу (DeepSeek + Qwen/Alice на одном CDP). Нужно решение оператора: (а) --no-proxy при первом запуске + ручной логин, (б) фиксированный URL чата /a/chat/s/<id>, (в) fallback только если на порту ровно один page-таб. Файл Bridge/cdp.py не тронут, бэкап .bak_7c_bug3a есть.
+
+- [ ] B-06: Mainframe 8670 — переписать UI с панели Mainframe (как DeepSeek 8770), не Pip-Boy sidepanel. Масштабируемость по config.letters (1-10). Образец: C:/DeepSeek/sandbox/council_chat/ + git/jewai. После B-04 и раскатки B-F. Приоритет MEDIUM.
+
+- [ ] B-07: Onboarding-HTML в каждой вкладке Chrome агента (вместо about:blank): шаги (панель расширения -> логин в чат -> pin tab). Отдаётся agent.py GET /onboarding?channel=L. Приоритет HIGH.
+- [ ] B-08: RAG/onboarding/AGENT_FIRST_RUN.md — линк-лист чатов, инструкция "не логинь Chromium в Google, логинь только в чаты", описание что лежит в Profiles/<L>/chrome. Приоритет HIGH (вместе с B-07).
+- [ ] B-09: автодетект "не авторизован" (редирект чата) -> красный статус в Mainframe + кнопка "Залогиниться". Приоритет MEDIUM.
+- [ ] B-10: автовосстановление вкладки чата через CDP (Target.createTarget) при потере. Приоритет MEDIUM.
+
+- [ ] B-07 upd: onboarding HTML + краткая инструкция по проекту + чекбокс «не показывать» (флаг в config). HIGH.
+- [ ] B-11: rebirth пишет active_chat_<CH>.json (chat_url, model, model_index, created_at); Bridge ищет по конкретному URL. Mainframe показывает активную модель. MEDIUM.
+- [ ] B-12: вики в Mainframe — how-to, ключевые механики, без тех. деталей. LOW, хвост.
