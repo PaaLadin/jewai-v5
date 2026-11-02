@@ -240,7 +240,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             
             channels = {}
             for i, L in enumerate(letters):
-                cname = names_list[i] if i < len(names_list) else L
+                # 7C B-05: nicer fallback for agents without an explicit name
+                if i < len(names_list):
+                    cname = names_list[i]
+                else:
+                    cname = "Agent " + L
                 channels[L] = {
                     "name": cname,
                     "agent": base_port + i,

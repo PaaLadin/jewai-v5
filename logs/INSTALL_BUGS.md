@@ -53,7 +53,7 @@ Dixi. C (Семён), 7C, 2026-11-02.
 - **Симптом:** оператор ввёл `Hans` в [6/6] → A=Hans, B=`"name": "B"`. Для неопытного пользователя — неожиданно.
 - **Где:** Tools/installer/server.py, channels[L]["name"] = names_list[i] if i < len(names_list) else L.
 - **Ожидание:** либо дефолт «Agent B» / «Boris», либо отказ: «для 2 агентов нужно 2 имени» / «оставьте пустым для всех».
-- **Приоритет:** LOW (UX, не блокер).
+- **Приоритет:** LOW. **СДЕЛАНО (7C, 2026-11-02):** fallback имени = 'Agent <L>' вместо просто '<L>'.
 
 
 
@@ -109,15 +109,14 @@ Dixi. C (Семён), 7C, 2026-11-02.
 - **Симптом:** если куки чата истекли (DeepSeek refresh token), Bridge видит редирект на www.deepseek.com/en, не находит /a/chat/s/ и молчит. Оператор не понимает, что делать.
 - **Что должно быть:** Bridge при `find_chat` returns None + детект "url редиректит на login/www" -> сигнал в Mainframe (alerts) -> Mainframe-панель показывает красный статус канала + кнопка "Залогиниться заново" -> открывает chat URL в той вкладке.
 - **Где:** Bridge/cdp.py (расширенный find_chat, возвращать причину), Mainframe/health.py (алерт), Mainframe/static (кнопка).
-- **Приоритет:** MEDIUM (после B-07/B-08). Связано с BUG3a (в DeepSeek отложен).
+- **Приоритет:** MEDIUM. **ЧАСТИЧНО СДЕЛАНО (7C, 2026-11-02):** Bridge/run.py B-10 восстанавливает вкладку при потере через Target.createTarget. Mainframe-панель красный статус — часть B-06 (отложено).
 
 ### B-10: Автовосстановление вкладки чата через CDP
 
 - **Симптом:** вкладка чата может пропасть — случайно закрыли, Chrome крашнулся без restore, Chromium выгрузил target.
 - **Что должно быть:** Bridge/run.py при потере чата (find_chat None, но CDP жив) -> `Target.createTarget` на URL чата -> повторный find_chat. Не ждать оператора.
 - **Где:** Bridge/run.py / Bridge/cdp.py.
-- **Приоритет:** MEDIUM (страховка, не критично, если B-07/B-08 работают).
-- **Связано:** вкладка-пин не решает (pin — UX, не CDP).
+- **Приоритет:** MEDIUM. **СДЕЛАНО (7C, 2026-11-02):** Bridge/run.py::_try_recreate_chat — Target.createTarget на chat_url (из active_chat_<L>.json) или /a/chat/s/. Throttle 30s.
 
 
 ### B-07 (обновлено 02.11): Onboarding HTML + чекбокс "не показывать"

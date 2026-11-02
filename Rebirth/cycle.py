@@ -148,6 +148,31 @@ def run_cycle(cfg: Config, letter: str, adapter: Any, cdp: Any, table: Table) ->
         return {"ok": False, "error": "advance: " + str(e)[:200],
                 "hits": hits, "new_url": new_url}
 
+    # 7C B-11: persist active chat URL + model for this channel.
+    # Bridge/run.py B-10 reads this when recreating a missing tab; Mainframe shows active model.
+    try:
+        import json as _json
+        _active_path = cfg.path("logs", "active_chat_%s.json" % letter)
+        _active_path.parent.mkdir(parents=True, exist_ok=True)
+        _prev_idx = 0
+        if _active_path.exists():
+            try:
+                _prev = _json.loads(_active_path.read_text(encoding="utf-8"))
+                _prev_idx = int(_prev.get("model_index", 0))
+            except Exception:
+                _prev_idx = 0
+        _payload = {
+            "channel": letter,
+            "chat_url": new_url,
+            "model": ch.model,
+            "series": adv.new_series,
+            "model_index": _prev_idx + 1,
+            "created_at": time.time(),
+        }
+        _active_path.write_text(_json.dumps(_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as _e:
+        pass
+
     append_log(cfg, {"ts": time.time(), "ch": letter, "old_series": adv.old_series,
                      "new_series": adv.new_series, "new_url": new_url,
                      "hits": hits, "markers_total": len(markers),
