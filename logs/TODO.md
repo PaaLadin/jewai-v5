@@ -591,3 +591,17 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - [ ] Фазы R1-R5 (Алиса): LICENSE, requirements.txt, CHANGELOG, push, техдолг.
 - [ ] Каналы B-F: настройка и тестирование.
 - [ ] Мелкие баги: Agent v из манифеста, agentName из storage.
+
+
+## 2026-11-02 (7C, Семён) - актуализация + план раскатки
+
+- [x] Подхват хвостов Бориса 12B, разбор HANDOVER/TODO/SESSION_STATE/PROMPT_13B.
+- [x] Правки Бориса 31.10-02.11: в rag/ и algorithms/ DeepSeek правок НЕТ. Реальные правки (RAG-доки, Pip-Boy UI, voice_call, installer fixes) уже в jewai, коммиты 89db413..7fe994c.
+- [x] Push jewai 7fe994c (fix UI silent ping) -> origin/main == HEAD.
+- [x] ROADMAP актуализирован (02.11): Ф2 in progress, Ф3/Ф4/Ф5 partial (приёмки не было), Ф7 = релизный пуш после закрытия фаз.
+- [x] LICENSE перед релизным пушем - отдельное напоминание logs/LICENSE_REMINDER.md.
+- [x] CORS в Mainframe/web.py реализован (_cors + do_OPTIONS) - проверить живьём.
+- [ ] Инсталлер-баги: BUG2 fallback Click to open, BUG3 agent:8666 DOWN при CDP UP, storage=False, DeepSeek redirect, agentCount default.
+- [ ] Раскатка B-F с оператором (после Ф2).
+- [ ] Проверить checkStuck в content_deepseek.js живьём.
+- [ ] Прогнать rebirth-цикл в рантайме.

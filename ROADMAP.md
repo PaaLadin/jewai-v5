@@ -3,7 +3,7 @@
 **Версия:** 0.1.0-dev
 **Старт:** 2026-10-28
 **Корень:** C:/JewAI/
-**Ответственный:** оператор + 12D (Димон), пилот — канал C (Семён)
+**Ответственный:** оператор + 7C (Семён)
 
 ## Цель
 
@@ -34,13 +34,13 @@
 |------|----------|--------|------------|
 | Ф0 | Скелет проекта | done | структура, VERSION, README, JOURNAL, TODO |
 | Ф1 | Аудит старого JewAI | done | AUDIT.md 44467b, 29 разделов + §30 replay-guard |
-| Ф2 | Пилот моста на C | done | Core/Bridge/Adapters/Tools; E2E read+send на C (9124) |
-| Ф3 | Mainframe 8670 | done | P0+P1: chat/status/health/svc/launchpad/meeting/logs/roadmap; /fs отложен |
-| Ф4 | Rebirth v5 | done | table/master/onboard + gate + lock + CDP cycle; test_rebirth 23/23, test_cycle 19/19 |
-| Ф5 | Надстройки | partial | llm/mail/rag каркасы + doh_proxy реализован (test 9/9); real config требует данные оператора |
+| Ф2 | Пилот моста + Extension | in progress | пилот накидан, extension = мост, приёмки нет, занимаемся 02.11 |
+| Ф3 | Mainframe 8670 | partial | пилот накидан, приёмки НЕ было |
+| Ф4 | Rebirth v5 | partial | тесты зелёные, РАНТАЙМ-цикл не прогонялся |
+| Ф5 | Надстройки | partial | каркасы; real SMTP/LLM не проверены |
 | Ф6 | Раскатка A/B/D/E/F | откат в план | Chrome поднимались вне правил, потушены; агенты не запускались |
-| Ф7 | GitHub-публикация | в плане | precheck только; push не выполнялся |
-| + | Extension (added 13D) | done | Templates/extension 7 файлов + Agents/<CH>/extension; test 15/15 |
+| Ф7 | Релизный пуш | pending | пуш после закрытия всех фаз; обычный push 7fe994c — 02.11.2026 |
+| + | Extension | в Ф2 | extension = мост, часть Ф2 |
 | + | Layout (added 13D) | done | Profiles/<CH>/ (browser) + Agents/<CH>/ (personal) + Templates/ |
 
 ## Порты
@@ -240,3 +240,13 @@ Chrome C (9124) live. Mainframe 8670 live (наш pid). Watchdog D ON.
   - 5.1. Аутентичность источника блока (префикс-канал). *Проектное решение, требует консилиума.*
   - 5.2. Живой CDP-цикл Rebirth на тестовом канале (create_chat -> send_prompt -> verify -> advance).
   - 5.3. Тест Watchdog-guard (залипание DOM -> авто-сброс).
+
+
+## Состояние 02.11.2026 (7C, актуализация)
+
+- git jewai: HEAD 7fe994c, origin/main == HEAD (запушено 02.11.2026). Дерево чистое.
+- Тесты 21/21 зелёные, но это unit/smoke. Рантайм-циклы (rebirth, сервисы, install->launch->agent, extension в бою) НЕ прогонялись.
+- Ф3/Ф4/Ф5 - partial, приёмки не было. Ф2 in progress. Ф7 = релизный пуш после закрытия всех фаз.
+- Открытые баги инсталлятора (детали в logs/TODO.md): CORS в Mainframe/web.py, fallback redirect, agent:8666 DOWN при CDP UP, storage=False, DeepSeek redirect, agentCount default.
+- Расширение: checkStuck не проверен живьём; agentName UNKNOWN; E/F lastId=None.
+- LICENSE перед релизным пушем - напоминание в logs/LICENSE_REMINDER.md.
