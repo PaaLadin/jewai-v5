@@ -115,8 +115,24 @@ class Daemon:
             num = int(current_max[len(pref):])
         return "%s%04d" % (pref, num + 1)
 
+    # ---- pause (B-15) ----
+    def _pause_path(self):
+        return self.cfg.channel_path(self.letter, "logs", "paused.json")
+
+    def _is_paused(self) -> bool:
+        pp = self._pause_path()
+        if not pp.exists():
+            return False
+        try:
+            import json as _j
+            return bool(_j.loads(pp.read_text(encoding="utf-8")).get("paused"))
+        except Exception:
+            return False
+
     # ---- one pass ----
     def tick(self, cdp: CDP) -> DaemonResult:
+        if self._is_paused():
+            return DaemonResult(self.letter, 0, 0, 0)
         if self._inflight():
             return DaemonResult(self.letter, 0, 0, 0)
         if not self._is_stable(cdp):

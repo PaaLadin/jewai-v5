@@ -143,3 +143,59 @@ Dixi. C (Семён), 7C, 2026-11-02.
 - **Контент:** как пользоваться агентами, как логиниться, как закреплять вкладки, что делать если сломалось, ключевые механики (каналы, rebirth, восстановление). Без кода, без внутренних процедур.
 - **Где:** Mainframe/static/ + роут /wiki или /help, контент — RAG/wiki/*.md.
 - **Приоритет:** LOW (хвост). После RAG, раскатки, B-04..B-11, релизного пуша.
+
+
+### B-13: DeepSeek "Stopped" — нужен авто-клик regenerate
+
+- **Симптом:** иногда размышление DeepSeek зависает в состоянии "Stopped" (внизу чата: "Stopped" + две стрелки-круга regenerate). Агент стоит часами, пока оператор не заметит.
+- **Что должно быть:** content_deepseek.js каждые 2 сек проверяет наличие "Stopped" + кнопки regenerate. Если найдено и оператор НЕ печатает (userHasTyped=false) -> клик regenerate. Дедуп 15с (не спамить). Лог в console.
+- **Где:** Templates/extension/content_deepseek.js (+ Agents/*/extension/).
+- **Приоритет:** HIGH (агент простаивает часами, работа стоит).
+- **Связано:** RAG/procedures/STUCK_STATES.md (там про regenerate есть, но не про Stopped).
+
+### B-14: Панель (sidepanel) не подхватывает channel/name из storage
+
+- **Симптом:** после install в панели: буква `?`, имя `UNKNOWN`. SELF-TEST/PING пишет `ch: ?`. Все каналы показывают одно и то же.
+- **Причина:** Tools/launcher.py::_push_storage возвращает False для B (B-04); плюс app.js вообще не пытается повторить push / не запрашивает storage сам при load().
+- **Что должно быть:**
+  - app.js при load(): если channel/name = '?'/'UNKNOWN' и agentUrl известен, запросить `/identity` у agent.py (новый роут) -> подтянуть канал/имя/порт автоматически.
+  - launcher._push_storage: retry до 10x1s, ждать появления target любого chrome-extension://.
+  - agent.py: новый GET /identity -> {channel, name, port, version} из per-channel config.
+- **Приоритет:** HIGH (это корень симптомов "панель не подхватывает").
+- **Связано:** B-04.
+
+### B-15: Пауза не связана с мостом (кнопка pause в панели — заглушка)
+
+- **Симптом:** жмёшь PAUSE/PLAY — в логе "PAUSE ON/OFF", но мост продолжает отправлять. Кнопка ничего не останавливает.
+- **Причина:** Bridge/daemon.py не читает никакой флаг паузы; app.js пишет chrome.storage.paused, который видит только background.js (но он тоже не останавливает — только отвергает новые батчи, а daemon шлёт напрямую через CDP).
+- **Что должно быть:** sidepanel pause -> POST `/pause` на agent.py -> пишет `Profiles/<L>/logs/paused.json` {paused:true, since, by}. Bridge/daemon.py::tick() в начале проверяет paused.json: если paused — return (не отправляет). При снятии паузы — мост возобновляет и отправляет накопленное (что в ledger не закоммичено — да, а что закоммичено но не отправлено — надо дослать по флагу).
+- **Приоритет:** HIGH (главный функционал панели — не работает).
+- **Связано:** B-14, B-16.
+
+### B-16: WATCHDOG/RECOVERY лампы и переключатели — не подключены
+
+- **Симптом:** тумблеры WATCHDOG/RECOVERY включаются (визуально зелёные), но лампы остаются красными. Кнопки SAVE не работают.
+- **Причина:** app.js не читает статус сервисов, не отправляет команды svc; agent.py не имеет роутов `/svc_status`, `/svc_toggle`.
+- **Что должно быть:**
+  - agent.py: GET `/svc_status` -> читает Profiles/<L>/logs/svc_watchdog_<L>.json, svc_recovery_<L>.json -> {watchdog:{state,pid,alive}, recovery:{...}}.
+  - agent.py: POST `/svc_toggle` {kind, action, interval?, cooldown?} -> вызов Tools/svc.py через subprocess.
+  - app.js: при load() и раз в 10с — fetch `/svc_status`, красить лампы. При клике тумблера -> POST `/svc_toggle`.
+  - Лампы: зелёная если alive=true, красная если off, жёлтая если state=on но pid мёртв.
+- **Приоритет:** HIGH (главная визуальная ложь панели).
+- **Связано:** B-15.
+
+### B-17: SELF-TEST и REBOOT — заглушки
+
+- **Симптом:** SELF-TEST пишет "заглушка", REBOOT пишет "REBOOT (заглушка)".
+- **Что должно быть:**
+  - SELF-TEST: POST `/selftest` на agent.py -> проверяет: ping ok, token ok, root доступен, ledger читается, config читается, svc_state читается. Возвращает массив checks. Панель печатает в лог.
+  - REBOOT: POST `/reboot` на agent.py -> находит Bridge/run.py для канала в процессах и перезапускает (kill + spawn через pythonw). Агент НЕ трогает Chrome (это отдельно).
+- **Приоритет:** MEDIUM (не критично для работы, но панель должна быть честной).
+- **Связано:** B-16.
+
+### B-18: Масштабируемость панелей 1-10 — проверить
+
+- **Симптом:** installer принимает 1-10 агентов, но панели/конфиги/launcher — везде ли поддерживается N>2?
+- **Что проверить:** при install 3-10: в config.json N каналов; per-agent Profiles созданы; Tools/launcher.py запускает все; Tools/svc.py знает все каналы; Mainframe status отдаёт все; панели у каждого Chrome свои.
+- **Приоритет:** MEDIUM. Проверить после B-14..B-17 на тестовой установке 3 канала.
+

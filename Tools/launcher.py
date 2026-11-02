@@ -127,13 +127,18 @@ def launch(cfg, letter: str, no_proxy: bool = False, dry: bool = False) -> dict:
     ok = wait_cdp(ch.cdp_port, wait_sec=20.0)
     storage_ok = False
     if ok:
-        for _attempt in range(1, 4):
-            storage_ok = _push_storage(cfg, letter, ch)
-            if storage_ok:
-                break
-            time.sleep(2)
-        if not storage_ok:
-            print("[launcher] push_storage FAILED x3 channel=%s cdp=%d" % (letter, ch.cdp_port), flush=True)
+        _ext_ok = _wait_extension_target(ch.cdp_port, wait_sec=15.0)
+        if _ext_ok:
+            for _attempt in range(1, 11):
+                storage_ok = _push_storage(cfg, letter, ch)
+                if storage_ok:
+                    print("[launcher] push_storage OK ch=%s try=%d" % (letter, _attempt), flush=True)
+                    break
+                time.sleep(1)
+            if not storage_ok:
+                print("[launcher] push_storage FAILED x10 ch=%s cdp=%d" % (letter, ch.cdp_port), flush=True)
+        else:
+            print("[launcher] push_storage SKIP ch=%s cdp=%d no_ext_target" % (letter, ch.cdp_port), flush=True)
     return {"ok": ok, "pid": p.pid, "cdp": ch.cdp_port, "first_run": first_run, "storage": storage_ok}
 
 
@@ -182,6 +187,24 @@ def _push_storage(cfg, letter: str, ch) -> bool:
             ws.close()
     except Exception:
         return False
+
+
+def _wait_extension_target(cdp_port: int, wait_sec: float = 15.0) -> bool:
+    import json as _j
+    import urllib.request as _u
+    t0 = time.time()
+    while (time.time() - t0) < wait_sec:
+        try:
+            with _u.urlopen("http://127.0.0.1:%d/json/list" % cdp_port, timeout=2) as r:
+                targets = _j.loads(r.read().decode("utf-8"))
+            for x in targets:
+                u = x.get("url", "") or ""
+                if u.startswith("chrome-extension://"):
+                    return True
+        except Exception:
+            pass
+        time.sleep(0.5)
+    return False
 
 
 def main() -> int:

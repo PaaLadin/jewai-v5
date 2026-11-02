@@ -158,17 +158,59 @@ setInterval(scan, POLL_MS);
 window.addEventListener('load', () => setTimeout(scan, 800));
 // --- checkStuck v5 ---
 function checkStuck() {
-  if (window.location.href.includes('/a/chat/s/')) {
-    const bodyText = document.body.innerText || '';
-    if (bodyText.includes('Server is temporarily unavailable') || bodyText.includes('This model is currently unavailable')) {
-      const buttons = Array.from(document.querySelectorAll('button, div[role="button"]'));
-      const retryBtn = buttons.find(b => b.innerText && (b.innerText.includes('Continue') || b.innerText.includes('Retry')));
-      if (retryBtn && !retryBtn.dataset.clicked) {
-        retryBtn.dataset.clicked = 'true';
-        retryBtn.click();
-        console.log('[jewai-v5] Clicked Retry/Continue');
-      }
+  if (!window.location.href.includes('/a/chat/s/')) return;
+  const bodyText = document.body.innerText || '';
+  if (bodyText.includes('Server is temporarily unavailable') || bodyText.includes('This model is currently unavailable')) {
+    const buttons = Array.from(document.querySelectorAll('button, div[role="button"]'));
+    const retryBtn = buttons.find(b => b.innerText && (b.innerText.includes('Continue') || b.innerText.includes('Retry')));
+    if (retryBtn && !retryBtn.dataset.clicked) {
+      retryBtn.dataset.clicked = 'true';
+      retryBtn.click();
+      console.log('[jewai-v5] Clicked Retry/Continue');
     }
   }
+  try {
+    const ta = document.querySelector('textarea');
+    if (ta && ta.value && ta.value.trim().length > 0) return;
+    const msgs = document.querySelectorAll('.ds-message');
+    if (!msgs.length) return;
+    const lastN = Math.min(2, msgs.length);
+    for (let i = msgs.length - lastN; i < msgs.length; i++) {
+      const m = msgs[i];
+      if (!m) continue;
+      const txt = (m.innerText || '').toLowerCase();
+      if (txt.indexOf('stopped') < 0) continue;
+      const btns = m.querySelectorAll('button');
+      let regenBtn = null;
+      for (const b of btns) {
+        const al = (b.getAttribute('aria-label') || '').toLowerCase();
+        if (al.indexOf('regener') >= 0 || al.indexOf('regen') >= 0) { regenBtn = b; break; }
+      }
+      if (!regenBtn) {
+        const svgs = m.querySelectorAll('button');
+        for (const b of svgs) {
+          if (b.querySelector('svg') && b.innerText.trim() === '') { regenBtn = b; break; }
+        }
+      }
+      if (!regenBtn) continue;
+      const lastAt = parseInt(regenBtn.dataset.regeneratedAt || '0', 10);
+      const now = Date.now();
+      if (now - lastAt < 15000) continue;
+      const clicks = parseInt(regenBtn.dataset.clicksIn5 || '0', 10);
+      if (clicks >= 3) {
+        if (!regenBtn.dataset.warned) {
+          regenBtn.dataset.warned = '1';
+          console.log('[jewai-v5] B-13: Stopped persists after 3 regenerates, giving up');
+        }
+        continue;
+      }
+      regenBtn.dataset.regeneratedAt = String(now);
+      regenBtn.dataset.clicksIn5 = String(clicks + 1);
+      regenBtn.click();
+      console.log('[jewai-v5] B-13: clicked regenerate (n=' + (clicks + 1) + ')');
+      break;
+    }
+  } catch (e) {}
 }
 setInterval(checkStuck, 2000);
+
