@@ -1160,3 +1160,25 @@ Watchdog D: ON (pid 17360). Recovery D: ON (pid 7444).
 - Добавлено отображение имени агента.
 - Реализован PING с выводом версии и порта.
 - Портирован checkStuck (v5) для авто-восстановления чата.
+
+
+## 2026-11-02, запись 7C-001 - bug3b fix + status schema merge
+
+**Фаза:** Ф2 (мост) + Ф3 (Mainframe)
+
+**Что сделано:**
+- Templates/extension/agent.py: exit(1) при занятом порте (было exit(0), installer видел ok).
+- Tools/installer/server.py: health-check /ping после spawn agent (6 попыток x 0.5s), log OK/FAILED.
+- Mainframe/api.py: status() мержит метаданные канала (name, prefix, model, cdp, agent, agent_port, cdp_port) в matrix из health.collect().
+- Synced agent.py в Agents/{A..F}/extension/.
+
+**Чем проверено:**
+- py_compile Mainframe/api.py OK, Tools/installer/server.py OK.
+- Tools/run_all_tests.py: 21/21 pass, 0 fail (52.3s), лог logs/runtime/_v5_all_tests.txt.
+- test_mainframe_8671 и test_mainframe_ext: PASS (были FAIL x2 и x4 из-за схемы status).
+
+**Что дальше:**
+- Push 5dd4117 (ждёт GCM-клика оператора, как и b8b0c2f).
+- BUG3a (Bridge/DeepSeek redirect) - решение оператора.
+
+Dixi. C (Семён), 7C, 2026-11-02.
