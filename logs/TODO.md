@@ -635,3 +635,6 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - [ ] B-07 upd: onboarding HTML + краткая инструкция по проекту + чекбокс «не показывать» (флаг в config). HIGH.
 - [ ] B-11: rebirth пишет active_chat_<CH>.json (chat_url, model, model_index, created_at); Bridge ищет по конкретному URL. Mainframe показывает активную модель. MEDIUM.
 - [ ] B-12: вики в Mainframe — how-to, ключевые механики, без тех. деталей. LOW, хвост.
+
+- [ ] РЕДЕПЛОЙ: установить jewai_5 с новыми фиксами (после возвращения оператора). Проверить: панель показывает канал/имя, PAUSE работает, WATCHDOG/RECOVERY тумблеры, SELF-TEST проходит, REBOOT перезапускает мост, LED'ы корректны.
+- [ ] B-18: масштабируемость 1-10 проверить на редеплое.

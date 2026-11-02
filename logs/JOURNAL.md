@@ -1182,3 +1182,31 @@ Watchdog D: ON (pid 17360). Recovery D: ON (pid 7444).
 - BUG3a (Bridge/DeepSeek redirect) - решение оператора.
 
 Dixi. C (Семён), 7C, 2026-11-02.
+
+
+## 2026-11-02, запись 7C-002 - Панель агента: B-04, B-13..B-18
+
+**Фаза:** Ф2 (мост + extension)
+
+**Что сделано:**
+- B-13: content_deepseek.js -- детект "Stopped" в последних 2 сообщениях, авто-клик regenerate. Дедуп 15с, лимит 3 клика за 5 мин, не кликает если оператор печатает.
+- B-04: Tools/launcher.py -- ждать появления extension target до 15с, затем 10 попыток _push_storage через 1с. Явные логи OK/FAILED/SKIP.
+- B-14: Templates/extension/agent.py -- новые GET /identity, /ping теперь отдаёт channel/name. app.js -- loadIdentity() при старте если channel=='?'.
+- B-15: agent.py POST /pause -- пишет Profiles/<L>/logs/paused.json. Bridge/daemon.py::tick() в начале проверяет paused.json.
+- B-16: agent.py GET /svc_status (watchdog+recovery, pid alive check), POST /svc_toggle (start/stop через Tools/svc.py). app.js -- loadSvcStatus() раз в 10с, тумблеры реальные, лампы зелёный/жёлтый/красный.
+- B-17: agent.py POST /selftest (6 проверок: ping/token/root/config/ledger/svc_state), POST /reboot (kill Bridge + spawn заново). app.js -- реальные handlers.
+- B-18: sidepanel.html -- добавлен .led.yellow (state=on, pid мёртв).
+- Синхронизировано во всех 6 Agents/*/extension/.
+
+**Чем проверено:**
+- py_compile: agent.py, Bridge/daemon.py, Tools/launcher.py -- OK.
+- Tools/run_all_tests.py: 21/21 pass.
+- Ждёт редеплоя на C:/JewAI_v5 для живой проверки.
+
+**Что дальше:**
+- Редеплой оператором.
+- Живая проверка панели (B-14..B-17).
+- B-18 тест на 3 каналах.
+- B-06 (Mainframe = пульт), B-07/B-08 (onboarding), B-09/B-10 (auth/restore), B-11 (active_chat), B-12 (wiki).
+
+Dixi. C (Семён), 7C, 2026-11-02.
