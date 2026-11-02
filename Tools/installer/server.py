@@ -70,6 +70,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Templates', 'logs', 'Projects', 'Archive', 'Profiles']:
                 os.makedirs(os.path.join(target, d), exist_ok=True)
                 # 12B: ensure logs/JOURNAL.md and logs/TODO.md
+                os.makedirs(os.path.join(target, 'logs'), exist_ok=True)
                 for tpl_name in ('JOURNAL.md', 'TODO.md'):
                     tpl_src = os.path.join(ROOT, 'Templates', 'logs', tpl_name)
                     tpl_dst = os.path.join(target, 'logs', tpl_name)
