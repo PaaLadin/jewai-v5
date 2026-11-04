@@ -9,12 +9,16 @@ def _kill_chrome_for_target(target, log):
     try:
         target_norm = os.path.abspath(target).lower().replace("\\", "/")
         root_norm = os.path.abspath(ROOT).lower().replace("\\", "/")
+        cft_root = (root_norm + "/tools/chrome-for-testing/")
         ps = (
             "Get-CimInstance Win32_Process -Filter \"Name='chrome.exe'\" | "
-            "Where-Object { $_.CommandLine -and ( $_.CommandLine.ToLower().Replace('\\','/').Contains('"
+            "Where-Object { "
+            "  ($_.CommandLine -and ( $_.CommandLine.ToLower().Replace('\\','/').Contains('"
             + target_norm.replace("'", "") + "') -or $_.CommandLine.ToLower().Replace('\\','/').Contains('"
-            + root_norm.replace("'", "") + "') ) } | "
-            "Select-Object -ExpandProperty ProcessId"
+            + root_norm.replace("'", "") + "') ) ) -or "
+            "  ($_.ExecutablePath -and $_.ExecutablePath.ToLower().Replace('\\','/').StartsWith('"
+            + cft_root.replace("'", "") + "')) "
+            "} | Select-Object -ExpandProperty ProcessId"
         )
         r = _sp.run(["powershell", "-NoProfile", "-Command", ps],
                     capture_output=True, text=True, timeout=15)
@@ -134,14 +138,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 f.write(msg + "\n")
         try:
             log(f"Target: {target}")
+            # 8C B-35: kill Chrome BEFORE copying CfT from ROOT (was WinError 32).
+            _kill_chrome_for_target(target, log)
+            _kill_python_for_target(target, log)
+            if os.path.abspath(ROOT).lower() == os.path.abspath(target).lower():
+                # 8C B-43: same-dir install. Templates/extension NOT refreshed from source.
+                log("WARNING (B-43): source == target (%s). Files not copied. Templates/extension"
+                    " will keep whatever is on disk. For a clean install, run install.bat from"
+                    " a SEPARATE source dir into a fresh target dir." % target)
             if ROOT.lower() != target.lower():
                 log("Copying files...")
-                ignore = shutil.ignore_patterns('.git', '__pycache__', '*.pyc', 'logs', 'runtime', 'Agents', 'Profiles', 'Archive', 'media', 'backups', '.agent_token', 'start-*.bat', 'stop-*.bat', 'restart-*.bat', 'server-*.bat', 'create-shortcut.bat')
+                # 8C B-35: exclude 'chrome-for-testing' — CfT copied later with retry+kill
+                ignore = shutil.ignore_patterns('.git', '__pycache__', '*.pyc', 'logs', 'runtime', 'Agents', 'Profiles', 'Archive', 'media', 'backups', '.agent_token', 'start-*.bat', 'stop-*.bat', 'restart-*.bat', 'server-*.bat', 'create-shortcut.bat', 'chrome-for-testing')
                 shutil.copytree(ROOT, target, dirs_exist_ok=True, ignore=ignore)
                 log("Files copied.")
             else:
                 log("Same directory, skip copy.")
-            base_port = int(cfg.get('basePort', 8680))  # 7C B-32: v5 default with 20-agent headroom
+            base_port = int(cfg.get('basePort', 8680))  # 7C B-32: v5 default base_port
             n = int(cfg.get('agentCount', 1))
             chat_port = int(cfg.get('chatPort', 8670))
             proxy_port = int(cfg.get('proxyPort', 9899))
@@ -287,7 +300,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             cft_src = os.path.join(ROOT, 'tools', 'chrome-for-testing')
             cft_dst = os.path.join(target, 'tools', 'chrome-for-testing')
             if os.path.isdir(cft_src) and os.path.isfile(os.path.join(cft_src, 'chrome.exe')):
+                # 8C B-42: if src==dst, skip copytree (was WinError 3 after rmtree(dst))
                 try:
+                    _same_cft = False
+                    try:
+                        _same_cft = os.path.samefile(cft_src, cft_dst)
+                    except (FileNotFoundError, OSError):
+                        _same_cft = os.path.abspath(cft_src).lower() == os.path.abspath(cft_dst).lower()
+                    if _same_cft:
+                        log("B-42: CfT src==dst, skipping copy (already in place)")
+                        raise Exception("__CFT_SKIP__")
                     _copy_ok = False
                     _last_err = None
                     for _try in range(1, 6):
@@ -318,7 +340,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         json.dump(_cfg, f, indent=2, ensure_ascii=False)
                     log(f"chrome_path set to CfT: {_cfg['chrome_path']}")
                 except Exception as _e:
-                    log(f"CfT copy failed: {_e}")
+                    if "__CFT_SKIP__" in str(_e):
+                        pass  # B-42: already logged above
+                    else:
+                        log(f"CfT copy failed: {_e}")
             else:
                 log("Chrome for Testing not found in source (tools/chrome-for-testing); using regular Chrome")
             # 11B: generate launchers (start/stop/restart per channel + server)
