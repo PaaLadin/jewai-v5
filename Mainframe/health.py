@@ -54,7 +54,7 @@ def _content_alive(cdp_port: int, timeout: float = 0.7) -> bool | None:
 
 
 def _svc_state(cfg: Config, ch: str, kind: str) -> bool:
-    p = cfg.path("logs", "svc", ("%s_%s.json" % (kind, ch)))
+    p = cfg.channel_path(ch, "logs", ("svc_%s_%s.json" % (kind, ch)))
     if not p.exists():
         return False
     try:
@@ -70,7 +70,7 @@ def _svc_state(cfg: Config, ch: str, kind: str) -> bool:
 
 
 def _read_lastid(cfg: Config, ch: str) -> str | None:
-    p = cfg.path("logs", "council", ("state_%s.json" % ch))
+    p = cfg.channel_path(ch, "logs", ("state_%s.json" % ch))
     if not p.exists():
         return None
     try:
@@ -82,7 +82,7 @@ def _read_lastid(cfg: Config, ch: str) -> str | None:
 
 
 def _read_start(cfg: Config, ch: str) -> str | None:
-    p = cfg.path("logs", ("session_%s.json" % ch))
+    p = cfg.channel_path(ch, "logs", ("session_%s.json" % ch))
     if not p.exists():
         return None
     try:
@@ -112,7 +112,7 @@ def _cmds(lastid: str | None, start: str | None) -> int | None:
 
 def _alive_button(cfg: Config, ch: str) -> str:
     """grey/yellow/green by flags/alive_<CH>.json and acks."""
-    p = cfg.path("logs", "council", "flags", ("alive_%s.json" % ch))
+    p = cfg.channel_path(ch, "logs", "flags", ("alive_%s.json" % ch))
     if not p.exists():
         return "grey"
     try:
@@ -128,6 +128,27 @@ def _alive_button(cfg: Config, ch: str) -> str:
         return "grey"
     except Exception:
         return "grey"
+
+
+def _auth_status(cdp_port: int, host: str = "deepseek") -> str:
+    """8C B-09: logged_in | needs_login | no_chrome | unknown."""
+    import json as _j
+    import urllib.request as _u
+    try:
+        with _u.urlopen("http://127.0.0.1:%d/json/list" % cdp_port, timeout=0.7) as r:
+            ts = _j.loads(r.read().decode("utf-8"))
+    except Exception:
+        return "no_chrome"
+    has_host = False
+    for t in ts:
+        if t.get("type") != "page":
+            continue
+        u = t.get("url", "") or ""
+        if host in u:
+            has_host = True
+            if "/a/chat/s/" in u:
+                return "logged_in"
+    return "needs_login" if has_host else "unknown"
 
 
 def _probe_one(cfg: Config, letter: str, ch) -> tuple[str, dict]:
@@ -147,6 +168,7 @@ def _probe_one(cfg: Config, letter: str, ch) -> tuple[str, dict]:
         "session_min": start,
         "cmds_from_start": cmds,
         "alive_button": _alive_button(cfg, letter),
+        "auth_status": _auth_status(ch.cdp_port),
     }
     return letter, row
 

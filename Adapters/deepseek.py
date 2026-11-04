@@ -36,8 +36,11 @@ class DeepSeek:
             "  const c = m.querySelector('.ds-assistant-message-main-content');"
             "  if (!c) continue;"
             "  const pres = c.querySelectorAll('pre, code');"
-            "  for (const p of pres) {"
-            "   out.push(p.textContent || '');"
+            "  if (pres.length > 0) {"
+            "   for (const p of pres) { out.push(p.textContent || ''); }"
+            "  } else {"
+            "   const t = c.innerText || c.textContent || '';"
+            "   if (t) out.push(t);"
             "  }"
             " }"
             " return out; })()"
@@ -46,7 +49,12 @@ class DeepSeek:
         seen: set[str] = set()
         blocks: list[Block] = []
         for txt in chunks:
-            if not txt or "###BEGIN###" not in txt.replace(" ", ""):
+            # 8C B-55: accept bare BEGIN too (agent may omit ###)
+            if not txt:
+                continue
+            _t = txt.replace(" ", "")
+            _nl = chr(10)
+            if "###BEGIN###" not in _t and not (_nl + "BEGIN" + _nl) in (_nl + txt + _nl):
                 continue
             for b in parse_blocks(txt):
                 if b.id in seen:

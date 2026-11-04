@@ -38,9 +38,18 @@ def _adapter_for(model: str):
 
 def _try_recreate_chat(cfg, letter, ch_port, adapter):
     """7C B-10: if CDP is alive but find_chat fails, open the chat tab via Target.createTarget.
-    Uses logs/active_chat_<L>.json if present (from B-11 rebirth), otherwise a fresh chat URL."""
+    Uses logs/active_chat_<L>.json if present (from B-11 rebirth), otherwise a fresh chat URL.
+    8C: do NOT auto-open chat while onboarding is unacknowledged.
+    """
     import json as _j
     import urllib.request as _u
+    # 8C B-48: only reopen chat AFTER onboarding acked. Before that — do not touch.
+    try:
+        _flag = cfg.channel_path(letter, "logs", "onboarding_disabled.flag")
+        if not _flag.exists():
+            return False
+    except Exception:
+        return False
     try:
         with _u.urlopen("http://127.0.0.1:%d/json/list" % ch_port, timeout=3) as r:
             targets = _j.loads(r.read().decode("utf-8"))
@@ -76,6 +85,29 @@ def _try_recreate_chat(cfg, letter, ch_port, adapter):
         return False
 
 
+def _acquire_single_instance_mutex(channel: str):
+    """8C B-40: Windows named mutex — only ONE Bridge per channel can run.
+    OS auto-releases on process exit. Returns handle (keep alive) or None.
+    """
+    try:
+        import ctypes
+        name = "Local\\JewAI_Bridge_" + channel
+        k32 = ctypes.windll.kernel32
+        k32.CreateMutexW.restype = ctypes.c_void_p
+        h = k32.CreateMutexW(None, True, name)
+        if not h:
+            print("[Bridge %s] mutex create failed (err=%d), exiting." % (channel, ctypes.get_last_error()), flush=True)
+            return None
+        last = k32.GetLastError()
+        if last == 183:
+            print("[Bridge %s] Duplicate instances detected, exiting." % channel, flush=True)
+            return None
+        return h
+    except Exception as _e:
+        print("[Bridge %s] mutex init err: %s" % (channel, _e), flush=True)
+        return None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--channel", required=True, choices=["A", "B", "C", "D", "E", "F"])
@@ -83,6 +115,10 @@ def main() -> int:
     ap.add_argument("--config", default=None)
     a = ap.parse_args()
 
+    # 8C B-40: single instance per channel
+    _mutex = _acquire_single_instance_mutex(a.channel)
+    if _mutex is None:
+        return 3
     cfg = load_config(a.config)
     ch = cfg.channel(a.channel)
     adapter = _adapter_for(ch.model)

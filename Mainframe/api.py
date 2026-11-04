@@ -67,6 +67,15 @@ def status(cfg: Config, path: str, body: dict) -> dict:
         # 7C: expose boolean flags for tests and UI (True/False, not None)
         merged["agent_alive"] = bool(merged.get("agent"))
         merged["cdp_alive"] = bool(merged.get("content"))
+        # 8C B-09: auth_status + chat_url for login button
+        merged["auth_status"] = merged.get("auth_status") or "unknown"
+        merged["chat_url"] = "https://chat.deepseek.com/" if ch and ch.model == "deepseek" else "https://chat.qwen.ai/"
+        # 8C B-09: auth_status + chat_url for login button
+        merged["auth_status"] = merged.get("auth_status") or "unknown"
+        merged["chat_url"] = "https://chat.deepseek.com/" if ch and ch.model == "deepseek" else "https://chat.qwen.ai/"
+        # 8C B-09: auth_status + chat_url for login button
+        merged["auth_status"] = merged.get("auth_status") or "unknown"
+        merged["chat_url"] = "https://chat.deepseek.com/" if ch and ch.model == "deepseek" else "https://chat.qwen.ai/"
         channels[L] = merged
     return {"ok": True, "ts": time.time(), "channels": channels,
             "alerts": h.get("alerts", []),

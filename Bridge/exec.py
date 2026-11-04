@@ -54,7 +54,19 @@ class Block:
 
 def parse_blocks(text: str) -> list[Block]:
     out: list[Block] = []
-    if not text or BEGIN not in text:
+    if not text:
+        return out
+    # 8C B-49/B-55: accept markers with or without spaces/###
+    text = text.replace("### BEGIN ###", "###BEGIN###")
+    text = text.replace("### END ###", "###END###")
+    text = text.replace("### CONTENT ###", "###CONTENT###")
+    # 8C B-55: fallback for bare BEGIN/END as standalone lines
+    if BEGIN not in text:
+        import re as _re2
+        text = _re2.sub(r"^BEGIN$", "###BEGIN###", text, flags=_re2.M)
+        text = _re2.sub(r"^END$", "###END###", text, flags=_re2.M)
+        text = _re2.sub(r"^CONTENT$", "###CONTENT###", text, flags=_re2.M)
+    if BEGIN not in text:
         return out
     pat = re.compile(re.escape(BEGIN) + r"(.*?)" + re.escape(END), re.DOTALL)
     for m in pat.finditer(text):
@@ -103,6 +115,8 @@ class Ledger:
         self.max_entries = max_entries
         self.watermark: str = ""
         self.hashes: dict[str, str] = {}
+        self.entries: list[dict] = []
+        self.last_action: dict = {}
         self._load()
 
     def _load(self) -> None:
@@ -112,16 +126,23 @@ class Ledger:
             data = json.loads(self.path.read_text(encoding="utf-8"))
             self.watermark = str(data.get("watermark", ""))
             self.hashes = dict(data.get("hashes", {}))
+            self.entries = list(data.get("entries", []) or [])
+            self.last_action = dict(data.get("last_action", {}) or {})
         except Exception:
             self.watermark = ""
             self.hashes = {}
+            self.entries = []
+            self.last_action = {}
 
     def _save(self) -> None:
         if len(self.hashes) > self.max_entries:
             keys = sorted(self.hashes.keys())
             for k in keys[: len(keys) - self.max_entries]:
                 del self.hashes[k]
-        data = {"watermark": self.watermark, "hashes": self.hashes}
+        if len(self.entries) > 200:
+            self.entries = self.entries[-200:]
+        data = {"watermark": self.watermark, "hashes": self.hashes,
+                "entries": self.entries, "last_action": self.last_action}
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_suffix(".tmp")
         tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -159,19 +180,31 @@ class Ledger:
             self.watermark = block.id
         self._save()
 
+    def record(self, block: Block, status: str = "OK", detail: str = "") -> None:
+        """Append one executed entry and set last_action. Persist."""
+        ts = time.strftime("%Y-%m-%d %H:%M:%S")
+        entry = {"id": block.id, "op": block.op, "status": status, "ts": ts}
+        self.entries.append(entry)
+        if len(self.entries) > 200:
+            self.entries = self.entries[-200:]
+        self.last_action = {"id": block.id, "op": block.op, "status": status,
+                            "ts": ts, "detail": detail[:200]}
+        self._save()
+
 
 class OpError(RuntimeError):
     pass
 
 
-def safe_path(root: Path, rel: str) -> Path:
+def safe_path(root: Path, rel: str, extra_roots: tuple = ()) -> Path:
     if not rel:
         raise OpError("empty path")
     p = (root / rel).resolve()
-    root_r = root.resolve()
-    if p != root_r and root_r not in p.parents:
-        raise OpError("escape: " + rel)
-    return p
+    allowed = [root.resolve()] + [r.resolve() for r in extra_roots]
+    for ar in allowed:
+        if p == ar or ar in p.parents:
+            return p
+    raise OpError("escape: " + rel)
 
 
 def _sha256(p: Path) -> str:
@@ -188,15 +221,15 @@ def _nw_flags() -> int:
     return subprocess.CREATE_NO_WINDOW
 
 
-def op_read(root: Path, b: Block) -> dict[str, Any]:
-    p = safe_path(root, b.path or "")
+def op_read(root: Path, b: Block, extra_roots: tuple = ()) -> dict[str, Any]:
+    p = safe_path(root, b.path or "", extra_roots)
     text = p.read_text(encoding="utf-8", errors="replace")
     return {"ok": True, "path": str(p), "content": text,
             "bytes": len(text.encode("utf-8"))}
 
 
-def op_write(root: Path, b: Block) -> dict[str, Any]:
-    p = safe_path(root, b.path or "")
+def op_write(root: Path, b: Block, extra_roots: tuple = ()) -> dict[str, Any]:
+    p = safe_path(root, b.path or "", extra_roots)
     p.parent.mkdir(parents=True, exist_ok=True)
     body = b.content
     if p.exists() and p.is_file():
@@ -211,8 +244,8 @@ def op_write(root: Path, b: Block) -> dict[str, Any]:
             "sha256": _sha256(p)}
 
 
-def op_list(root: Path, b: Block) -> dict[str, Any]:
-    p = safe_path(root, b.path or ".")
+def op_list(root: Path, b: Block, extra_roots: tuple = ()) -> dict[str, Any]:
+    p = safe_path(root, b.path or ".", extra_roots)
     items = []
     for x in sorted(p.iterdir()):
         try:
@@ -223,23 +256,23 @@ def op_list(root: Path, b: Block) -> dict[str, Any]:
     return {"ok": True, "path": str(p), "items": items}
 
 
-def op_mkdir(root: Path, b: Block) -> dict[str, Any]:
-    p = safe_path(root, b.path or "")
+def op_mkdir(root: Path, b: Block, extra_roots: tuple = ()) -> dict[str, Any]:
+    p = safe_path(root, b.path or "", extra_roots)
     p.mkdir(parents=True, exist_ok=True)
     return {"ok": True, "path": str(p)}
 
 
-def op_hash(root: Path, b: Block) -> dict[str, Any]:
-    p = safe_path(root, b.path or "")
+def op_hash(root: Path, b: Block, extra_roots: tuple = ()) -> dict[str, Any]:
+    p = safe_path(root, b.path or "", extra_roots)
     if not p.exists():
         return {"ok": False, "error": "not found"}
     return {"ok": True, "sha256": _sha256(p), "bytes": p.stat().st_size}
 
 
-def op_run(root: Path, b: Block) -> dict[str, Any]:
+def op_run(root: Path, b: Block, extra_roots: tuple = ()) -> dict[str, Any]:
     if not b.cmd:
         return {"ok": False, "error": "no cmd"}
-    cwd = safe_path(root, b.cwd) if b.cwd else root
+    cwd = safe_path(root, b.cwd, extra_roots) if b.cwd else root
     t0 = time.time()
     try:
         r = subprocess.run(b.cmd, shell=True, cwd=str(cwd),
@@ -265,12 +298,14 @@ OPS = {
 }
 
 
-def execute(root: Path, block: Block) -> dict[str, Any]:
+def execute(root: Path, block: Block, extra_roots: tuple = ()) -> dict[str, Any]:
     fn = OPS.get(block.op)
     if not fn:
         return {"ok": False, "error": "unknown op " + block.op}
     try:
-        return fn(root, block)
+        if block.op in ("run",):
+            return fn(root, block, extra_roots)
+        return fn(root, block, extra_roots)
     except OpError as e:
         return {"ok": False, "error": str(e)}
     except Exception as e:

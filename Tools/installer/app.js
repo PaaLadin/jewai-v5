@@ -8,7 +8,7 @@ const i18n = {
     en: {
         welcome: "JEWAI OS v5 // SYSTEM INSTALLER\n\nSelect language / Выберите язык [en/ru]: ",
         path: "\n[1/5] Installation path (e.g. C:\\JewAI_v5): ",
-        basePort: "\n[2/5] Base port for agents (e.g. 8680, supports up to 20 agents): ",
+        basePort: "\n[2/5] Base port for agents (e.g. 8680): ",
         agentCount: "\n[3/5] Number of agents (1-10): ",
         chatPort: "\n[4/5] Mainframe chat port (e.g. 8670): ",
         proxyPort: "\n[5/6] DoH proxy port (e.g. 9899): ",
@@ -25,7 +25,7 @@ const i18n = {
     ru: {
         welcome: "JEWAI OS v5 // СИСТЕМА УСТАНОВКИ\n\nSelect language / Выберите язык [en/ru]: ",
         path: "\n[1/5] Путь установки (например C:\\JewAI_v5): ",
-        basePort: "\n[2/5] Базовый порт агентов (например 8680, до 20 агентов): ",
+        basePort: "\n[2/5] Базовый порт агентов (например 8680): ",
         agentCount: "\n[3/5] Количество агентов (1-10): ",
         chatPort: "\n[4/5] Порт мейнфрейма (например 8670): ",
         proxyPort: "\n[5/6] Порт DoH-прокси (например 9899): ",
@@ -127,7 +127,7 @@ if (config.proxyPort === 8660 || config.proxyPort === config.chatPort) {
     return;
 }
 if (config.basePort === 8660 || config.basePort === config.chatPort) {
-    typeText('ERROR: base port conflicts with installer or chat port. Use 8680 (supports up to 20 agents).');
+    typeText('ERROR: base port conflicts with installer or chat port. Use 8680.');
     state = 12;
     return;
 }

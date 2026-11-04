@@ -642,3 +642,50 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - [x] B-28: installer CfT copy locked (WinError 32). Kill chrome по target+ROOT + retry 5x. КОД ГОТОВ.
 - [x] B-29: agent.py _logs_dir() = HERE.parent вместо HERE.parent.parent. Лампы/пауза/ledger теперь работают. КОД ГОТОВ.
 - [ ] B-30: paused state рассинхрон storage vs paused.json. app.js load() -> GET /pause_state. LOW.
+## 2026-11-04 (Mora, B) — RAG-зона, новые пункты
+
+**Роли (актуализация):**
+- **Dora (A)** — roadmap + architecture (jewai).
+- **Mora (B)** — RAG (Jeho, копия в jewai по готовности).
+- **Оператор** — приёмка, стратегия, порты сборки.
+- Остальные каналы (C/D/E/F) — по назначению оператора.
+
+### Мост: handicap при отправке (HIGH)
+
+- [ ] `Bridge/daemon.py` — после отправки `[AGENT REPORT]` в чат ставить паузу **7–10 с**, в течение которой мост не пишет в textarea (копит в outbox, как при `paused`). Причина: сейчас мост шлёт подтверждения быстрее, чем агент успевает обдумать ответ, ответы возвращаются пачкой и перебивают размышление. Цикл должен быть однопоточным: команда → мост → скрипт → результат → мост → ответ → размышление → команда.
+- [ ] Handicap действует **для любого источника** текста в textarea (мой блок, кик коллеги, системное сообщение).
+- [ ] Настройка в `config.json` → `timeouts.handicap_ms` (default 7000), не хардкод.
+- [ ] Исполнитель: **Dora** (архитектура моста) или **Mora** (если Dora занята roadmap). Согласовать.
+
+### Правило «один блок — одно сообщение» (HIGH)
+
+- [x] `RAG/procedures/BEHAVIOR.md` §9 — дисциплина отправки (сделано Mora 04.11).
+- [x] `RAG/procedures/BEHAVIOR.md` §10 — не переиспользовать id (сделано Mora 04.11).
+- [ ] Продублировать в jewai `RAG/procedures/BEHAVIOR.md` при копировании RAG.
+
+### Таймер (инструмент, MEDIUM)
+
+- [ ] `Tools/timer.py` — запуск detached (`DETACHED_PROCESS`), через N секунд кикает в свой канал: `python Tools/timer.py --channel B --after 600 --text "[B>B] напоминание"`. Нужен, потому что чаты DeepSeek без пинка в окне не активируют дальнейшие действия.
+- [ ] Исполнитель: **Mora**.
+
+### Watchdog — тест живьём (MEDIUM)
+
+- [ ] Проверить, что watchdog B (interval 300, threshold 3) реально шлёт `[ALIVE?]` при молчании. Пассивно: `Profiles/B/logs/svc_watchdog_B.json` (state, pid, at), `logs/svc/`. Активно: остановить, включить с `--interval 60 --threshold 1`, помолчать 2–3 мин, проверить приход `[ALIVE?]`. Потом вернуть 300/3.
+- [ ] Исполнитель: **Mora** (после таймера — таймер страхует, если watchdog не сработает).
+
+### Доступ к C:\jewai (DONE)
+
+- [x] `Core/config.py` + `Bridge/exec.py` + `Bridge/daemon.py` — поле `extra_roots`, `safe_path` принимает доп. корни. `config.json` → `"extra_roots": ["C:\\jewai"]`. Мост B перезапущен. Проверено: `op:read C:\jewai\logs\HANDOVER_11B.md` → OK. Бэкапы `.bak_20261104*`. Сделано Mora 04.11.
+- [ ] При переносе в jewai: `extra_roots` = `["C:\\Jeho"]` (обратное направление) или `[]` — по потребности сборки.
+
+### RAG — что сделано Mora 04.11 (к переносу в jewai по готовности)
+
+- [x] `RAG/TREE.md` — карта дерева (10408 б).
+- [x] `RAG/procedures/TOKEN_COUNTER.md` — F5b (5043 б).
+- [x] `RAG/procedures/SESSION_HANDOVER.md` — F5d (4763 б).
+- [x] `RAG/procedures/REBIRTH.md` §11 — 500/700/850, TTL, pending, hold, lock.
+- [x] `RAG/procedures/ALIVE_AND_SERVICES.md` §10 — guard/rescue F6b.
+- [x] `Templates/PROMPT_ACTIVATION.md` v2 — тонкий корень (11175 б), §11 paused.
+- [x] `RAG/INDEX.md` — обновлён.
+- [ ] Перенос в jewai — после приёмки оператора.
+- [x] B-45: Fix launcher.py for Chrome 156+ (get real Ext ID via chrome://extensions, force sidepanel, fix push_storage). Verified in test.

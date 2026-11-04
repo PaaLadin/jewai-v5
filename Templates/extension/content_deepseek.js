@@ -154,8 +154,11 @@ async function typeAndSend(text) {
 }
 
 console.log('[jewai-v5-deepseek] content script loaded v' + V);
-setInterval(scan, POLL_MS);
-window.addEventListener('load', () => setTimeout(scan, 800));
+// V5 FIX: Bridge polling is handled by Python daemon (Bridge/daemon.py).
+// Extension acting as a bridge causes duplicate reports and rate limits.
+// Disabled scan().
+// setInterval(scan, POLL_MS);
+// window.addEventListener('load', () => setTimeout(scan, 800));
 // --- checkStuck v5 ---
 function checkStuck() {
   if (!window.location.href.includes('/a/chat/s/')) return;

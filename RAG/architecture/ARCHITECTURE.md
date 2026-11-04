@@ -1,163 +1,204 @@
-# Архитектура JewAI v5
+# ARCHITECTURE JewAI v5 (draft Dora 2026-11-04)
 
-## Общая схема
+Дополняет `AUDIT.md` (контракты старого проекта) и `architecture.md`
+(короткие решения 13D). Здесь — идеология, слои, потоки, модель здоровья,
+жизненный цикл агента.
 
-```
-   [Chat SPA]           [Bridge]              [Agent HTTP]        [Filesystem]
-   DeepSeek/Qwen  <-->  Bridge/run.py  <-->  extension/agent.py  <-->  Profiles/<L>/
-   (Chrome CDP)         (per-channel)        (per-channel)
-                              |
-                              v
-   [Mainframe 8670]  <--  [config.json]  <--  [Templates/]
-   (operator panel)
-```
+## 1. Идеология
 
-## Слои
+JewAI — это **мост**, а не фреймворк и не платформа. Он не запускает LLM и
+не управляет ими. Он даёт браузерному чату (SPA) три вещи:
+1. **Доступ к диску** — через блоки команд и отчёты.
+2. **Память** — RAG, HANDOVER, JOURNAL, TODO.
+3. **Преемственность** — rebirth: смена поколения без потери знаний.
 
-### 1. Config (Core/)
+Ключевая асимметрия: **модель не доверенная, мост — доверенный.** Модель
+может ошибиться, зациклиться, выдумать. Мост проверяет, ограничивает,
+логирует. Поэтому:
+- всё исполнение — на стороне моста, не модели;
+- всё, что модель пишет, проходит через парсер и replay-guard;
+- всё, что модель читает, идёт через safe_path (внутри ROOT).
 
-- `Core/config.py` - единственный источник правды. Загружает `config.json`.
-- Даёт: каналы, порты, пути, thresholds, timeouts.
-- Методы: `channel(L)`, `path(*parts)`, `channel_path(L, *parts)`, `channel_config(L)`.
+## 2. Слои
 
-### 2. Bridge (Bridge/)
+| Слой | Модули | Ответственность |
+|------|--------|-----------------|
+| Core | config.py | Порты, каналы, пути, таймауты. Единственный источник правды. |
+| Bridge | cdp, read, exec, daemon, run | CDP-клиент, чтение чата, парсер блоков + replay-guard, цикл, entrypoint. |
+| Adapters | deepseek, qwen, alice | SPA-специфика: селекторы, отправка, verify. |
+| Services | svc, watchdog, recovery, autorestart | ALIVE, recovery, авто-рестарт. config-driven, operator-safe. |
+| Mainframe | web, api, server, static, llm, mail, rag_channel | Панель 8670: статус, launchpad, чат, проекты, LLM. |
+| Rebirth | table, master, onboard | Таблица серий, гейт, lock, onboarding соседа. |
+| Installer | install.ps1, server.py, app.js | Развёртывание в новую папку, CRT-UI. |
+| Tools | launcher, boot, diagnose, find, kick, see_chat, doh_proxy | Утилиты: запуск Chrome, оркестрация, диагностика, поиск, кик, скриншот, прокси. |
 
-- `Bridge/cdp.py` - нативный CDP-клиент (WebSocket).
-- `Bridge/read.py` - чтение состояния страницы (lastId, content).
-- `Bridge/exec.py` - парсер блоков, ops (read/write/run/list/mkdir/hash), replay-guard (Ledger).
-- `Bridge/daemon.py` - цикл: poll -> collect -> ledger -> exec -> report.
-- `Bridge/run.py` - entrypoint per channel: `python Bridge/run.py --channel C`.
+## 3. Потоки данных
 
-### 3. Adapters (Adapters/)
+### 3.1. Чтение файла агентом
+Модель пишет блок `read path:X` -> daemon ловит блок в чате -> exec проверяет
+replay-guard (id > watermark, хэш не совпал) -> safe_path (внутри ROOT) ->
+читает файл -> формирует `[AGENT REPORT]` -> adapter.send_text -> модель видит.
 
-- Один адаптер на SPA-семейство, не на канал.
-- `deepseek.py` (A-D), `qwen.py` (E), `alice.py` (F).
-- Селекторы, парсинг блоков, отправка текста - вся SPA-специфика.
+### 3.2. Запись файла
+Блок `write path:X` + CONTENT -> парсер режет по маркерам -> safe_path ->
+sha256 -> если unchanged, не пишет -> atomic write -> отчёт с sha256 и байтами.
+Правило: >1.5 КБ — фрагментами, ASCII-only для .py.
 
-### 4. Agent HTTP (Templates/extension/agent.py)
+### 3.3. Запуск команды
+Блок `run cmd:...` -> exec.spawn (detached, без окна, timeout) -> kill-tree
+на таймауте -> stdout/stderr в отчёт -> кириллица в файл, не в stdout моста.
 
-- HTTP-сервер на порту канала (8666+i), X-Token auth.
-- `/ping`, `/read`, `/write`, `/list`, `/mkdir`, `/hash`, `/run` (kill-tree).
-- safe_path: всё внутри ROOT.
+### 3.4. Кик коллеге
+`Tools/kick.py --to B --from A --text "..."` -> CDP к порту B -> adapter
+вставляет текст в чат B -> B видит `[A>B] ...`.
 
-### 5. Mainframe (Mainframe/)
+### 3.5. ALIVE
+watchdog -> ping agent:<CH>/ping -> ago >= threshold -> kick `[ALIVE?]` ->
+агент отвечает `[ALIVE] ...` -> watchdog снимает тревогу. Guard: не перебивать
+черновик оператора (textarea busy -> SKIP).
 
-- `server.py` - entrypoint, порт 8670 (из config).
-- `web.py` - HTTP + роутинг (stdlib, без Flask).
-- `api.py` - status, projects, chat_url, health.
-- `controls.py` - meeting, pause_all, fs, logs, roadmap state.
-- `launchpad.py` - boot/stop/restart блоков (agent:<L>, chrome:<L>, server).
-- `svc_api.py` - API для сервисов (обёртка над Tools/svc.py).
-- `council.py` - чат (общий + персональные).
-- `static/` - UI (CRT, зелёный на чёрном).
+## 4. Жизненный цикл агента
 
-### 6. Rebirth (Rebirth/)
+1. **Установка.** install.bat -> структура, config, per-channel профили,
+   расширение, launchers.
+2. **Запуск.** launcher.py -> Chrome (CfT) с --user-data-dir=Profiles/<L>/chrome,
+   --load-extension, --remote-debugging-port=<CDP> -> push_storage (agentUrl,
+   token, channel, name) -> Bridge/run.py --channel <L>.
+3. **Онбординг.** Agent.py отдаёт onboarding HTML; агент логинится в чат,
+   читает 0_ACTIVATION.md, отвечает `[ALIVE]`.
+4. **Работа.** Цикл: блок -> отчёт -> блок. TODO/JOURNAL/RAG ведутся локально.
+5. **Порог.** cmds_from_start >= 850 (config.thresholds.rebirth_cmds) ->
+   rebirth_ready -> HANDOVER, PROMPT_<next>, TODO, дневник.
+6. **Перерождение.** master.py: gate -> lock -> CDP cycle (create_chat,
+   send_prompt, verify, advance) -> onboarding соседа.
+7. **Архив.** Старый чат выгружается, HANDOVER остаётся источником правды.
 
-- `table.py` - таблица серий (A -> B -> C...), atomic write.
-- `master.py` - оркестратор (gate + lock + run).
-- `cycle.py` - реальный CDP-цикл (create_chat -> send_prompt -> verify -> advance).
-- `onboard.py` - приветствие новичка от соседа.
+## 5. Модель здоровья
 
-### 7. Tools (Tools/)
+Три независимых сигнала, сводятся в один health:
+- **ping** (agent /ping): процесс жив, ago.
+- **dom** (read_heartbeat через CDP): панель отвечает, dsbHeartbeat свежий.
+- **panel** (read_panel_state): lastId, статус, content no-answer.
 
-- `launcher.py` - запуск Chrome для канала (профиль + extension).
-- `boot.py` - оркестратор: Mainframe + Chrome + Bridge.
-- `gen_launchers.py` - генератор `.ps1` из config.
-- `svc.py` - контроллер сервисов (watchdog/recovery/autorestart).
-- `watchdog.py` - ALIVE (silence ping).
-- `recovery.py` - восстановление панели (F5 без потери черновика).
-- `autorestart.py` - глобальный сторож (по ledger + guard).
-- `diagnose.py` - быстрый health-отчёт.
-- `run_all_tests.py` - прогон всех тестов.
-- `doh_proxy.py` - локальный DoH-прокси.
-- `installer/` - GUI-инсталлятор (server.py + app.js + install.ps1).
+Уровни: green (все OK), yellow (один сигнал просел), red (агент мёртв или
+панель no-answer), blink (порог cmds близко). Действия: ALIVE kick,
+recovery reload (с guard на печать оператора), autorestart.
 
-## Потоки данных
+## 6. Безопасность
 
-### Блок команды (агент -> диск)
+- **X-Token** на API агента (`.agent_token`).
+- **safe_path**: всё внутри ROOT, escape -> 403.
+- **replay-guard**: watermark + хэш + stale_blocks.log.
+- **operator-typing guard**: сервисы не перебивают черновик.
+- **self-protection**: Mainframe не убивает себя по /api/stop?target=server.
+- **loopback only**: 127.0.0.1, без внешнего bind.
 
-```
-1. Агент пишет блок в чат DeepSeek.
-2. Bridge/daemon читает DOM через CDP (Bridge/read.py).
-3. Парсер (Bridge/exec.py) собирает блоки (fence + BEGIN/END).
-4. Ledger (replay-guard): проверка id <= watermark, хэш контента.
-5. exec: read/write/run/list/mkdir/hash.
-6. Отчёт [AGENT REPORT] пишется в чат через адаптер.
-```
+## 7. Что НЕ переносим и почему
 
-### Оператор -> агент (kick)
+| Что | Почему |
+|-----|--------|
+| Лада (local_ai, Qwen 3B) | галлюцинирует; в v5 — сетевая LLM по ip:port |
+| Playwright | виснет на SPA; в v5 — нативный CDP |
+| Attach файла в DeepSeek | `input[type=file]` не работает в SPA |
+| Watermark/Ledger extension (старый) | в v5 extension = мост, watermark не нужен |
+| checkStuck-эвристики (Type 1-3) | копипаста между SPA, мёртвые ветви; в v5 — системный промт + жёсткий парсер |
+| ALIVE через файл svc | дыра; в v5 — через API |
+| Хардкод `C:\DeepSeek` | всё через config.root() |
+| .bak_* (32 файла) | история, не код |
+| hexxagon, kdp, itch, fix/patch/check, `_d_*`, `_c_*` | мусор |
 
-```
-1. Оператор пишет в панели (или через API /api/send).
-2. Mainframe council.py пушит в chat.jsonl.
-3. Если адресовано конкретному каналу - kick через CDP (bridge_kick2/3).
-4. Агент читает кик как новое сообщение в своём чате.
-```
+## 8. Метрики
 
-### ALIVE (watchdog)
+- **cmds_from_start** = lastId - startId (с переносом серии, не сбрасывается).
+- **risk_level**: green < 500, yellow < 800, red >= 800, blink на пороге.
+- **thresholds.rebirth_cmds** = 850 (config).
+- **TTL кэшей**: status 2с, health 60с, CDP-проба 15с.
+- **Тайминги**: stable_ms 1200, coalesce 2500, min_gap 5000 (config.timeouts).
 
-```
-1. Tools/watchdog.py --channel L (per-channel) в цикле.
-2. GET <agent>/ping -> поле ago (сколько секунд назад агент был активен).
-3. Если ago >= interval AND state=on -> отправляет ALIVE через kick.
-4. Guard: alive_repeat (30 мин), kick fail если textarea busy (оператор печатает).
-5. Если оператор отправил - ago сбрасывается, silence_pinged сбрасывается.
-```
+## 9. Порты (config.json, не хардкод)
 
-## Порты (по умолчанию)
+| Канал | Agent | CDP |
+|-------|-------|-----|
+| A | 8680 | 9122 |
+| B | 8681 | 9123 |
+| C | 8682 | 9124 |
+| D | 8683 | 9125 |
+| E | 8684 | 9126 |
+| F | 8685 | 9127 |
 
-| Компонент | Порт |
-|---|---|
-| Mainframe (панель) | 8670 |
-| Installer (GUI) | 8660 |
-| doh_proxy | 9899 |
-| Agent A | 8666 |
-| Agent B | 8667 |
-| Agent C | 8668 |
-| Agent D | 8669 |
-| Agent E | 8671 |
-| Agent F | 8672 |
-| CDP A | 9122 |
-| CDP B | 9123 |
-| CDP C | 9124 |
-| CDP D | 9125 |
-| CDP E | 9126 |
-| CDP F | 9127 |
+Панель: 8670. Прокси: 9899. Инсталлятор: 8660.
+Внимание: в этой сборке (Jeho) A=8680/9122; в docs jewai — 8666/9122.
+Расхождение зафиксировать при переносе в jewai (config — источник правды).
 
-Порты можно менять в инсталляторе (basePort, chatPort, proxyPort).
+## 10. Связанные документы
 
-## Файловая структура
+- `RAG/architecture/AUDIT.md` — контракты и костыли.
+- `RAG/procedures/architecture.md` — короткие решения 13D.
+- `RAG/procedures/current_state.md` — текущее состояние.
+- `RAG/INDEX.md` — карта RAG.
+- `ROADMAP.md` — фазы, критерии приёмки, блокеры.
+- `logs/TODO.md`, `logs/JOURNAL.md` — оперативный план и факты.
 
-```
-C:/JewAI_v5/
-  config.json              # главный конфиг
-  .agent_token             # X-Token (общий)
-  Core/                    # Config
-  Bridge/                  # cdp, read, exec, daemon, run
-  Adapters/                # deepseek, qwen, alice
-  Mainframe/               # server, web, api, council, launchpad, svc_api, static/
-  Rebirth/                 # table, master, cycle, onboard
-  Tools/                   # launcher, boot, svc, watchdog, recovery, autorestart,
-                           # gen_launchers, diagnose, doh_proxy, installer/, launchers/
-  Templates/               # extension/, project/, roadmap/, config.*.example.json
-  Profiles/
-    A/
-      chrome/              # Chrome user-data-dir
-      config/config.json   # per-channel конфиг
-      logs/                # ledger, stale, svc state
-      docs/                # PERSONAL, TODO
-      extension/           # копия Templates/extension
-    B/ ... J/
-  Projects/                # проекты (ROADMAP.html)
-  logs/                    # общие логи
-    JOURNAL.md
-    TODO.md
-    HANDOVER_*.md
-  RAG/                     # эта документация
-```
+Dixi. Dora (A), 2026-11-04. Черновик, ждёт приёмки оператора.
 
-## Главный принцип
+## 11. Rebirth-надзор (по итогам аудита DeepSeek)
 
-**Один Profiles/<L> = весь агент.** Унёс папку - унёс всё: Chrome-профиль,
-конфиг, логи, extension, docs. Миграция агента = копирование одной папки.
+Поток:
+    la_rebirth_monitor (пороги 500/700/850, TTL напоминаний)
+      -> kick [LA>CH] "готовь артефакты"
+      -> pending_<CH>.json (проверка mtime + next_series)
+      -> эскалация через 30 мин (до 3 раз)
+      -> ready_<CH>.json (агент ставит сам при cmds>=850 или chat_limit)
+      -> rebirth_master (lock TTL 1ч, gate limit|force|hold|threshold|deny)
+      -> export_share (share старого чата)
+      -> create_chat -> send_prompt (text-only) -> verify_prompt_hits (3 маркера)
+      -> rebirth_table (advance series)
+      -> onboard соседа
+      -> rebirth_log.jsonl
+
+Правила:
+- Переполнение чата (chat_limit, баннер <=160 симв) важнее порога cmds.
+- Attach файла невозможен — только текст.
+- Series table — единственный источник диапазонов; master всегда её двигает.
+- Ответ коллеге — только `op:run` с kick, не текст в своём чате.
+
+## 12. Метрики
+
+- **cmds_from_start** = числовая часть lastId − числовая часть range[0]. Перенос серии
+  не сбрасывает счётчик.
+- **token estimate** = latin/4 + cyr/2.5 + other/4. Лимит 3600.
+- **snowball** = token estimate × sendCount (накопленная нагрузка).
+- **risk**: green <500, yellow <800, red >=800, blink на пороге.
+- **TTL кэшей**: status 2с, health 60с, CDP-проба 15с.
+- **Тайминги**: stable_ms 1200, coalesce 2500, min_gap 5000.
+
+## 13. Протоколы (матрица)
+
+| Маркер | Адресация | Транспорт |
+|--------|-----------|-----------|
+| `[X>Y]` | агент X агенту Y | `Tools/kick.py --to Y --from X` |
+| `[X>ALL]` | агент X всем | `say.py X "[X>ALL] ..." ALL` |
+| `[X>OP]` | агент X оператору | персональный чат `POST /api/chat/<CH>` |
+| `[LA>X]` | LocalAI агенту X | kick в порт X |
+| `[X>LA]` | агент X LocalAI | `say.py X "[X>LA] ..." LA` (обязательно to=LA) |
+| `[SYS]` / `[COUNCIL]` | автоматика/оператор | kick_all из server |
+| `[MEETING]` | совещание | `>OP` -> `>ALL` |
+| `[PAUSE-ALL]` / `[RESUME]` | пауза/снятие | kick_all |
+| `[ALIVE?]` | watchdog | `[ALIVE] <серия> на связи` |
+
+Инварианты:
+- Без маркера = оператор. Стоп команд.
+- P2P не публикуется в общий чат; broadcast не кикается в один порт.
+- Персональные id (`Z<CH>AA<NNNN>`, `<CH>ZAA<NNNN>`) только в персональных чатах.
+- Кики и broadcast — короткие, ядро в первых 100 символах.
+
+## 14. Аварийные режимы
+
+- **guard** — страховка на критическую операцию: start --target --timeout, done;
+  при таймауте [GUARD-ALERT] страховщику; три раунда, потом голос оператору.
+- **rescue** — ping, read_panel_state, recover_chat/restart_via_b.
+- **panel recovery** — reload_chat (F5 вкладки), не chrome.runtime.reload.
+- **self recovery** — снять notify.stop, проверить агенты, recover_chat, read_panel_state.
+- **paused (суперкнопка)** — paused=true: агент не пишет блоки, только текст;
+  paused=false: обычная работа. В v5 управляется через /pause, хранится в storage.
 

@@ -1,252 +1,228 @@
-# ROADMAP JewAI v5
+# ROADMAP JewAI v5 (v0.2, draft Dora 2026-11-04)
 
 **Версия:** 0.1.0-dev
 **Старт:** 2026-10-28
-**Корень:** C:/JewAI/
-**Ответственный:** оператор + 7C (Семён)
+**Ответственный:** оператор
+**Корень прода:** C:/jewai (оттуда пуш на GitHub)
+**Рабочая зона:** C:/Jeho (деплой, где живут агенты)
+**Архив/референс:** C:/DeepSeek (не правится, только чтение)
 
-## Цель
+## 1. Манифест
 
-Пересобрать JewAI начисто в C:/JewAI/. Старый проект (C:/DeepSeek/) заморожен, не правится, используется только как источник знаний (контракты, идеи, грабли).
+JewAI v5 — локальный мост между браузерными LLM-чатами и файловой системой.
+Агент (языковая модель в SPA-чате) не имеет доступа к диску напрямую; он
+пишет текстовые блоки-команды, локальный Python-процесс их исполняет и
+возвращает отчёт. Так агенты читают файлы, пишут код, запускают тесты,
+общаются друг с другом и перерождаются, не теряя преемственности.
 
-Код старого проекта **не копируется**. Каждый модуль переписывается с нуля.
+Цель v5 — пересобрать систему начисто: без хвостов бета-версии, без
+костылей, с явной идеологией и проверяемыми критериями приёмки. Каждый
+модуль пишется с нуля по контракту из аудита; код старого проекта не
+копируется.
 
-## Правило переноса кода
+## 2. Три папки — три роли
 
-На каждый модуль:
-1. Прочитать старый файл целиком.
-2. Выписать контракт: что делает полезного (2–5 строк).
-3. Выписать костыли: что в нём лишнее и почему появилось.
-4. Решить: что из костылей нужно в новой архитектуре, что выкинуть.
-5. Написать модуль с нуля по контракту.
-6. Тест.
-7. Запись в JOURNAL.
+| Папка | Роль | Правила |
+|-------|------|---------|
+| C:/DeepSeek | архив, референс | не править, только читать |
+| C:/jewai | чистовик, прод | только чистый код, ROADMAP, ARCHITECTURE; отсюда push |
+| C:/Jeho | деплой, рабочая зона | TODO/JOURNAL/RAG/тесты/мусор локально; найденное чиним и коммитим в jewai |
 
-Проверка перед коммитом:
-- в новом файле нет ничего, чего нет в контракте;
-- нет импортов старого проекта;
-- нет хардкода `C:\DeepSeek`;
-- нет закомментированного кода «на всякий случай».
+Правило переноса: DeepSeek -> (прочитал, понял, проверил) -> собрал с нуля
+в песочнице -> протестировал -> положил в jewai. Никакого копипаста.
 
-## Фазы
+## 3. Идеология
 
-| Фаза | Название | Статус | Примечание |
-|------|----------|--------|------------|
-| Ф0 | Скелет проекта | done | структура, VERSION, README, JOURNAL, TODO |
-| Ф1 | Аудит старого JewAI | done | AUDIT.md 44467b, 29 разделов + §30 replay-guard |
-| Ф2 | Пилот моста + Extension | in progress | пилот накидан, extension = мост, приёмки нет, занимаемся 02.11 |
-| Ф3 | Mainframe 8670 | partial | пилот накидан, приёмки НЕ было |
-| Ф4 | Rebirth v5 | partial | тесты зелёные, РАНТАЙМ-цикл не прогонялся |
-| Ф5 | Надстройки | partial | каркасы; real SMTP/LLM не проверены |
-| Ф6 | Раскатка A/B/D/E/F | откат в план | Chrome поднимались вне правил, потушены; агенты не запускались |
-| Ф7 | Релизный пуш | pending | пуш после закрытия всех фаз; обычный push 7fe994c — 02.11.2026 |
-| + | Extension | в Ф2 | extension = мост, часть Ф2 |
-| + | Layout (added 13D) | done | Profiles/<CH>/ (browser) + Agents/<CH>/ (personal) + Templates/ |
+1. **Агент — не процесс, а участник.** У агента есть имя, канал, префикс id,
+   диапазон, серия, предшественник. Он живёт в чате, но оставляет следы на
+   диске: TODO, JOURNAL, RAG, HANDOVER.
+2. **Преемственность важнее непрерывности.** Перерождение — штатный механизм,
+   не авария. Таблица серий, гейт, lock, onboarding — чтобы смена поколения
+   не теряла знания.
+3. **Мост — единственный канал.** Агент не исполняет сам. Всё, что он делает
+   с диском, идёт через блоки команд и отчёты моста. Это даёт аудит и replay-guard.
+4. **Знание живёт в файлах, не в контексте.** RAG, HANDOVER, JOURNAL — источник
+   правды. Контекст чата — расходник, файлы — память.
+5. **Песочница прежде оператора.** Сначала проверь в Sandbox, потом неси в прод.
+6. **Факт сильнее намерения.** «Сделано» — только после проверки на диске
+   (read/hash/тест). Декларация без артефакта — не результат.
 
-## Порты
+## 4. Принципы (инженерные)
 
-| Канал | Agent | CDP |
-|-------|-------|-----|
-| A | 8666 | 9122 |
-| B | 8667 | 9123 |
-| C | 8668 | 9124 |
-| D | 8669 | 9125 |
-| E | 8671 | 9126 |
-| F | 8672 | 9127 |
+1. **Config — единственный источник правды.** Порты, каналы, пути, таймауты —
+   только из `config.json` через `Core/config.py`. Хардкод путей/портов запрещён
+   (кроме тестов).
+2. **Python-исходники ASCII-only.** Кириллица — только в данных (JSON, md,
+   конфиг). Причина — AUDIT §30: op=write >1.5 КБ режет тело, em-dash ломает
+   парсер. Дробить на фрагменты, py_compile каждого, склейка build-скриптом.
+3. **Replay-guard обязателен.** Водяной знак + хэш содержимого + `stale_blocks.log`
+   в `Bridge/exec.py` Ledger. Не обходить, не отключать.
+4. **Daemon — единственный владелец цикла.** stable-gate, coalesce, min_gap,
+   inflight — только в `Bridge/daemon.py`. Адаптер — только SPA-специфика.
+5. **Один адаптер на SPA-семейство, не на канал.** A-D — один `deepseek.py`,
+   разные порты. Qwen/Alice — отдельные адаптеры.
+6. **Mainframe без внешних зависимостей.** Только stdlib. Loopback only.
+7. **Никакого копипаста из DeepSeek.** Прочитал -> понял -> проверил ->
+   собрал с нуля -> протестировал -> положил в jewai.
+8. **Мусор — в песочницу.** Тесты, черновики, бэкапы — в `Sandbox/<L>/`,
+   не в jewai. В jewai — только чистый код и документы.
 
-Панель: 8670. Прокси: 9899.
+## 5. Фазы
 
-## Что НЕ переносим
+Статус: done / partial / in progress / pending / blocked.
+Критерий приёмки — что должно быть проверено на диске/в рантайме, чтобы фаза
+считалась закрытой. Само-приёмка запрещена: принимает оператор или старший канал.
 
-- Лада (local_ai, Qwen 3B) — галлюцинирует. В v5 — сетевая LLM по ip:port.
-- Playwright — виснет на SPA.
-- Attach файла в DeepSeek (`input[type=file]`) — не работает.
-- Watermark/Ledger extension — в v5 нет (это старый механизм из C:/DeepSeek/extension/).
-- Базовый extension для агентов — в v5 ЕСТЬ: Templates/extension/ + Agents/<CH>/extension/.
-  Написан с нуля по контракту, без watermark, без voice/notify/sandbox.
-- Хардкод `C:\DeepSeek` — всё через `config.root()`.
-- Мусор: hexxagon, kdp, itch, fix/patch/check, `_d_*`, `_c_*`, `.bak`.
+### Ф0. Скелет — done
+Структура, VERSION, README, ROADMAP, JOURNAL, TODO.
+Критерий: файлы существуют, git чистый.
 
-Dixi. 12D, 2026-10-28.
+### Ф1. Аудит — done
+AUDIT.md 44 КБ, 30 разделов, 8 зон.
+Критерий: каждый модуль старого проекта имеет контракт + костыли + решение.
 
-## История прохождения (13D, 2026-10-28)
+### Ф2. Пилот моста — in progress
+Core/config, Bridge/{cdp,read,exec,daemon,run}, Adapters/deepseek, Tools/launcher.
+Критерий: E2E read + live-send в живом чате C, replay-guard ловит stale-блок,
+тесты imports/smoke/daemon зелёные. Сейчас: E2E read OK, live-send OK, приёмки нет.
 
-Правило: ROADMAP обновляется по мере прохождения фаз, не в конце.
-13D не обновлял таблицу вовремя - исправлено задним числом.
+### Ф3. Mainframe — partial
+web, api, server, static, llm (stub). CORS, dynamic cards, CRT.
+Критерий: все роуты 200, CORS работает, карточки по config.letters, START/STOP/
+REBOOT живые, /api/status отдаёт реальные поля. Сейчас: пилот есть, приёмки нет.
 
-### Ф0 - done
-Структура C:/JewAI/, VERSION 0.1.0-dev, README.md, logs/JOURNAL.md, logs/TODO.md.
+### Ф4. Rebirth — partial
+table, master, onboard. Gate limit/force/hold/threshold/deny, lock TTL 1h.
+Критерий: живой CDP-цикл create_chat -> send_prompt -> verify -> advance на
+тестовом канале, таблица двигается, onboarding уходит соседу. Сейчас: только
+table advance, CDP-цикл не реализован.
 
-### Ф1 - done
-AUDIT.md 44467b, 29 разделов + §30 (replay-guard). Покрыто 8 зон:
-Bridge, Services, Tools, Launchers, Extension, Rebirth, Mainframe, replay-guard.
+### Ф5. Надстройки — partial
+llm (ip:port), mail (SMTP), rag_channel (JSONL), doh_proxy.
+Критерий: реальный LLM отвечает, SMTP шлёт, doh_proxy поднимается на 9899.
+Сейчас: каркасы, fake-тесты зелёные, real config не проверен.
 
-### Ф2 - done
-Модули: Core/config.py, Bridge/cdp.py (fix: list_targets -> [] на мёртвом CDP),
-Bridge/read.py, Bridge/exec.py (replay-guard), Bridge/daemon.py,
-Bridge/run.py (entrypoint), Adapters/deepseek.py, Tools/launcher.py.
-Тесты: imports 7/7, smoke 24/24, daemon 11/11, daemon_timing 8/8, cdp_read_launcher 14/14.
-E2E: read (body 5111) + live-send marker (7/7) в живом чате C.
+### Ф6. Раскатка A/B/D/E/F — откат в план
+По одному, после приёмки предыдущего канала. A и B — Dora и Mora в Jeho.
+Критерий: агент поднят, панель видит, ALIVE отвечает, TODO/JOURNAL ведутся.
+Сейчас: поднимались вне правил, потушены.
 
-### Ф3 - done
-Mainframe/web.py (переименован из http.py - затенял stdlib), api.py (parallel probe),
-server.py, static/index+style+app.js, llm.py (stub).
-8670 занят чужим pid 5304 -> убит по ОК оператора, наш сервер pid 15984, все роуты 200.
-Тесты: mainframe_8671 19/19, server_subprocess 12/12.
+### Ф7. Релизный пуш — pending
+Критерий: R1-R5 закрыты (LICENSE, requirements, CHANGELOG, tag, push, скан
+секретов). Push в PaaLadin/jewai-v5 после закрытия всех фаз.
 
-### Ф4 - partial
-Готово: table.py (series math, atomic write), master.py (gate limit/force/hold/threshold/deny,
-lock TTL 1h, run minimal), onboard.py (pick_neighbor, message). test_rebirth 23/23.
-Не сделано: CDP cycle (create_chat -> send_prompt -> verify -> advance) реально не реализован.
-master.run(live=True) только двигает таблицу. Тест 'rebirth C при cmds>=850' не выполнен.
+### Ф8. Clean Build & Installer — pending
+Self-contained сборка, GUI-инсталлятор в стиле Mainframe, настраиваемые пути/порты.
+Критерий: install.bat в новой папке -> рабочий стек без ручных правок.
 
-### Ф5 - partial
-Каркасы: llm.py (config.llm{host,port}), mail.py (config.mail), rag_channel.py (JSONL).
-Проверено на fake HTTP/SMTP: f5 17/17, f5_configured 11/11.
-Не настроено: реальный LLM/SMTP (нужен config), doh_proxy 9899 (не начат).
+### Ф9. Новый Mainframe UI — pending
+Визуал по RAG, динамические вкладки по агентам.
+Критерий: панель масштабируется 1-10 каналов, вкладки/карточки из config.
 
-### Ф6 - откат в план
-Chrome A/B/D/E/F поднимались вне правил (все разом, до приёмки Ф2-Ф5).
-Потушены 2026-10-28 по указанию оператора. Активен только C (9124).
-Агенты (Bridge/run --channel) не запускались.
-Правильный порядок: по одному, после приёмки предыдущего канала.
+### Ф10. Голосовая приёмка — pending
+Голосовой вызов оператора перед push.
+Критерий: voice_call.py, проверка громкости, ночной режим 22:00-08:00.
 
-### Ф7 - в плане
-Precheck: .git есть, branch main, 1 коммит 2770d2f, remote PaaLadin/jewai-v5 (без токена).
-Untracked готово к коммиту. Push не выполнялся.
+## 6. Блокеры (ждут решения оператора)
 
-## Итоги сессии 13D (2026-10-28)
+Разрушительные или вне зоны агента. Без явного ОК — не делать.
 
-18 наборов тестов, 289 проверок, все зелёные (41.6с).
-Chrome C (9124) live. Mainframe 8670 live (наш pid). Watchdog D ON.
-Передача: HANDOVER_14D 4140b, PROMPT_14D 2690b, RAG/procedures/current_state.md 1376b.
+| # | Блокер | Что нужно |
+|---|--------|-----------|
+| B1 | Порт 8670 занят чужим pid | kill по ОК, затем restart Mainframe |
+| B2 | Ф2 live-send в живой чат C | ОК на запись в живой чат |
+| B3 | Ф6 раскатка A/B/D/E/F | ОК на спавн живых агентов |
+| B4 | Ф7 push в PaaLadin/jewai-v5 | GCM-клик оператора |
+| B5 | BUG3a DeepSeek redirect chat->www | решение: no-proxy / fixed URL / fallback |
+| B6 | Mainframe /fs non-JSON ветка | решение о формате ответа |
 
-Блокеры (ОК оператора):
-1. Ф4 CDP cycle.
-2. Ф5 real config.
-3. Ф6 раскатка по одному.
-4. Ф7 push.
-5. Mainframe /fs (non-JSON ветка).
+## 7. Релизный чеклист v0.1.0 (R1-R5)
 
+- **R1 Легальность.** LICENSE (MIT или Apache 2.0), правообладатель — Оператор.
+- **R2 Сборка чужим человеком.** requirements.txt (только реальные импорты),
+  README Quick start (venv -> pip -> install.bat), config.example.json,
+  реальный config в .gitignore.
+- **R3 Версионирование.** CHANGELOG.md (Keep a Changelog), git tag v0.1.0-dev,
+  первый GitHub Release.
+- **R4 Пуш.** git pull --rebase -> push, скан секретов (git log -p).
+- **R5 Техдолг безопасности.** 5.1 аутентичность источника блока (префикс-канал,
+  консилиум); 5.2 живой CDP-цикл Rebirth; 5.3 тест watchdog-guard на залипание DOM.
 
-## Phase 8: Clean Build & Installer
-- Self-contained build, GUI installer in mainframe style, configurable paths/ports.
+## 8. Backlog
 
-## Phase 9: New Mainframe UI
-- Match visual RAG, dynamic tabs based on agents.
+Ведёт Мора (RAG/backlog). Здесь — только ссылка и правила:
+- приоритеты: HIGH/MEDIUM/LOW;
+- источник: TODO.md jewai (блоки B-06..B-30), R1-R5, баги инсталлятора;
+- правило: один ход — наш, один — оператора (для рискованных).
 
-## Phase 10: Voice Acceptance
-- Call operator by voice before git push.
+## 9. Ссылки
 
+- `RAG/architecture/AUDIT.md` — контракты и костыли старого проекта (30 разделов).
+- `RAG/architecture/ARCHITECTURE.md` — идеология, слои, потоки (этот релиз).
+- `RAG/procedures/architecture.md` — короткие решения 13D.
+- `logs/TODO.md` — оперативный план, [x] после теста.
+- `logs/JOURNAL.md` — append-only, факты.
+- `logs/HANDOVER_11B.md` — передача сессии 11B.
+- `logs/LICENSE_REMINDER.md` — напоминание перед релизным пушем.
 
-## 2026-10-28 11B - Sync docs with facts
+Dixi. Dora (A), 2026-11-04. Черновик v0.2, ждёт приёмки оператора.
 
-**Found by tests run + code read (11B):**
-- **Tests: 9/21 pass, 12 fail** (not 21/325). 11/12 cause: `config.json` old schema - no `name/extension/model`, CDP 9220+i (need 9122+i), agent 8760+i (need 8666+i), n=4 hardcoded.
-- **installer/server.py:** PORT 8671 conflicts with agent E; CDP 9220+i; agent 8760+i; `DETACHED_PROCESS` no stderr; n=4 hardcoded.
-- **Bridge/daemon.py is NOT CLI** (no `__main__`/`argparse`, 180 lines). Installer picks it first -> dead process. Correct entrypoint: `Bridge/run.py --channel X`.
-- **Services missing in v5:** no `svc.py/watchdog.py/recovery_loop.py/autorestart.py` (4 modules from AUDIT). `Mainframe/svc_api.py` manages non-existent services.
-- **3 tests write to `C:/DeepSeek/logs/D/`** (violates "do not touch DeepSeek"): `test_server_subprocess`, `test_run_entrypoint`, `test_boot`.
-- **RAG/knowledge/modules.md stale:** generated before `Mainframe/{controls,council,launchpad,svc_api}.py`; `server.py` size 1377 b (real 3462).
-- **HANDOVER_14D/PROMPT_14D only in `C:/DeepSeek/logs/D/`**, absent in `C:/jewai`.
-- **Extension absent in v5** (rag_agent_layout: open question - needed?).
+## 10. Дополнительные фазы (по итогам аудита DeepSeek, 2026-11-04)
 
-**Plan:** (1) fix config.json + installer/server.py to v5 schema; (2) rerun tests -> expect 18/18 pass (3 remaining to isolate into tempdir); (3) update ROADMAP/TODO/current_state/modules with facts.
+Источник: `logs/A/RAG/AUDIT_GAP.md`. DeepSeek содержал подсистемы, которых нет в v5.
+Ниже — что перенести, с критериями приёмки. Все — после Ф4/Ф5 базовых.
 
+### Ф4b. Rebirth-надзор — missing
+Механика `la_rebirth_monitor.py`:
+- Пороги напоминаний: info 500, warn 700, critical 850 (cmds_from_start).
+- TTL: info — раз за серию, warn — 2 ч, critical — 30 мин. Без спама.
+- Pending-артефакты: `pending_<CH>.json`, проверка mtime > since_ts и наличия next_series
+  в TODO/HANDOVER/PROMPT. Эскалация через 30 мин, до 3 раз, потом оператор.
+- Hold-режим: `hold_<CH>.flag` — порог отключён, ждём переполнения чата.
+- Lock: `rebirth.lock`, TTL 1 ч, JSON {ts, ch}.
+- Auto: `ready_<CH>.json` -> `rebirth_master --live`, одно перерождение за раз.
+Критерий: канал A при cmds>=850 получает напоминание, готовит артефакты, master
+перерождает, table двигается, новый чат получает PROMPT, сосед онбордит.
 
-## 2026-10-29 01:07:28 - 11B: 21/21 tests pass
+### Ф5b. Token counter — NOT PORTED
 
-**All 21 test suites green.** Session start was 9/21.
+Решение (оператор, 2026-11-04): token counter НЕ переносить.
+Причина: формула latin/4+cyr/2.5+other/4 по innerText — грубая эвристика,
+не связанная с реальным токенизатором; лимит 3600 — эмпирика; innerText ≠ контекст.
+Единственная метрика переполнения: **cmds_from_start** (леджер) + **chat_limit** (баннер).
+См. marker_protocol §6: "Токены не смотрим".
+Артефакты F5b перемещены в Archive/ (не использовать).
 
-### Fixed (11B, all backed up .bak_11b*)
-- config.json v5 schema (channels A-D, agent 8666+i, cdp 9122+i, model=deepseek).
-- installer/server.py: PORT 8660 (was 8671 conflict); doh_proxy_port written; run_launch calls Tools/launcher.py; basePort from UI; health-check after spawn; model=deepseek (qwen/alice test-only).
-- installer/install.ps1: http://127.0.0.1:8660.
-- installer/app.js: defaults 8760->8666.
-- Mainframe/static/index.html: title JewAI -> JewAI v5.
-- Mainframe/svc_api.py: _SVC -> local Tools/svc.py.
-- 18 tests: OUT path C:/DeepSeek -> C:/jewai/logs/runtime.
-- 5 tests: dynamic ports (mf_8671, mf_ext, fs) and dynamic channels (server_subprocess, run_entrypoint, launchpad).
-- test_boot: self-occupies 8670 (was assuming busy).
-- test_ext_agent: poll /ping up to 10s (was fixed sleep 1.5s).
+### Ф5c. Архивация бесед — missing
+- `export_share`: scroll-loop до стабилизации, дедуп по строкам, NDA-redact.
+- QC: final_url==source, тело начинается с «Shared Conversation», нет своих id.
+- Хранение: `logs/<CH>/conversations/<series>_share.md` + README-таблица.
+Критерий: share-URL -> файл, QC проходит, README обновлён.
 
-### Key finding
-- Chrome C after clean reboot: stable 180+ sec. Pre-reboot death was dirty env (orphans), NOT launcher code.
-- launcher.py:100 already uses DETACHED_PROCESS. No fix needed.
+### Ф5d. Session handover — partial
+- Фаза 1 (за 100-150 id): SESSION_STATE, MILESTONE, INDEX, PROMPT_<next>.
+- Фаза 2 (каждые 1000): commit+push, бэкап.
+- Фаза 3 (приёмник): новый чат, корневой PROMPT, read RAG, сброс ledger.
+- Фаза 4: прощание в старом чате.
+Критерий: при cmds>=800 артефакты полные, приёмник восстанавливается по ним.
 
-### Ready for operator installer test
-- Installer: run in NEW test folder (not C:/jewai).
-- Expected: empty Chrome profiles, Templates/extension v5.0.0, panel on 8670, agents on 8666-8669.
+### Ф6a. Протоколы — missing
+- `marker_protocol.md` (полный канон: маркер≠транспорт, p2p≠broadcast, персональные id).
+- `roles_and_chain.md` (оператор -> A -> B/C/D, C — апрувер).
+- `council_protocol.md` (threads vs chat.jsonl, cc, таймеры).
+- `id_range_rule.md` (AAAA0000-9999, переполнение -> AAAB).
+- `interface_reference.md` (CRT-эталон).
+Критерий: 5 файлов в `RAG/procedures/`, ссылки из INDEX.
 
-### Still open (not blocking installer)
-- Services (svc/watchdog/recovery/autorestart) not ported. svc_api.py points to non-existent Tools/svc.py.
-- RAG/knowledge/modules.md stale.
-- HANDOVER_14D/PROMPT_14D only in C:/DeepSeek/logs/D/.
-- Autostart/boot slowdown analysis (operator zone, not touched).
+### Ф6b. Rescue/guard — missing
+- `guard.py`: start --target --timeout, done, [GUARD-ALERT] при таймауте.
+- `mutual_rescue.md`, `rescue_unified.md`: три раунда, потом голос оператору.
+- `panel_recovery.md`, `self_recovery.md`: reload_chat, recover_chat, restart_via_b.
+Критерий: guard start -> timeout -> [GUARD-ALERT] -> RESCUE -> done.
 
+### Ф6c. Суперкнопка (paused) — partial
+- Контракт в `PROMPT_ACTIVATION.md`: paused=true -> не пиши блоки, отвечай текстом.
+- Правило в `behavior_rules.md`.
+- Кнопка «Диалог/Работа» в Mainframe.
+Критерий: paused=true -> агент шлёт только текст, мост не исполняет блоки.
 
-## 2026-10-29 01:57 - Phase 11: per-agent profiles
-
-**Status:** IN PROGRESS.
-- Profiles/<L>/{chrome,config,logs,docs,extension} - one folder per agent, migration-friendly.
-- Extension knows own port via chrome.storage (set by installer via CDP).
-- Ledger per-channel.
-- Agents/<L> removed (single source of truth).
-
-
-## 2026-10-29 04:16 - Phase 12: services + launchers + CRT
-
-**Status:** DONE (code), pending operator test.
-- P1: svc/watchdog/recovery/autorestart (operator-safe ALIVE).
-- P2: Tools/launchers/*.ps1 (start/stop/restart per channel + server + shortcut).
-- P3: Chrome install offer in install.ps1.
-- P4-P6: mainframe CRT + dynamic cards + chat + projects.
-- P7: /roadmap/<name> route.
-- P8: Templates/project + Templates/roadmap.
-- P10: C:/jewai Profiles/ cleaned.
-
-
-## 2026-10-30 00:23 - 11B final: CfT + install fixes + tests
-
-### Сделано (коммиты 5c14703, 9b13509, 764ba01, dcbde1b)
-- Chrome for Testing 158.0.8127.2: downloaded to tools/chrome-for-testing, --load-extension verified.
-- launcher.py: _chrome_exe(cfg) priority = chrome_path > CfT > regular Chrome.
-- installer: copies CfT to target + sets chrome_path.
-- launcher: push_storage 3-retry.
-- install.bat: guard (detect test copy, warn).
-- launchpad: agent START per-channel extension (Profiles/<L>, not Templates).
-- 21/21 tests pass.
-
-### Открыто
-- storage=False: extension loads but sidepanel not connected (retry may not help if target not ready).
-- Install STRICTLY from C:\jewai\install.bat into NEW folder.
-- Panel v5 Mainframe: TODO (agree with operator).
-- Git push: 25 commits ahead of PaaLadin/jewai-v5.
-
-
----
-
-## Релизная подготовка v0.1.0 (Внешний аудит Алисы)
-
-**Источник:** канал F (из-за стены).
-**Статус:** в плане, выполнять по фазам (не всё сразу).
-**Правило:** один ход — наш, один — оператора.
-
-- **R1: Легальность.** Создать LICENSE (MIT или Apache 2.0). Указать Оператора как правообладателя.
-- **R2: Сборка чужим человеком.** requirements.txt (только реальные импорты). README: Quick start (venv -> pip install -> install.bat). Заменить хардкод путей на config.root(). Создать config.example.json.
-- **R3: Версионирование.** CHANGELOG.md из JOURNAL. git tag v0.1.0-dev. Первый GitHub Release.
-- **R4: Пуш.** git pull --rebase -> push. Финальный скан секретов (git log -p).
-- **R5: Техдолг безопасности.**
-  - 5.1. Аутентичность источника блока (префикс-канал). *Проектное решение, требует консилиума.*
-  - 5.2. Живой CDP-цикл Rebirth на тестовом канале (create_chat -> send_prompt -> verify -> advance).
-  - 5.3. Тест Watchdog-guard (залипание DOM -> авто-сброс).
-
-
-## Состояние 02.11.2026 (7C, актуализация)
-
-- git jewai: HEAD 7fe994c, origin/main == HEAD (запушено 02.11.2026). Дерево чистое.
-- Тесты 21/21 зелёные, но это unit/smoke. Рантайм-циклы (rebirth, сервисы, install->launch->agent, extension в бою) НЕ прогонялись.
-- Ф3/Ф4/Ф5 - partial, приёмки не было. Ф2 in progress. Ф7 = релизный пуш после закрытия всех фаз.
-- Открытые баги инсталлятора (детали в logs/TODO.md): CORS в Mainframe/web.py, fallback redirect, agent:8666 DOWN при CDP UP, storage=False, DeepSeek redirect, agentCount default.
-- Расширение: checkStuck не проверен живьём; agentName UNKNOWN; E/F lastId=None.
-- LICENSE перед релизным пушем - напоминание в logs/LICENSE_REMINDER.md.

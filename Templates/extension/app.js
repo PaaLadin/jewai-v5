@@ -122,6 +122,7 @@ async function loadPauseState() {
   try {
     const j = await apiGet('/pause_state');
     isPaused = !!j.paused;
+    await chrome.storage.local.set({paused: isPaused});
     updatePauseUI();
   } catch (e) { /* silent */ }
 }
@@ -168,6 +169,7 @@ async function load() {
   await loadPauseState();
   await loadSvcStatus();
   ping(false);
+  loadLive();
 }
 
 function updatePauseUI() {
@@ -193,6 +195,7 @@ els.pause.onclick = async () => {
     const r = await apiPost('/pause', {paused: target, by: 'operator'});
     if (r.ok) {
       isPaused = !!r.paused;
+      await chrome.storage.local.set({paused: isPaused});
       addLog(isPaused ? 'PAUSE ON (мост остановлен)' : 'PAUSE OFF (мост возобновлён)');
     } else {
       addLog('PAUSE FAIL: ' + JSON.stringify(r).slice(0, 120));
@@ -202,6 +205,46 @@ els.pause.onclick = async () => {
   }
   updatePauseUI();
 };
+
+
+let lastLedgerId = "";
+async function loadLive() {
+  if (!agentBaseUrl) return;
+  try {
+    const j = await apiGet('/live');
+    if (!j || j.ok === false) return;
+    const L = document.getElementById('crt-log');
+    const A = document.getElementById('crt-last');
+    if (L && Array.isArray(j.entries)) {
+      let added = false;
+      j.entries.forEach(function(e) {
+        if (e.id > lastLedgerId) {
+          lastLedgerId = e.id;
+          const st = String(e.status || '?').toUpperCase();
+          const cls = st === 'OK' ? 'ok' : (st === 'FAIL' ? 'fail' : 'skip');
+          L.innerHTML += '<div><span class="' + cls + '">[' + st + ']</span> '
+            + String(e.id || '') + ' ' + String(e.op || '') + ' '
+            + '<span class="small">' + String(e.ts || '') + '</span></div>';
+          added = true;
+        }
+      });
+      if (added && !document.getElementById('scroll-lock').checked) L.scrollTop = L.scrollHeight;
+    }
+    if (A) {
+      const bs = j.bridge_status || {};
+      let tm = '';
+      if (bs.iso) {
+        const parts = String(bs.iso).split(' ');
+        if (parts.length > 1) tm = parts[1];
+      }
+      if (bs.text) {
+        A.textContent = (tm ? '[' + tm + '] ' : '') + 'Мост: ' + bs.text;
+      } else {
+        A.textContent = 'Мост: —';
+      }
+    }
+  } catch (e) { /* silent */ }
+}
 
 async function toggleSvc(kind, on, interval, cooldown) {
   try {
@@ -264,3 +307,4 @@ els.reboot.onclick = async () => {
 load();
 setInterval(() => { if (!isPaused) ping(true); }, 10000);
 setInterval(async () => { await loadSvcStatus(); await loadPauseState(); }, 10000);
+setInterval(loadLive, 3000);

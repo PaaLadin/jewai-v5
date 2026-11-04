@@ -244,6 +244,19 @@ class Handler(BaseHTTPRequestHandler):
                                  "recovery": _svc_state("recovery")})
         if self.path == "/pause_state":
             return self._j(200, {"ok": True, **_pause_state()})
+        if self.path == "/live":
+            lp = _logs_dir() / "live.json"
+            if not lp.exists():
+                return self._j(200, {"ok": True, "channel": _ch_letter(),
+                                     "entries": [], "last_action": {},
+                                     "watermark": None, "paused": bool(_pause_state().get("paused")),
+                                     "updated": None})
+            try:
+                data = json.loads(lp.read_text(encoding="utf-8"))
+                data["ok"] = True
+                return self._j(200, data)
+            except Exception as e:
+                return self._j(200, {"ok": False, "error": type(e).__name__ + ": " + str(e)})
         if self.path == "/onboarding/status":
             return self._j(200, {"ok": True, "disabled": _onboarding_is_disabled(),
                                  "channel": _ch_letter(), "name": _ch_name()})
@@ -283,6 +296,12 @@ class Handler(BaseHTTPRequestHandler):
         try:
             b = self._body()
             op = self.path
+            _MUTATING = ("/write", "/mkdir", "/delete", "/run")
+            if op in _MUTATING:
+                _ps = _pause_state()
+                if _ps.get("paused"):
+                    return self._j(423, {"ok": False, "paused": True,
+                                         "error": "paused: operation blocked (dialog with operator)"})
             if op == "/onboarding/disable":
                 try:
                     _onboarding_disabled_path().parent.mkdir(parents=True, exist_ok=True)
@@ -468,10 +487,28 @@ def _port_busy(port):
         b.close()
 
 
+def _resolve_port():
+    # priority: argv > env JEWAI_AGENT_PORT > channel config > default 8666
+    if len(sys.argv) > 1 and str(sys.argv[1]).isdigit():
+        return int(sys.argv[1]), "argv"
+    envp = (os.environ.get("JEWAI_AGENT_PORT") or "").strip()
+    if envp.isdigit():
+        return int(envp), "env"
+    cfg = CHANNEL_CFG or {}
+    for key in ("agent_port", "agent"):
+        v = cfg.get(key)
+        try:
+            if v:
+                return int(v), "config." + key
+        except Exception:
+            pass
+    return 8666, "default"
+
+
 if __name__ == "__main__":
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8666
+    port, _src = _resolve_port()
     if _port_busy(port):
-        print("[guard] port", port, "busy, exit")
+        print("[guard] port", port, "busy, exit (from " + _src + ")")
         sys.exit(1)
-    print("[agent] v" + VERSION + " root=" + str(ROOT) + " port=" + str(port))
+    print("[agent] v" + VERSION + " root=" + str(ROOT) + " port=" + str(port) + " (from " + _src + ")")
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()

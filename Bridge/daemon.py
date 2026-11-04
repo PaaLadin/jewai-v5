@@ -13,6 +13,7 @@
 """
 from __future__ import annotations
 
+import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -48,12 +49,17 @@ class Daemon:
         self.stable_ms = int(cfg.timeouts.get("stable_ms", 1200))
         self.coalesce_ms = int(cfg.timeouts.get("coalesce_ms", 2500))
         self.min_gap_ms = int(cfg.timeouts.get("min_gap_ms", 5000))
+        self.handicap_ms = int(cfg.timeouts.get("handicap_ms", 7000))
+        self._handicap_until = 0.0
+        self.bridge_status = {"text": "Инициализация...", "ts": time.time(), "iso": time.strftime("%Y-%m-%d %H:%M:%S")}
 
         self._last_pre_count: int = -1
         self._last_change_at: float = time.time()
         self._last_send_at: float = 0.0
         self._inflight_since: float = 0.0
         self._inflight_timeout: float = 45.0
+        # 8C: track pause transitions for bootstrap/resume/stop messages
+        self._last_paused: bool | None = None
 
     # ---- gates ----
     def _is_stable(self, cdp: CDP) -> bool:
@@ -129,16 +135,232 @@ class Daemon:
         except Exception:
             return False
 
+    # ---- 8C: bootstrap outbox + activation ----
+    def _outbox_path(self):
+        return self.cfg.channel_path(self.letter, "logs", f"outbox_{self.letter}.jsonl")
+
+    def _activation_flag_path(self):
+        return self.cfg.channel_path(self.letter, "logs", "activation_sent.flag")
+
+    def _is_ledger_empty(self) -> bool:
+        """True if ledger has no committed entries (fresh install)."""
+        try:
+            lp = self.ledger.path
+            if not lp.exists():
+                return True
+            import json as _j
+            data = _j.loads(lp.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                entries = data.get("entries") or data.get("committed") or []
+                return not entries
+            if isinstance(data, list):
+                return not data
+            return True
+        except Exception:
+            return True
+
+    def _send_or_buffer(self, cdp: CDP, text: str) -> bool:
+        """If paused — append to outbox; else send to chat."""
+        if self._is_paused():
+            try:
+                op = self._outbox_path()
+                op.parent.mkdir(parents=True, exist_ok=True)
+                import json as _j
+                with open(op, "a", encoding="utf-8") as f:
+                    f.write(_j.dumps({"ts": time.time(), "text": text}, ensure_ascii=False) + "\n")
+                return True
+            except Exception:
+                return False
+        return self.adapter.send_text(cdp, text)
+
+    def _drain_outbox(self, cdp: CDP) -> bool:
+        """Send queued outbox items FIFO. Return True when empty."""
+        op = self._outbox_path()
+        if not op.exists():
+            return True
+        try:
+            lines = op.read_text(encoding="utf-8").splitlines()
+        except Exception:
+            return True
+        if not lines:
+            return True
+        import json as _j
+        remaining = []
+        for ln in lines:
+            try:
+                item = _j.loads(ln)
+                text = item.get("text", "")
+                if not text:
+                    continue
+                ok = self.adapter.send_text(cdp, text)
+                if not ok:
+                    remaining.append(ln); break
+                time.sleep(2.0)
+            except Exception:
+                remaining.append(ln); break
+        try:
+            op.write_text("\n".join(remaining) + ("\n" if remaining else ""), encoding="utf-8")
+        except Exception:
+            pass
+        return len(remaining) == 0
+
+    def _render_activation(self) -> str:
+        """Read Templates/PROMPT_ACTIVATION.md and substitute placeholders."""
+        try:
+            tpl = self.cfg.path("Templates", "PROMPT_ACTIVATION.md")
+            if not tpl.exists():
+                return ""
+            text = tpl.read_text(encoding="utf-8")
+            ch = self.ch
+            # derive ID range from prefix
+            pref = ch.prefix
+            id_start = pref + "0001"
+            id_end = pref + "0999"
+            subs = {
+                "{{NAME}}": ch.name,
+                "{{CHANNEL}}": self.letter,
+                "{{PREFIX}}": pref,
+                "{{ID_START}}": id_start,
+                "{{ID_END}}": id_end,
+                "{{AGENT_PORT}}": str(ch.agent_port),
+                "{{CDP_PORT}}": str(ch.cdp_port),
+                "{{CHAT_PORT}}": str(self.cfg.chat_port),
+                "{{ROOT}}": str(self.cfg.root),
+            }
+            for k, v in subs.items():
+                text = text.replace(k, str(v))
+            return text
+        except Exception:
+            return ""
+
+    def _bootstrap_check(self, cdp: CDP) -> bool:
+        """Return True if bootstrap handled this tick (skip normal work)."""
+        flag = self._activation_flag_path()
+        if flag.exists():
+            return False  # already activated once
+        if not self._is_ledger_empty():
+            return False  # not fresh
+        text = self._render_activation()
+        if not text:
+            return False
+        ok = self.adapter.send_text(cdp, text)
+        if ok:
+            try:
+                flag.parent.mkdir(parents=True, exist_ok=True)
+                flag.write_text("sent @ " + str(time.time()), encoding="utf-8")
+            except Exception:
+                pass
+            return True
+        return False
+
+    # ---- live.json for sidepanel ----
+    def _live_path(self):
+        return self.cfg.channel_path(self.letter, "logs", "live.json")
+
+    def _set_status(self, text: str) -> None:
+        self.bridge_status = {"text": text, "ts": time.time(), "iso": time.strftime("%Y-%m-%d %H:%M:%S")}
+        self._write_live()
+
+    def _drain_kick_buffer(self, cdp: CDP) -> bool:
+        kb = self.cfg.channel_path(self.letter, "logs", "kick_buffer.jsonl")
+        if not kb.exists(): return True
+        try:
+            lines = kb.read_text(encoding="utf-8").splitlines()
+        except Exception: return True
+        if not lines: return True
+        import json as _j
+        remaining = []
+        for ln in lines:
+            try:
+                item = _j.loads(ln)
+                text = item.get("text", "")
+                if not text: continue
+                ok = self.adapter.send_text(cdp, text)
+                if not ok:
+                    remaining.append(ln); break
+                time.sleep(1.0)
+            except Exception:
+                remaining.append(ln); break
+        try:
+            kb.write_text("\n".join(remaining) + ("\n" if remaining else ""), encoding="utf-8")
+        except Exception: pass
+        return len(remaining) == 0
+
+    def _write_live(self) -> None:
+        try:
+            import json as _j
+            data = {
+                "channel": self.letter,
+                "watermark": self.ledger.watermark,
+                "entries": self.ledger.entries[-50:],
+                "last_action": self.ledger.last_action,
+                "bridge_status": self.bridge_status,
+                "paused": self._is_paused(),
+                "updated": time.time(),
+                "updated_iso": time.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            lp = self._live_path()
+            lp.parent.mkdir(parents=True, exist_ok=True)
+            tmp = lp.with_suffix(".tmp")
+            tmp.write_text(_j.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+            os.replace(tmp, lp)
+        except Exception:
+            pass
+
     # ---- one pass ----
     def tick(self, cdp: CDP) -> DaemonResult:
-        if self._is_paused():
+        # 8C: pause/play transition detection
+        paused = self._is_paused()
+        transition = None
+        if self._last_paused is None:
+            self._last_paused = paused  # baseline, no action on first tick
+        elif self._last_paused != paused:
+            transition = (self._last_paused, paused)
+            self._last_paused = paused
+        # ---- PAUSE: transition to paused -> send STOP ----
+        if paused:
+            if transition and transition[1]:
+                # just paused — send STOP message once
+                self.adapter.send_text(cdp, "СТОП! Пауза. Диалог с оператором начат. Не пиши команд в чат. Только ответы оператору.")
+            self._set_status("Стою на паузе (диалог с оператором)")
+            return DaemonResult(self.letter, 0, 0, 0)
+        # handicap: after any text sent to chat, wait before next block
+        if time.time() < self._handicap_until:
+            self._set_status("Ожидание (handicap)")
+            return DaemonResult(self.letter, 0, 0, 0)
+        # ---- PLAY side: bootstrap by condition (idempotent via flag) ----
+        flag = self._activation_flag_path()
+        if (not flag.exists()) and self._is_ledger_empty():
+            # bootstrap: first PLAY — send activation, set flag, skip rest this tick
+            text = self._render_activation()
+            if text and self.adapter.send_text(cdp, text):
+                try:
+                    flag.parent.mkdir(parents=True, exist_ok=True)
+                    flag.write_text("sent @ " + str(time.time()), encoding="utf-8")
+                except Exception:
+                    pass
+            return DaemonResult(self.letter, 0, 0, 0)
+        if transition and not transition[1]:
+            # regular resume (flag exists or ledger non-empty)
+            self.adapter.send_text(cdp, "Возобновляй работу!")
+        # 8C: outbox first
+        if not self._drain_kick_buffer(cdp):
+            self._set_status("Отправка буфера киков...")
+            return DaemonResult(self.letter, 0, 0, 0)
+        if not self._drain_outbox(cdp):
+            self._set_status("Отправка буфера исходящих...")
             return DaemonResult(self.letter, 0, 0, 0)
         if self._inflight():
             return DaemonResult(self.letter, 0, 0, 0)
         if not self._is_stable(cdp):
+            self._set_status("Ожидание стабилизации чата")
             return DaemonResult(self.letter, 0, 0, 0)
         blocks = self.adapter.collect_blocks(cdp, last_n=3)
+        # 8C B-51: filter blocks by own channel prefix (safety)
+        _own = self.ch.prefix
+        blocks = [b for b in blocks if b.id.startswith(_own)]
         if not blocks:
+            self._set_status("Ожидание команд (idle)")
             return DaemonResult(self.letter, 0, 0, 0)
         if (time.time() - self._last_send_at) * 1000.0 < self.min_gap_ms:
             return DaemonResult(self.letter, 0, 0, 0)
@@ -151,6 +373,7 @@ class Daemon:
         self._inflight_since = time.time()
         try:
             for b in blocks:
+                self._set_status("Выполняю " + b.id + " " + b.op)
                 if b.id > max_id:
                     max_id = b.id
                 ok, reason = self.ledger.check(b)
@@ -159,9 +382,17 @@ class Daemon:
                     results.append({"id": b.id, "op": b.op, "status": "SKIP",
                                     "result": {"error": reason}})
                     continue
-                res = execute(self.cfg.root, b)
+                _er = tuple(getattr(self.cfg, "extra_roots", ()) or ())
+                res = execute(self.cfg.root, b, extra_roots=_er)
                 self.ledger.commit(b)
                 status = "OK" if res.get("ok") else "FAIL"
+                _detail = ""
+                if isinstance(res, dict):
+                    _detail = str(res.get("path") or res.get("sha256") or res.get("error") or "")[:200]
+                try:
+                    self.ledger.record(b, status, _detail)
+                except Exception:
+                    pass
                 results.append({"id": b.id, "op": b.op, "status": status, "result": res})
                 if res.get("ok"):
                     processed += 1
@@ -170,11 +401,17 @@ class Daemon:
             if results:
                 next_id = self._next_id(max_id)
                 report = self._fmt_report(results, next_id)
-                sent = self.adapter.send_text(cdp, report)
+                self._set_status("Отправка [AGENT REPORT]")
+                sent = self._send_or_buffer(cdp, report)
                 if sent:
                     self._last_send_at = time.time()
+                    self._handicap_until = time.time() + self.handicap_ms / 1000.0
         finally:
             self._inflight_since = 0.0
+            try:
+                self._write_live()
+            except Exception:
+                pass
         return DaemonResult(self.letter, processed, skipped, errors)
 
     # ---- loop ----

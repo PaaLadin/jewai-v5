@@ -49,7 +49,8 @@
   "timeouts": {
     "cdp": 5,
     "poll_ms": 2000,
-    "stable_ms": 1200
+    "stable_ms": 1200,
+    "handicap_ms": 7000
   },
   "version": "0.1.0-dev"
 }

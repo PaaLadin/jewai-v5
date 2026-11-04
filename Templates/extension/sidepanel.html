@@ -142,6 +142,22 @@
   .crt-content::-webkit-scrollbar { width: 6px; }
   .crt-content::-webkit-scrollbar-track { background: rgba(0,20,8,0.3); }
   .crt-content::-webkit-scrollbar-thumb { background: var(--green-dim); border-radius: 3px; }
+  .crt-content { flex: 1; }
+  .crt-last {
+    flex-shrink: 0;
+    background: #ffb000;
+    color: #000;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 6px 8px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    z-index: 3;
+    position: relative;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .scroll-lock-label {
     cursor: pointer;
     display: flex;
@@ -391,6 +407,7 @@
   <main class="crt-screen">
     <div class="crt-header"><span>LOG</span><label class="scroll-lock-label"><input type="checkbox" id="scroll-lock"> LOCK</label></div>
     <div class="crt-content" id="crt-log"><div>[SYS] Инициализация...</div></div>
+    <div class="crt-last" id="crt-last">Мост: —</div>
   </main>
   <footer class="bottom-panel">
     <div class="panel-left">

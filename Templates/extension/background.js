@@ -2,7 +2,7 @@
 // Reads state (token, agent url, paused) from chrome.storage, routes batches
 // from content scripts to local agent (agent.py) HTTP endpoint.
 
-const DEFAULTS = { agentUrl: '', token: '', paused: false };
+const DEFAULTS = { agentUrl: '', token: '', paused: false, pausedQueue: [] };
 
 async function getState() {
   return new Promise((resolve) => {
@@ -47,12 +47,22 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           return;
         }
         if (st.paused) {
-          sendResponse({ status: 'PAUSED', results: [] });
+          // buffer incoming blocks while paused; drain on resume
+          const q = Array.isArray(st.pausedQueue) ? st.pausedQueue.slice() : [];
+          for (const a of (msg.actions || [])) q.push(a);
+          const cap = 200;
+          const trimmed = q.slice(-cap);
+          await setState({ pausedQueue: trimmed });
+          sendResponse({ status: 'PAUSED', results: [], queued: trimmed.length });
           return;
         }
+        // drain buffered queue first (from pause), then current batch
+        const buffered = Array.isArray(st.pausedQueue) ? st.pausedQueue.slice() : [];
+        if (buffered.length) await setState({ pausedQueue: [] });
+        const allActions = buffered.concat(msg.actions || []);
         const results = [];
         let nextId = null;
-        for (const action of (msg.actions || [])) {
+        for (const action of allActions) {
           try {
             const r = await callAgent(st.agentUrl, st.token, '/' + action.op, action);
             results.push({ id: action.id, op: action.op, status: r.ok ? 'OK' : 'FAIL', result: r });

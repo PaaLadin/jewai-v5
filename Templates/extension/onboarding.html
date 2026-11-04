@@ -57,7 +57,11 @@
   document.getElementById('agent-channel').textContent = INFO.channel || '?';
   document.getElementById('chat-link').textContent = INFO.chat_url || 'чат';
   document.getElementById('chat-link').href = INFO.chat_url || '#';
-  document.getElementById('btn-ready').onclick = () => { window.location.href = INFO.chat_url || 'https://chat.deepseek.com/'; };
+  document.getElementById('btn-ready').onclick = async () => {
+    // 8C: mark onboarding done so Bridge stops guarding and can open chat tabs
+    try { await fetch('http://127.0.0.1:' + INFO.port + '/onboarding/disable?channel=' + INFO.channel, {method: 'POST'}); } catch (err) {}
+    window.location.href = INFO.chat_url || 'https://chat.deepseek.com/';
+  };
   document.getElementById('cb-dont-show').onchange = async (e) => {
     if (e.target.checked) {
       try { await fetch('http://127.0.0.1:' + INFO.port + '/onboarding/disable?channel=' + INFO.channel, {method: 'POST'}); } catch (err) { alert('Не удалось: ' + err); }

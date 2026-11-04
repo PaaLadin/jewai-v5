@@ -77,18 +77,36 @@ for rel in ["config.json", "README.md", "VERSION",
 # --- ports ---
 ln("")
 ln("=== ports ===")
-ln("  8670 (panel): %s" % ("busy" if tcp(8670) else "free"))
-for L, cdp, ag in [("A",9122,8666),("B",9123,8667),("C",9124,8668),
-                    ("D",9125,8669),("E",9126,8671),("F",9127,8672)]:
-    cdp_s = "up" if tcp(cdp) else "down"
-    ag_s = "up" if tcp(ag) else "down"
+_cfg = None
+try:
+    _cfg = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
+except Exception:
+    _cfg = None
+_panel = int((_cfg or {}).get("chat_port", 8670))
+ln("  %d (panel): %s" % (_panel, "busy" if tcp(_panel) else "free"))
+_channels = (_cfg or {}).get("channels", {}) if _cfg else {}
+if not _channels:
+    ln("  (config.json missing or no channels)")
+for L in sorted(_channels.keys()):
+    spec = _channels[L] or {}
+    try:
+        cdp = int(spec.get("cdp"))
+    except Exception:
+        cdp = 0
+    try:
+        ag = int(spec.get("agent"))
+    except Exception:
+        ag = 0
+    cdp_s = "up" if (cdp and tcp(cdp)) else "down"
+    ag_s = "up" if (ag and tcp(ag)) else "down"
     ln("  %s: cdp=%d %s agent=%d %s" % (L, cdp, cdp_s, ag, ag_s))
 
 # --- mainframe probe ---
 ln("")
 ln("=== mainframe on 8670 ===")
+_panel_url = "http://127.0.0.1:%d" % _panel
 for path in ["/api/health", "/api/status", "/api/llm", "/style.css"]:
-    up = http_ok("http://127.0.0.1:8670" + path)
+    up = http_ok(_panel_url + path)
     ln("  %-20s %s" % (path, "200" if up else "non-200"))
 
 # --- browser process (Chrome on C profile) ---
@@ -115,17 +133,27 @@ else:
 # --- chat_attached (12B: live) ---
 ln("")
 ln("=== chat_attached ===")
-try:
-    with urllib.request.urlopen("http://127.0.0.1:8670/api/health", timeout=5) as r:
-        h = json.loads(r.read().decode("utf-8"))
-    for L in ("A", "B", "C", "D", "E", "F"):
-        row = h.get("matrix", {}).get(L, {})
-        agent = row.get("agent")
-        lastid = row.get("lastId")
-        tag = "attached" if (agent and lastid) else ("idle" if agent else "down")
-        ln("  %s: agent=%s lastId=%s -> %s" % (L, agent, lastid, tag))
-except Exception as e:
-    ln("  /api/health unreachable: " + type(e).__name__)
+def _ledger_lastid(letter):
+    lp = ROOT / "Profiles" / letter / "logs" / ("ledger_%s.json" % letter)
+    try:
+        j = json.loads(lp.read_text(encoding="utf-8"))
+        return j.get("watermark") or None
+    except Exception:
+        return None
+
+for L in sorted(_channels.keys()):
+    spec = _channels[L] or {}
+    try:
+        ag = int(spec.get("agent"))
+    except Exception:
+        ag = 0
+    agent_up = bool(ag and tcp(ag))
+    lastid = _ledger_lastid(L)
+    if not lastid:
+        # fallback: probe agent /ping for liveness only
+        lastid = None
+    tag = "attached" if (agent_up and lastid) else ("idle" if agent_up else "down")
+    ln("  %s: agent=%s lastId=%s -> %s" % (L, agent_up, lastid, tag))
 
 # --- blockers (12B: live) ---
 ln("")
@@ -135,15 +163,14 @@ blockers = []
 if not http_ok("http://127.0.0.1:8670/api/health"):
     blockers.append("8670: panel /api/health non-200")
 # per-channel: agent up + chat not attached
-try:
-    with urllib.request.urlopen("http://127.0.0.1:8670/api/health", timeout=5) as r:
-        h = json.loads(r.read().decode("utf-8"))
-    for L in ("A", "B", "C", "D", "E", "F"):
-        row = h.get("matrix", {}).get(L, {})
-        if row.get("agent") and row.get("lastId") is None:
-            blockers.append("%s: agent up, lastId null (chat not attached or no commands yet)" % L)
-except Exception:
-    pass
+for L in sorted(_channels.keys()):
+    spec = _channels[L] or {}
+    try:
+        ag = int(spec.get("agent"))
+    except Exception:
+        ag = 0
+    if ag and tcp(ag) and not _ledger_lastid(L):
+        blockers.append("%s: agent up, lastId null (no ledger yet)" % L)
 # git
 try:
     import subprocess

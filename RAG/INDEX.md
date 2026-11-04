@@ -56,3 +56,21 @@
 - `procedures/PANEL.md` - Pip-Boy UI: структура, API, логика ламп.
 
 - `procedures/VOICE_CALL.md` - голосовой вызов (mute, громкость, ночь).
+
+
+---
+
+## Перенесено из DeepSeek 8C (2026-11-03)
+
+- procedures/behavior_rules.md - ядро поведения
+- procedures/backup_rule.md
+- procedures/rebirth_scope.md (A-D)
+- procedures/cdp_transport.md
+- procedures/stuck_states_collection.md
+- procedures/script_creation.md
+- procedures/see_newborn.md
+- procedures/operator_docs.md
+
+### Порядок: behavior_rules -> ALIVE_AND_SERVICES -> BRIDGE_LIMITS -> INDEX
+
+### Связано: Templates/PROMPT_ACTIVATION.md

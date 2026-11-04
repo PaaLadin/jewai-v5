@@ -71,7 +71,7 @@ def gen_start_channel(cfg, L):
     lines.append("python Tools\\launcher.py --channel " + L)
     lines.append("$agentPy = Join-Path $Root \"Profiles\\" + L + "\\extension\\agent.py\"")
     lines.append("if (Test-Path $agentPy) { Start-Process pythonw -ArgumentList @($agentPy, \"" + str(ch["agent"]) + "\") -WorkingDirectory $Root -WindowStyle Hidden; Log \"agent " + L + " :" + str(ch["agent"]) + " started\" }")
-    lines.append("python Bridge\\run.py --channel " + L + " --once")
+    lines.append("Start-Process pythonw -ArgumentList @(\"Bridge\\run.py\", \"--channel\", \"" + L + "\") -WorkingDirectory $Root -WindowStyle Hidden")
     return "\n".join(lines) + "\n"
 
 
