@@ -21,6 +21,7 @@
 
 
 
+
 <div class="crt">
 <div class="topbar">
   <div class="top-left">JewAI v5 // ПУЛЬТ</div>
@@ -147,6 +148,7 @@
 
 
 
+
 <script src="/app.js?v=f2"></script>
 <script src="/chat.js?v=f2"></script>
 <script src="/pers.js?v=f2"></script>
@@ -209,20 +211,21 @@ function build(id, b, def){
   el.style.width = b.w+'px'; el.style.height = b.h+'px';
   if(def.color) el.style.color = def.color;
   if(def.type==='agent'){
+    var L = (def.letter||'').toUpperCase();
     el.innerHTML =
       '<div class="mnemo-agent-letter">' + def.letter + '</div>' +
       '<div class="mnemo-agent-name">' + def.name + '</div>' +
       '<div class="mnemo-agent-status"><div class="mnemo-agent-status-dot"></div><span>ONLINE</span></div>' +
-      '<div class="mnemo-agent-port">port ' + (def.port||'\u2014') + '</div>' +
+      '<div class="mnemo-agent-port">port ' + (def.port||'') + '</div>' +
       '<div class="mnemo-agent-lamps">' +
         '<div class="mnemo-lamp-row"><div class="mnemo-lamp-dot" data-lamp="agent"></div><span>AGENT</span></div>' +
         '<div class="mnemo-lamp-row"><div class="mnemo-lamp-dot" data-lamp="bridge"></div><span>BRIDGE</span></div>' +
         '<div class="mnemo-lamp-row"><div class="mnemo-lamp-dot" data-lamp="chrome"></div><span>CHROME</span></div>' +
       '</div>' +
       '<div class="mnemo-agent-reboot">' +
-        '<button class="mnemo-btn" data-act="reboot-agent" data-target="' + def.letter + '">\u21bba</button>' +
-        '<button class="mnemo-btn" data-act="reboot-bridge" data-target="' + def.letter + '">\u21bbb</button>' +
-        '<button class="mnemo-btn" data-act="reboot-chrome" data-target="' + def.letter + '">\u21bbc</button>' +
+        '<button class="mnemo-btn" data-act="reboot-agent" data-target="' + def.letter + '">\u21bb' + L + '</button>' +
+        '<button class="mnemo-btn" data-act="reboot-bridge" data-target="' + def.letter + '">\u21bb' + L + '</button>' +
+        '<button class="mnemo-btn" data-act="reboot-chrome" data-target="' + def.letter + '">\u21bb' + L + '</button>' +
       '</div>' +
       '<div class="mnemo-agent-mainbtns">' +
         '<button class="mnemo-btn" data-act="boot" data-target="agent:' + def.letter + '">\u25b6</button>' +
