@@ -1326,3 +1326,21 @@ Dixi. C (Семён), 7C, 2026-11-02.
 - 773ea5d, 3198d71, ddd2a54, f5dec41, e6042da.
 
 Dixi. 14D, 2026-11-05.
+
+## 2026-11-06 - 14D: сессия закрыта, приёмка оператора
+
+- Чекбоксы пройдены, приёмка дана.
+- HANDOVER_14D восстановлен (6773f5d), HANDOVER_15D полный, PROMPT_15D с warning.
+- Push: ac74680 (origin/main = HEAD).
+- Watchdog D: OFF.
+
+Dixi. 14D, 2026-11-06.
+
+## 2026-11-06 - 14D: сессия закрыта, приёмка оператора
+
+- Чекбоксы пройдены, приёмка дана.
+- HANDOVER_14D восстановлен (6773f5d), HANDOVER_15D полный, PROMPT_15D с warning.
+- Push: ac74680 (origin/main = HEAD).
+- Watchdog D: OFF.
+
+Dixi. 14D, 2026-11-06.
