@@ -66,17 +66,37 @@ class DeepSeek:
     def send_text(self, cdp: CDP, text: str) -> bool:
         """Ввод + Enter x2. Возвращает True если textarea опустела."""
         sel = self.TEXTAREA_SELECTOR
-        # 1) очистить и вставить через setter (React-friendly)
+        # 1) Check if user is typing (don't overwrite)
+        v = cdp.eval_expr(
+            "(() => { const t = document.querySelector(%r); return t ? t.value : ''; })()" % sel
+        ) or ""
+        if v.strip():
+            return False  # Busy
+
+        # 2) Clear textarea
         fill = (
             "(() => { const t = document.querySelector(%r); if (!t) return false;"
             " const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;"
             " setter.call(t, ''); t.dispatchEvent(new Event('input', {bubbles:true}));"
-            " setter.call(t, %r); t.dispatchEvent(new Event('input', {bubbles:true}));"
             " t.focus(); return true; })()"
-        ) % (sel, text)
+        ) % sel
         if not cdp.eval_expr(fill):
             return False
-        time.sleep(0.4)
+        time.sleep(0.2)
+
+        # 3) Insert text via CDP Input.insertText (reliable for large texts)
+        try:
+            cdp.call("Input.insertText", {"text": text})
+        except Exception:
+            setter_js = (
+                "(() => { const t = document.querySelector(%r); if (!t) return false;"
+                " const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;"
+                " setter.call(t, %r); t.dispatchEvent(new Event('input', {bubbles:true}));"
+                " return true; })()"
+            ) % (sel, text)
+            cdp.eval_expr(setter_js)
+
+        time.sleep(0.5)
         # 2) Enter x2
         for _ in range(2):
             for t in ("keydown", "keypress", "keyup"):

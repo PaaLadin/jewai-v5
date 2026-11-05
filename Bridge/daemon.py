@@ -160,7 +160,7 @@ class Daemon:
             return True
 
     def _send_or_buffer(self, cdp: CDP, text: str) -> bool:
-        """If paused — append to outbox; else send to chat."""
+        """If paused or busy — append to outbox; else send to chat."""
         if self._is_paused():
             try:
                 op = self._outbox_path()
@@ -171,7 +171,20 @@ class Daemon:
                 return True
             except Exception:
                 return False
-        return self.adapter.send_text(cdp, text)
+        
+        ok = self.adapter.send_text(cdp, text)
+        if not ok:
+            # Busy (user typing) or CDP failed. Buffer it.
+            try:
+                op = self._outbox_path()
+                op.parent.mkdir(parents=True, exist_ok=True)
+                import json as _j
+                with open(op, "a", encoding="utf-8") as f:
+                    f.write(_j.dumps({"ts": time.time(), "text": text}, ensure_ascii=False) + "\n")
+                return True
+            except Exception:
+                return False
+        return True
 
     def _drain_outbox(self, cdp: CDP) -> bool:
         """Send queued outbox items FIFO. Return True when empty."""
@@ -321,7 +334,7 @@ class Daemon:
         if paused:
             if transition and transition[1]:
                 # just paused — send STOP message once
-                self.adapter.send_text(cdp, "СТОП! Пауза. Диалог с оператором начат. Не пиши команд в чат. Только ответы оператору.")
+                self._send_or_buffer(cdp, "СТОП! Пауза. Диалог с оператором начат. Не пиши команд в чат. Только ответы оператору.")
             self._set_status("Стою на паузе (диалог с оператором)")
             return DaemonResult(self.letter, 0, 0, 0)
         # handicap: after any text sent to chat, wait before next block
@@ -342,7 +355,7 @@ class Daemon:
             return DaemonResult(self.letter, 0, 0, 0)
         if transition and not transition[1]:
             # regular resume (flag exists or ledger non-empty)
-            self.adapter.send_text(cdp, "Возобновляй работу!")
+            self._send_or_buffer(cdp, "Возобновляй работу!")
         # 8C: outbox first
         if not self._drain_kick_buffer(cdp):
             self._set_status("Отправка буфера киков...")
