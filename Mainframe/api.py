@@ -124,3 +124,29 @@ def health(cfg: Config, path: str, body: dict) -> dict:
     return {"ok": True, "ts": time.time(),
             "uptime": round(time.time() - _START_TS, 1),
             "version": cfg.version}
+
+def telemetry(cfg: Config, path: str, body: dict) -> dict:
+    """Phase 4: telemetry for mnemo — last entry + count per channel from live.json.
+
+    Client polls this every 2s, detects count delta, and animates a link
+    from agent to the target block on each new op.
+    """
+    out = {}
+    for L in cfg.letters:
+        live = cfg.channel_path(L, "logs", "live.json")
+        if not live.exists():
+            out[L] = {"count": 0, "last": None}
+            continue
+        try:
+            data = json.loads(live.read_text(encoding="utf-8"))
+        except Exception:
+            out[L] = {"count": 0, "last": None}
+            continue
+        entries = data.get("entries") or []
+        out[L] = {
+            "count": len(entries),
+            "last": entries[-1] if entries else None,
+            "updated": data.get("updated"),
+            "paused": data.get("paused", False),
+        }
+    return {"ok": True, "channels": out, "now": time.time()}

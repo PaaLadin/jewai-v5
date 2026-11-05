@@ -15,6 +15,7 @@
 
 
 
+
 <div class="crt">
 <div class="topbar">
   <div class="top-left">JewAI v5 // ПУЛЬТ</div>
@@ -135,18 +136,6 @@
     <pre class="rm-content" id="rm-content">выберите проект...</pre>
   </div>
 </section>
-<script src="/chat.js?v=f2"></script>
-<script src="/pers.js?v=f2"></script>
-
-</main>
-<div class="log-strip" id="log-strip"></div>
-</div>
-
-
-
-
-
-
 
 <script src="/app.js?v=f2"></script>
 <script>
@@ -558,6 +547,7 @@ function init(){
   });
 }
 
+window.__mnemo = { particles: particles, BLOCKS: BLOCKS, agentOrder: agentOrder };
 init();
 })();
 

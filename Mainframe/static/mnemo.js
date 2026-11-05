@@ -406,5 +406,6 @@ function init(){
   });
 }
 
+window.__mnemo = { particles: particles, BLOCKS: BLOCKS, agentOrder: agentOrder };
 init();
 })();
