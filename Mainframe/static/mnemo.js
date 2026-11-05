@@ -7,8 +7,8 @@ var blocksContainer = document.getElementById('mnemo-blocks');
 if(!canvas||!wrap||!blocksContainer) return;
 var ctx = canvas.getContext('2d');
 var GRID = 10;
-var AW=220, AH=110, CW=150, CH=80, RW=180, RH=70, MW=280, MH=120;
-var HG=30, VG=40;
+var AW=308, AH=154, CW=262, CH=140, RW=210, RH=80, MW=560, MH=240;
+var HG=42, VG=40;
 var COLORS = {'A':'#33ff33','B':'#33d6ff','C':'#c573ff','D':'#ffb000','E':'#4ecdc4','F':'#f7b731','J':'#ff6688','H':'#66aaff','K':'#cc66ff','L':'#66ffcc'};
 var BLOCKS = {};
 var agentOrder = [];
@@ -18,67 +18,33 @@ var BASE_W = 1400, BASE_H = 700;
 var canvasScale = 1.0;
 var obstacleMap = new Uint8Array(0);
 
-function plan(N){
-  var b = {};
-  var EDGE = 20;
-  var i, x, y;
-  var top = N<=4?N:Math.ceil(N/2);
-  var bot = N-top;
-
-  // Top agents: top-left, single row
-  var rightTop = EDGE;
-  for(i=0;i<top;i++){
-    x = EDGE + i*(AW+HG);
-    y = EDGE;
-    b['agent-'+agentOrder[i]] = {x:x, y:y, w:AW, h:AH};
-    rightTop = x + AW;
-  }
-
-  // Mainframe: below top agents, left
-  var mfX = EDGE;
-  var mfY = EDGE + AH + 50;
-  b.mainframe = {x:mfX, y:mfY, w:MW, h:MH};
-
-  // Controls: right of mainframe, 2x2, top aligned with mainframe
-  var cx0 = mfX + MW + 60;
-  var cy0 = mfY;
+function plan(_N){
+  var b = {}, EDGE = 30, i;
+  var SLOT = ['A','B','C','D','E','F','J','H','K','L'];
+  for (i=0; i<5; i++) b['slot-'+SLOT[i]] = {x:EDGE + i*(AW+HG), y:EDGE, w:AW, h:AH};
+  var blockH = Math.max(MH, 2*CH+20, 4*RH+3*20);
+  var centerY = EDGE + AH + 60 + blockH/2;
+  var mfY = centerY - MH/2;
+  b.mainframe = {x:EDGE, y:mfY, w:MW, h:MH};
   var ctrl = ['rebirth','mailbot','llm','proxy'];
-  var rightCtrl = cx0;
-  for(i=0;i<ctrl.length;i++){
-    var col = i%2, row = Math.floor(i/2);
-    x = cx0 + col*(CW+20);
-    y = cy0 + row*(CH+20);
-    b[ctrl[i]] = {x:x, y:y, w:CW, h:CH};
-    if(x + CW > rightCtrl) rightCtrl = x + CW;
+  var cx0 = EDGE + MW + 40;
+  var cy0 = centerY - (2*CH+20)/2;
+  for (i=0; i<4; i++) {
+    var col = i%2, row = (i/2)|0;
+    b[ctrl[i]] = {x:cx0 + col*(CW+20), y:cy0 + row*(CH+20), w:CW, h:CH};
   }
-
-  // Resources: right of (max of rightTop, rightCtrl), top aligned with mainframe
-  var rx = Math.max(rightTop, rightCtrl) + 50;
-  var ry = mfY;
   var res = ['sandbox','projects','rag','profiles'];
-  var rightRes = rx;
-  for(i=0;i<res.length;i++){
-    y = ry + i*(RH+20);
-    b[res[i]] = {x:rx, y:y, w:RW, h:RH};
-    rightRes = rx + RW;
-  }
-
-  // Bottom agents: below mainframe, single row
-  var bottomBottom = mfY + MH;
-  if(bot>0){
-    var ybot = mfY + MH + 50;
-    for(i=0;i<bot;i++){
-      x = EDGE + i*(AW+HG);
-      b['agent-'+agentOrder[top+i]] = {x:x, y:ybot, w:AW, h:AH};
-    }
-    bottomBottom = ybot + AH;
-  }
-
-  // Bbox
-  var maxX = Math.max(rightTop, rightRes, EDGE + bot*(AW+HG) - (bot>0?HG:0));
-  var maxY = Math.max(bottomBottom, ry + 4*RH + 3*20, mfY + MH);
-  BASE_W = maxX + EDGE;
-  BASE_H = maxY + EDGE;
+  var rtotal = 4*RH + 3*20;
+  var rx = cx0 + 2*CW + 60;
+  var ry = centerY - rtotal/2;
+  for (i=0; i<4; i++) b[res[i]] = {x:rx, y:ry + i*(RH+20), w:RW, h:RH};
+  var by = mfY + MH + 80;
+  for (i=0; i<5; i++) b['slot-'+SLOT[5+i]] = {x:EDGE + i*(AW+HG), y:by, w:AW, h:AH};
+  var minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity, id, bb;
+  for (id in b) { bb=b[id]; if(bb.x<minX)minX=bb.x; if(bb.y<minY)minY=bb.y; if(bb.x+bb.w>maxX)maxX=bb.x+bb.w; if(bb.y+bb.h>maxY)maxY=bb.y+bb.h; }
+  for (id in b) { b[id].x -= minX - EDGE; b[id].y -= minY - EDGE; }
+  BASE_W = (maxX - minX) + 2*EDGE;
+  BASE_H = (maxY - minY) + 2*EDGE;
   return b;
 }
 
@@ -91,33 +57,50 @@ function build(id, b, def){
   if(def.color) el.style.color = def.color;
   if(def.type==='agent'){
     el.innerHTML =
-      '<div class="mnemo-agent-inner">'+
-      '<div class="mnemo-agent-letter">'+def.letter+'</div>'+
-      '<div><div class="mnemo-agent-name">'+def.name+'</div>'+
-      '<div class="mnemo-agent-lamps">'+
-      '<div class="mnemo-lamp-row"><div class="mnemo-lamp-dot" data-lamp="agent"></div>AGENT</div>'+
-      '<div class="mnemo-lamp-row"><div class="mnemo-lamp-dot" data-lamp="bridge"></div>BRIDGE</div>'+
-      '<div class="mnemo-lamp-row"><div class="mnemo-lamp-dot" data-lamp="chrome"></div>CHROME</div>'+
-      '</div></div></div>'+
-      '<div class="mnemo-btns">'+
-      '<button class="mnemo-btn" data-act="boot" data-target="agent:'+def.letter+'">▶</button>'+
-      '<button class="mnemo-btn" data-act="stop" data-target="agent:'+def.letter+'">■</button>'+
-      '<button class="mnemo-btn" data-act="restart" data-target="agent:'+def.letter+'">↻</button>'+
+      '<div class="mnemo-agent-letter">' + def.letter + '</div>' +
+      '<div class="mnemo-agent-name">' + def.name + '</div>' +
+      '<div class="mnemo-agent-status"><div class="mnemo-agent-status-dot"></div><span>ONLINE</span></div>' +
+      '<div class="mnemo-agent-port">port ' + (def.port||'\u2014') + '</div>' +
+      '<div class="mnemo-agent-lamps">' +
+        '<div class="mnemo-lamp-row"><div class="mnemo-lamp-dot" data-lamp="agent"></div><span>AGENT</span></div>' +
+        '<div class="mnemo-lamp-row"><div class="mnemo-lamp-dot" data-lamp="bridge"></div><span>BRIDGE</span></div>' +
+        '<div class="mnemo-lamp-row"><div class="mnemo-lamp-dot" data-lamp="chrome"></div><span>CHROME</span></div>' +
+      '</div>' +
+      '<div class="mnemo-agent-reboot">' +
+        '<button class="mnemo-btn" data-act="reboot-agent" data-target="' + def.letter + '">\u21bba</button>' +
+        '<button class="mnemo-btn" data-act="reboot-bridge" data-target="' + def.letter + '">\u21bbb</button>' +
+        '<button class="mnemo-btn" data-act="reboot-chrome" data-target="' + def.letter + '">\u21bbc</button>' +
+      '</div>' +
+      '<div class="mnemo-agent-mainbtns">' +
+        '<button class="mnemo-btn" data-act="boot" data-target="agent:' + def.letter + '">\u25b6</button>' +
+        '<button class="mnemo-btn" data-act="stop" data-target="agent:' + def.letter + '">\u25a0</button>' +
+        '<button class="mnemo-btn" data-act="restart" data-target="agent:' + def.letter + '">\u21bb</button>' +
       '</div>';
   } else if(def.type==='mainframe' || def.type==='control'){
     el.innerHTML =
-      '<div class="mnemo-title">'+def.label+'</div>'+
-      '<div class="mnemo-info" data-info="1">…</div>'+
-      '<div class="mnemo-btns">'+
-      '<button class="mnemo-btn" data-act="boot" data-target="'+id+'">▶</button>'+
-      '<button class="mnemo-btn" data-act="stop" data-target="'+id+'">■</button>'+
-      '<button class="mnemo-btn" data-act="restart" data-target="'+id+'">↻</button>'+
+      '<div class="mnemo-title">' + def.label + '</div>' +
+      '<div class="mnemo-info" data-info="1">\u2026</div>' +
+      '<div class="mnemo-btns">' +
+        '<button class="mnemo-btn" data-act="boot" data-target="' + id + '">\u25b6</button>' +
+        '<button class="mnemo-btn" data-act="stop" data-target="' + id + '">\u25a0</button>' +
+        '<button class="mnemo-btn" data-act="restart" data-target="' + id + '">\u21bb</button>' +
       '</div>';
   } else {
     el.innerHTML =
-      '<div class="mnemo-title">'+(def.icon||'')+' '+def.label+'</div>'+
-      '<div class="mnemo-info" data-info="1">—</div>';
+      '<div class="mnemo-title">' + (def.icon||'') + ' ' + def.label + '</div>' +
+      '<div class="mnemo-info" data-info="1">\u2014</div>';
   }
+  blocksContainer.appendChild(el);
+  return el;
+}
+
+function buildPlaceholder(slotId, b){
+  var el = document.createElement('div');
+  el.className = 'mnemo-block mnemo-placeholder';
+  el.id = 'mnemo-' + slotId;
+  el.style.left = b.x + 'px'; el.style.top = b.y + 'px';
+  el.style.width = b.w + 'px'; el.style.height = b.h + 'px';
+  el.innerHTML = '<div class="mnemo-ph-label">SLOT ' + slotId.replace('slot-','') + '</div>';
   blocksContainer.appendChild(el);
   return el;
 }
@@ -339,7 +322,7 @@ function fit(){
   var vw=wrap.clientWidth, vh=wrap.clientHeight;
   if(vw<100||vh<100) return;
   var sx=(vw-20)/BASE_W, sy=(vh-20)/BASE_H;
-  canvasScale = Math.min(sx, sy, 2.2);
+  canvasScale = Math.min(sx, sy, 3.0);
   canvas.width = BASE_W; canvas.height = BASE_H;
   canvas.style.width = (BASE_W*canvasScale)+'px';
   canvas.style.height = (BASE_H*canvasScale)+'px';
@@ -377,23 +360,43 @@ function init(){
         rag:{type:'resource',label:'RAG',icon:'≡'},
         profiles:{type:'resource',label:'PROFILES',icon:'◯'}
       };
-      for(var id in layout){
-        var b = layout[id], def;
-        if(id.indexOf('agent-')===0){
-          var L = id.replace('agent-','');
-          var ch = st.channels[L]||{};
-          def = {type:'agent', letter:L, name:ch.name||L, color:COLORS[L]||'#33ff33'};
+      var activeSet = {};
+      agentOrder.forEach(function(L){ activeSet[L] = true; });
+      for(var rawId in layout){
+        var b = layout[rawId], def, realId = rawId;
+        if(rawId.indexOf('slot-')===0){
+          var SL = rawId.replace('slot-','');
+          if(activeSet[SL]){
+            var ch = st.channels[SL]||{};
+            def = {type:'agent', letter:SL, name:ch.name||SL, color:COLORS[SL]||'#33ff33', port:ch.agent_port||ch.agent||''};
+            realId = 'agent-' + SL;
+          } else {
+            continue; // placeholder handled later
+          }
         } else {
-          def = sdefs[id];
+          def = sdefs[rawId];
         }
         if(!def) continue;
-        build(id, b, def);
-        BLOCKS[id] = {x:b.x, y:b.y, w:b.w, h:b.h, type:def.type, color:def.color, letter:def.letter, label:def.label};
-        if(id.indexOf('agent-')===0){
-          var L = id.replace('agent-','');
+        build(realId, b, def);
+        BLOCKS[realId] = {x:b.x, y:b.y, w:b.w, h:b.h, type:def.type, color:def.color, letter:def.letter, label:def.label};
+        if(realId.indexOf('agent-')===0){
+          var L = realId.replace('agent-','');
           lastCounts[L] = (tel.channels[L] && tel.channels[L].count) || 0;
         }
       }
+      // Placeholders for all 10 slots; active agents overlay them
+      var SLOT_LETTERS = ['A','B','C','D','E','F','J','H','K','L'];
+      var activeSet = {};
+      agentOrder.forEach(function(L){ activeSet[L] = true; });
+      for (var si=0; si<SLOT_LETTERS.length; si++){
+        var SL = SLOT_LETTERS[si];
+        if (activeSet[SL]) continue;
+        var slotId = 'slot-' + SL;
+        var slotB = layout[slotId];
+        if (!slotB) continue;
+        buildPlaceholder(slotId, slotB);
+      }
+
       buildMap();
       fit();
       setTimeout(fit, 150);

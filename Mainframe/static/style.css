@@ -663,3 +663,259 @@ html, body, .crt, .topbar, .tabs, .tab, .top-left, .top-center, .top-right,
   font-size: 13px;
 }
 .pers-composer button:hover { border-color: var(--green); background: rgba(0,255,102,0.05); }
+
+
+/* === MNEMO v6: agent grid + placeholders === */
+.mnemo-block { z-index: 2; }
+.mnemo-placeholder {
+  z-index: 1 !important;
+  border: 1px dashed rgba(160,160,160,0.35) !important;
+  background: rgba(80,80,80,0.10) !important;
+  box-shadow: none !important;
+  color: rgba(160,160,160,0.4) !important;
+  pointer-events: none;
+}
+.mnemo-placeholder .mnemo-ph-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+/* Agent block grid: letter | name, status row, port row, lamps right */
+.mnemo-block.agent {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  gap: 6px;
+}
+.mnemo-agent-grid {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto auto;
+  gap: 4px 12px;
+  align-items: center;
+}
+.mnemo-agent-letter {
+  grid-row: 1 / 4;
+  grid-column: 1;
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 12px currentColor;
+  align-self: center;
+}
+.mnemo-agent-name {
+  grid-row: 1;
+  grid-column: 2;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.mnemo-agent-status {
+  grid-row: 2;
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #66ff66;
+}
+.mnemo-agent-status-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #66ff66;
+  box-shadow: 0 0 8px #66ff66;
+}
+.mnemo-agent-port {
+  grid-row: 3;
+  grid-column: 2;
+  font-size: 11px;
+  opacity: 0.75;
+  letter-spacing: 1px;
+}
+.mnemo-agent-lamps {
+  grid-row: 1 / 4;
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+.mnemo-agent-lamps .mnemo-lamp-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.mnemo-agent-lamps .mnemo-lamp-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+.mnemo-agent-lamps .mnemo-lamp-dot.off {
+  background: #333;
+  box-shadow: none;
+  opacity: 0.5;
+}
+.mnemo-block.agent .mnemo-btns {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+
+/* === MNEMO v6: agent layout by approved mockup === */
+.mnemo-block { z-index: 2; }
+.mnemo-placeholder {
+  z-index: 1 !important;
+  border: 1px dashed rgba(160,160,160,0.35) !important;
+  background: rgba(80,80,80,0.10) !important;
+  box-shadow: none !important;
+  color: rgba(160,160,160,0.4) !important;
+  pointer-events: none;
+}
+.mnemo-placeholder .mnemo-ph-label {
+  font-size: 10px; letter-spacing: 2px; opacity: 0.6; text-transform: uppercase;
+}
+
+/* Agent block: absolute-positioned children, no flex */
+.mnemo-block.agent {
+  position: absolute;
+  padding: 0 !important;
+}
+.mnemo-agent-letter {
+  position: absolute;
+  left: 32%; top: 8%;
+  font-size: 48px; font-weight: 900; line-height: 1;
+  text-shadow: 0 0 14px currentColor;
+}
+.mnemo-agent-name {
+  position: absolute;
+  left: 14%; top: 42%;
+  font-size: 18px; font-weight: bold;
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.mnemo-agent-status {
+  position: absolute;
+  left: 14%; top: 62%;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; letter-spacing: 1px;
+}
+.mnemo-agent-status-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #66ff66; box-shadow: 0 0 8px #66ff66;
+}
+.mnemo-agent-port {
+  position: absolute;
+  right: 8%; bottom: 10%;
+  font-size: 12px; opacity: 0.85; letter-spacing: 1px;
+}
+.mnemo-agent-lamps {
+  position: absolute;
+  right: 28%; top: 8%;
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 11px; letter-spacing: 1px;
+}
+.mnemo-agent-lamps .mnemo-lamp-row {
+  display: flex; align-items: center; gap: 5px;
+}
+.mnemo-agent-lamps .mnemo-lamp-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: currentColor; box-shadow: 0 0 8px currentColor;
+}
+.mnemo-agent-lamps .mnemo-lamp-dot.off {
+  background: #333; box-shadow: none; opacity: 0.5;
+}
+.mnemo-agent-reboot {
+  position: absolute;
+  right: 6%; top: 8%;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mnemo-agent-mainbtns {
+  position: absolute;
+  left: 6%; bottom: 10%;
+  display: flex; gap: 6px;
+}
+.mnemo-btn {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 2px 6px;
+  cursor: pointer;
+  min-width: 30px;
+}
+.mnemo-btn:hover { background: currentColor; color: #050805; }
+
+/* Scrollbars hidden, keep CRT look */
+
+
+/* === CRT FRAME (from old council_chat) === */
+html, body { background: #000 !important; overflow: hidden !important; }
+body { height: 100vh !important; margin: 0 !important; padding: 0 !important; }
+
+.crt {
+  position: absolute !important;
+  inset: 14px !important;
+  padding: 14px 18px 18px !important;
+  border: 8px solid var(--metal2, #2a2822) !important;
+  outline: 3px solid var(--metal1, #1b1a16) !important;
+  outline-offset: 0 !important;
+  border-radius: 20px !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  background-image:
+    repeating-linear-gradient(0deg,
+      rgba(0,255,102,0.03) 0px,
+      rgba(0,255,102,0.03) 1px,
+      transparent 1px,
+      transparent 3px),
+    radial-gradient(ellipse at center, #0d1a0d 0%, #04100a 60%, #000 100%) !important;
+  box-shadow:
+    inset 0 0 120px rgba(0,255,102,0.06),
+    inset 0 0 240px rgba(0,0,0,0.85),
+    0 0 40px rgba(0,255,102,0.05) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* === CHAT GLOW (phosphor bloom around messages and frames) === */
+.feed, .chat-main, .chat-side, .panel-block, .composer {
+  box-shadow: 0 0 12px -4px rgba(0,255,102,0.25), inset 0 0 8px -6px rgba(0,255,102,0.15);
+}
+.feed .msg .who { text-shadow: 0 0 6px currentColor; }
+.feed .msg .text { text-shadow: 0 0 4px rgba(0,255,102,0.4); }
+.pers-feed .pers-h { text-shadow: 0 0 6px currentColor; }
+.pers-feed .pers-text { text-shadow: 0 0 4px rgba(0,255,102,0.4); }
+
+/* === BLINKING PROMPT '>' + glow === */
+.composer .prompt, .pers-composer .prompt {
+  color: var(--green, #00ff66);
+  text-shadow: 0 0 8px var(--green, #00ff66), 0 0 16px rgba(0,255,102,0.5);
+  animation: promptBlink 1.2s steps(2, start) infinite;
+  font-weight: bold;
+}
+@keyframes promptBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.15; }
+}
+
+/* Composer border glow on focus */
+.composer:focus-within, .pers-composer:focus-within {
+  box-shadow: 0 0 14px -2px rgba(0,255,102,0.45), inset 0 0 10px -6px rgba(0,255,102,0.3);
+  border-color: var(--green, #00ff66);
+}
+
+/* Input/textarea glow */
+.composer textarea, .pers-composer textarea, .chat-input input {
+  box-shadow: inset 0 0 8px -4px rgba(0,255,102,0.3);
+}
