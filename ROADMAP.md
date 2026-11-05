@@ -226,3 +226,105 @@ Dixi. Dora (A), 2026-11-04. Черновик v0.2, ждёт приёмки оп�
 - Кнопка «Диалог/Работа» в Mainframe.
 Критерий: paused=true -> агент шлёт только текст, мост не исполняет блоки.
 
+
+---
+
+
+---
+
+## Статус после сессии 14D (2026-11-05, ночь)
+
+### Сделано в этой сессии
+
+
+---
+
+---
+
+## Status after 14D session (2026-11-05, night)
+
+### Done this session
+- B-45: Chrome 156+ fix in Tools/launcher.py.
+- Activation: PROMPT_ACTIVATION.md 9K to 4K, real BEGIN/END markers.
+- send_text: CDP Input.insertText. textarea.value check.
+- Pause buffer: outbox_CH.jsonl on busy.
+- Telemetry: cfg.channel_path (was cfg.path).
+- Mnemo: 10-slot grid, placeholders, x1.4/x2/x1.75, card k=0.51, comet Tron.
+- CRT: inset 14px, border 8px, outline 3px, radius 20px, Consolas.
+- Chat: panels + feed + composer + mic. Glow + blink prompt.
+- Pers: list + feed + /api/chat/CH.
+
+### Open (for 15D)
+- E2E: live DeepSeek to bridge to exec. Only direct HTTP tested.
+- Mnemo buttons: target=agent:X, check launchpad.boot format.
+- Comet on real ops (not inject).
+- TTS voice call operator: not implemented.
+- F5c/F5d/F6a-c: not started.
+
+### Pitfalls for 15D
+- web.py whitelist: new .js inline or STATIC_EXTS.
+- CDP ws: suppress_origin=True (Chrome 111+ 403).
+- CSS bump in index.html (style.css?v=X).
+- op=write >200b loses body: staging + read.
+
+Dixi. 14D, 2026-11-05.
+
+---
+
+## Status after 14D session (2026-11-05, night)
+
+### Done this session
+- B-45: Chrome 156+ fix in Tools/launcher.py.
+- Activation: PROMPT_ACTIVATION.md 9K to 4K, real BEGIN/END markers.
+- send_text: CDP Input.insertText. textarea.value check.
+- Pause buffer: outbox_CH.jsonl on busy.
+- Telemetry: cfg.channel_path (was cfg.path).
+- Mnemo: 10-slot grid, placeholders, x1.4/x2/x1.75, card k=0.51, comet Tron.
+- CRT: inset 14px, border 8px, outline 3px, radius 20px, Consolas.
+- Chat: panels + feed + composer + mic. Glow + blink prompt.
+- Pers: list + feed + /api/chat/CH.
+
+### Open (for 15D)
+- E2E: live DeepSeek to bridge to exec. Only direct HTTP tested.
+- Mnemo buttons: target=agent:X, check launchpad.boot format.
+- Comet on real ops (not inject).
+- TTS voice call operator: not implemented.
+- F5c/F5d/F6a-c: not started.
+
+### Pitfalls for 15D
+- web.py whitelist: new .js inline or STATIC_EXTS.
+- CDP ws: suppress_origin=True (Chrome 111+ 403).
+- CSS bump in index.html (style.css?v=X).
+- op=write >200b loses body: staging + read.
+
+Dixi. 14D, 2026-11-05.
+
+---
+
+## Status after 14D session (2026-11-05, night)
+
+### Done this session
+- B-45: Chrome 156+ fix in Tools/launcher.py.
+- Activation: PROMPT_ACTIVATION.md 9K to 4K, real BEGIN/END markers.
+- send_text: CDP Input.insertText. textarea.value check.
+- Pause buffer: outbox_CH.jsonl on busy.
+- Telemetry: cfg.channel_path (was cfg.path).
+- Mnemo: 10-slot grid, placeholders, x1.4/x2/x1.75, card k=0.51, comet Tron.
+- CRT: inset 14px, border 8px, outline 3px, radius 20px, Consolas.
+- Chat: panels + feed + composer + mic. Glow + blink prompt.
+- Pers: list + feed + /api/chat/CH.
+
+### Open (for 15D)
+- E2E: live DeepSeek to bridge to exec. Only direct HTTP tested.
+- Mnemo buttons: target=agent:X, check launchpad.boot format.
+- Comet on real ops (not inject).
+- TTS voice call operator: not implemented.
+- F5c/F5d/F6a-c: not started.
+
+### Pitfalls for 15D
+- web.py whitelist: new .js inline or STATIC_EXTS.
+- CDP ws: suppress_origin=True (Chrome 111+ 403).
+- CSS bump in index.html (style.css?v=X).
+- op=write >200b loses body: staging + read.
+
+Dixi. 14D, 2026-11-05.

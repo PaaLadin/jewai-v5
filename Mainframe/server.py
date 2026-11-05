@@ -26,6 +26,7 @@ def _qs(path):
 def build_routes():
     return {
         ("GET", "/api/status"): api.status,
+        ("GET", "/api/telemetry"): api.telemetry,
         ("GET", "/api/health"): lambda c, p, b: health.collect(c),
         ("POST", "/api/svc"): lambda c, p, b: svc_api.handle(c, (b or {}).get("channel", ""), (b or {}).get("kind", ""), (b or {}).get("action", ""), b),
         ("GET", "/api/launchpad/status"): lambda c, p, b: launchpad.status(c),

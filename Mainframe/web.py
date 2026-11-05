@@ -97,10 +97,27 @@ class Handler(BaseHTTPRequestHandler):
             if f.exists():
                 return self._send(200, f.read_bytes(), "text/html; charset=utf-8")
             return self._send(404, b"index.html missing", "text/plain")
-        if path in ("/style.css", "/app.js"):
-            f = static_dir / path.lstrip("/")
-            if f.exists():
-                ct = "text/css; charset=utf-8" if path.endswith(".css") else "application/javascript; charset=utf-8"
+        # Static assets: any file in Mainframe/static/ with known extension
+        import os as _os
+        STATIC_EXTS = (".css", ".js", ".html", ".png", ".jpg", ".svg", ".ico", ".woff", ".woff2", ".ttf")
+        STATIC_CT = {
+            ".css": "text/css; charset=utf-8",
+            ".js": "application/javascript; charset=utf-8",
+            ".html": "text/html; charset=utf-8",
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".svg": "image/svg+xml",
+            ".ico": "image/x-icon",
+            ".woff": "font/woff",
+            ".woff2": "font/woff2",
+            ".ttf": "font/ttf",
+        }
+        if path.startswith("/") and any(path.endswith(ext) for ext in STATIC_EXTS):
+            # защита от escape
+            safe = path.lstrip("/").replace("..", "")
+            f = static_dir / safe
+            if f.exists() and f.is_file():
+                ct = STATIC_CT.get(_os.path.splitext(safe)[1].lower(), "application/octet-stream")
                 return self._send(200, f.read_bytes(), ct)
             return self._send(404, b"missing", "text/plain")
         # 7C B-12: wiki page (how-to for beginners)

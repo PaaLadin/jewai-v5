@@ -1249,3 +1249,80 @@ Dixi. C (Семён), 7C, 2026-11-02.
 - B-30, B-05..B-12 — бэклог.
 
 Dixi. C (Семён), 7C, 2026-11-02.
+
+
+## 2026-11-05, ночная сессия 14D - UI, мнемосхема, чаты, CRT
+
+**Фаза:** Ф3-Ф4
+
+### 1. Chrome 156+ (B-45) - Tools/launcher.py
+- `_get_loaded_ext_id(cdp_port)` — читает ID расширения из chrome://extensions shadow DOM (не из хеша, Chrome 156+ генерирует случайно).
+- `_open_ext_sidepanel` — открывает sidepanel.html, будит SW.
+- `_push_storage` — awaitPromise, диагностика Object.keys(chrome).
+- Проверено: agentUrl=http://127.0.0.1:8200 записывается.
+
+### 2. Активация — Templates/PROMPT_ACTIVATION.md
+- 9K -> 4K. [open]/[close] -> настоящие ###BEGIN###/
+- `_get_loaded_ext_id(cdp_port)` — читает ID расширения из chrome://extensions shadow DOM (не из хеша, Chrome 156+ генерирует случайно).
+- `_open_ext_sidepanel` — открывает sidepanel.html, будит SW.
+- `_push_storage` — awaitPromise, диагностика Object.keys(chrome).
+- Проверено: agentUrl=http://127.0.0.1:8200 записывается.
+
+### 2. Активация — Templates/PROMPT_ACTIVATION.md
+- 9K -> 4K. [open]/[close] -> настоящие ###BEGIN###/
+
+### 4. Телеметрия — Mainframe/api.py::telemetry
+- `cfg.channel_path(L, "logs", "live.json")` (было `cfg.path` — count всегда 0).
+- Отдаёт `{count, last: {id, op, path, status, ts}, updated, paused}`.
+
+### 5. Мнемосхема — Mainframe/static/mnemo.js (inline в index.html)
+- 10-слотовый grid. Активные — по agentOrder. Неактивные — серые заглушки (opacity 10%, z-index 1).
+- Размеры: agent 308x154 (x1.4), mainframe 560x240 (x2) лево-центр, control 262x140 (x1.75) 2x2 центр, resource 210x80 право-центр.
+- BASE_W/H из bbox.
+- Карточка по макету: буква 56px, имя 28px, статус 18px, порт 17px, лампы 14px, кнопки ↻A/B/C 14px, главные 18px. Пропорции k=0.51 от редактора 600x320.
+- Комета (Tron): A* по grid 10px, 20% линия за точкой, точка 100%, хвост 0.5с. Долетела — источник и цель вспыхивают 2с. Проверено: write->sandbox, read->rag.
+
+### 4. Телеметрия — Mainframe/api.py::telemetry
+- `cfg.channel_path(L, "logs", "live.json")` (было `cfg.path` — count всегда 0).
+- Отдаёт `{count, last: {id, op, path, status, ts}, updated, paused}`.
+
+### 5. Мнемосхема — Mainframe/static/mnemo.js (inline в index.html)
+- 10-слотовый grid. Активные — по agentOrder. Неактивные — серые заглушки (opacity 10%, z-index 1).
+- Размеры: agent 308x154 (x1.4), mainframe 560x240 (x2) лево-центр, control 262x140 (x1.75) 2x2 центр, resource 210x80 право-центр.
+- BASE_W/H из bbox.
+- Карточка по макету: буква 56px, имя 28px, статус 18px, порт 17px, лампы 14px, кнопки ↻A/B/C 14px, главные 18px. Пропорции k=0.51 от редактора 600x320.
+- Комета (Tron): A* по grid 10px, 20% линия за точкой, точка 100%, хвост 0.5с. Долетела — источник и цель вспыхивают 2с. Проверено: write->sandbox, read->rag.
+
+### 6. CRT-рамка — Mainframe/static/style.css
+- .crt из старого council_chat: inset 14px, border 8px metal2 + outline 3px metal1, radius 20px, многослойный box-shadow.
+- Вкладки-папки (скруглённый верх, без нижней границы, letter-spacing 3px).
+- Шрифт Consolas (было Courier New с засечками).
+
+### 7. Чат — Mainframe/static/chat.js
+- Панели: КАНАЛЫ / МЕТРИКИ / ПУЛЬТ / УЧАСТНИКИ.
+- feed + composer с микрофоном (Web Speech API, ru-RU) и `>_`.
+- Поллинг /api/messages 1.5с, отправка /api/send.
+- Glow на тексте, стрелка `>` мигает (promptBlink 1.2с).
+
+### 8. Персональные — Mainframe/static/pers.js
+- Список каналов из /api/status, переписка, отправка /api/chat/<CH>. Поллинг 3с.
+
+### Проверено (CDP + API)
+- mnemo-blocks: 19 children (1 активный + 9 заглушек + 9 статиков).
+- Размеры A=308x154, mainframe=560x240, control=262x140, resource=210x80.
+- /api/telemetry: count=3, last={op:read, path:RAG/INDEX.md}.
+- Комета: particles = agent-A->sandbox после write.
+- Шрифты: letter 56px, name 28px.
+- Чат: chan:1, roster:3, prompt anim=promptBlink.
+- CRT: top:14px, left:14px, border:8px, radius:20px.
+
+### НЕ доделано (для 15D)
+- E2E через живой AI: команда из DeepSeek -> мост -> исполнение (проверялся только HTTP к agent.py).
+- Кнопки на мнемосхеме: target=agent:A — инспектировать ответ launchpad.
+- TTS-вызов оператора — не реализовано.
+- Комета на потоке реальных операций (не инжект).
+
+### Коммиты
+- 773ea5d, 3198d71, ddd2a54, f5dec41, e6042da.
+
+Dixi. 14D, 2026-11-05.
