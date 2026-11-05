@@ -56,10 +56,10 @@
 
 
 ## FINAL (05.11, от оператора, перед перерождением)
-- [ ] Синхронизировать JewTest_Final -> JewAI (static + api)
-- [ ] Обновить JOURNAL.md с ночными правками
-- [ ] Обновить ROADMAP.md (v6 mnemo done, comet -> 15D)
-- [ ] Написать HANDOVER_14D.md (полный, для 15D)
-- [ ] Написать PROMPT_15D.md (активация)
-- [ ] Коммит + push в GitHub PaaLadin/jewai-v5
+- [x] Синхронизировать JewTest_Final -> JewAI
+- [x] Обновить JOURNAL.md
+- [x] Обновить ROADMAP.md
+- [x] Написать HANDOVER_15D.md (полный, для 15D)
+- [x] Написать PROMPT_15D.md
+- [x] Коммит + push в GitHub (33c9c3e)
 - [ ] Пройтись по чекбоксам с оператором
