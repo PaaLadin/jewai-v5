@@ -45,3 +45,8 @@ create-shortcut.bat
 # Chrome for Testing binary (downloaded, not in git)
 tools/chrome-for-testing/
 tools/chrome-win64.zip
+
+# Test artifacts
+Tools/tests/_testroot/
+Tools/tests/_tg_*/
+logs/guard/
