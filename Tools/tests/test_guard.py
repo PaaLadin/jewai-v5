@@ -6,7 +6,7 @@ ROOT = HERE.parent.parent
 sys.path.insert(0, str(ROOT))
 
 # 1. Check compile
-r = subprocess.run([sys.executable, '-m', 'py_compile', str(HERE / 'guard.py')],
+r = subprocess.run([sys.executable, '-m', 'py_compile', str(HERE.parent / 'guard.py')],
                    capture_output=True, text=True)
 print('compile:', r.returncode == 0)
 if r.returncode != 0:
@@ -17,7 +17,7 @@ if r.returncode != 0:
 T = HERE / ('_tg_' + str(int(time.time())))
 (T / 'logs' / 'guard').mkdir(parents=True)
 (T / 'Tools').mkdir()
-shutil.copy2(HERE / 'guard.py', T / 'Tools' / 'guard.py')
+shutil.copy2(HERE.parent / 'guard.py', T / 'Tools' / 'guard.py')
 # dummy kick.py to verify call
 (T / 'Tools' / 'kick.py').write_text(
     'import sys\n'

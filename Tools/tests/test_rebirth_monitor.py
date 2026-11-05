@@ -47,7 +47,7 @@ def setup():
 
 
 def load_monitor_module():
-    p = HERE / "rebirth_monitor.py"
+    p = HERE.parent / "rebirth_monitor.py"
     spec = importlib.util.spec_from_file_location("rebirth_monitor", p)
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
