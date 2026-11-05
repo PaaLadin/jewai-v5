@@ -173,6 +173,56 @@ async function resumeAll(){
 }
 function clearView(){ feed.innerHTML=''; }
 
+var recog = null, recogOn = false;
+
+function initVoice(){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var btn = document.getElementById('btnVoice');
+  if(!btn) return;
+  if(!SR){
+    btn.title = 'голосовой ввод не поддерживается';
+    btn.style.opacity = '0.4';
+    btn.disabled = true;
+    return;
+  }
+  recog = new SR();
+  recog.lang = 'ru-RU';
+  recog.continuous = true;
+  recog.interimResults = true;
+  recog.onresult = function(e){
+    var fin = '', inter = '';
+    for (var i = e.resultIndex; i < e.results.length; i++){
+      var t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) fin += t;
+      else inter += t;
+    }
+    var inp = document.getElementById('input');
+    if (fin && inp){
+      inp.value = (inp.value ? inp.value + ' ' : '') + fin.trim();
+    }
+    var hint = document.getElementById('voiceHint');
+    if (hint) hint.textContent = inter ? ('... ' + inter) : '';
+  };
+  recog.onend = function(){ if (recogOn){ try{ recog.start(); }catch(e){} } };
+  recog.onerror = function(e){
+    var hint = document.getElementById('voiceHint');
+    if (hint) hint.textContent = 'voice: ' + (e.error||'?');
+  };
+  btn.addEventListener('click', function(){
+    if (recogOn){
+      recogOn = false;
+      try{ recog.stop(); }catch(e){}
+      btn.classList.remove('on');
+      btn.style.color = '';
+    } else {
+      recogOn = true;
+      try{ recog.start(); }catch(e){}
+      btn.classList.add('on');
+      btn.style.color = 'var(--amber, #ffb000)';
+    }
+  });
+}
+
 function init(){
   var send_btn = $('btnSend');
   var input = $('input');
@@ -187,6 +237,7 @@ function init(){
   var br = $('btnResumeAll'); if(br) br.addEventListener('click', resumeAll);
   var bc = $('btnClearView'); if(bc) bc.addEventListener('click', clearView);
 
+  initVoice();
   refreshStatus();
   setTarget('ALL');
   poll();

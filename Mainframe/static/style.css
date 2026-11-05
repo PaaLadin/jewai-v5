@@ -1095,3 +1095,18 @@ body { height: 100vh !important; margin: 0 !important; padding: 0 !important; }
   font-size: 11px;
   opacity: 0.7;
 }
+
+
+
+
+/* === FONT SIZES v8 (k=0.51 from editor 600x320 to block 308x154) === */
+.mnemo-agent-letter { font-size: 56px !important; line-height: 0.9 !important; }
+.mnemo-agent-name { font-size: 28px !important; }
+.mnemo-agent-status { font-size: 18px !important; }
+.mnemo-agent-status-dot { width: 12px !important; height: 12px !important; }
+.mnemo-agent-port { font-size: 17px !important; }
+.mnemo-agent-lamps { font-size: 14px !important; }
+.mnemo-agent-lamps .mnemo-lamp-dot { width: 11px !important; height: 11px !important; }
+.mnemo-block.agent .mnemo-agent-reboot .mnemo-btn { font-size: 14px !important; min-width: 32px !important; min-height: 28px !important; padding: 2px 6px !important; }
+.mnemo-block.agent .mnemo-agent-mainbtns .mnemo-btn { font-size: 18px !important; min-width: 40px !important; min-height: 36px !important; padding: 2px 8px !important; }
+
