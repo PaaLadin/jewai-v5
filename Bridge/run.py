@@ -1,4 +1,4 @@
-"""Channel bridge entrypoint; provider metadata lives in Adapters.registry."""
+"""Channel bridge entrypoint. Provider changes apply between complete ticks."""
 from __future__ import annotations
 import argparse
 import sys
@@ -20,11 +20,14 @@ def _adapter_for(model: str):
 
 
 def _try_recreate_chat(cfg, letter, ch_port, adapter):
-    """Only recreate after onboarding; do not touch unacknowledged profiles."""
+    """Only recreate after onboarding; never replace a pinned provider session."""
     import json
     import urllib.request
     from urllib.parse import urlparse
     try:
+        state = cfg.channel_path(letter, "logs", "provider_state.json")
+        if state.exists() and json.loads(state.read_text(encoding="utf-8")).get("target"):
+            return False
         if not cfg.channel_path(letter, "logs", "onboarding_disabled.flag").exists():
             return False
         with urllib.request.urlopen("http://127.0.0.1:%d/json/list" % ch_port, timeout=3) as r:
@@ -53,7 +56,6 @@ def _try_recreate_chat(cfg, letter, ch_port, adapter):
 
 
 def _acquire_single_instance_mutex(channel: str):
-    """Windows named mutex; retain returned handle for the process lifetime."""
     try:
         import ctypes
         k32 = ctypes.windll.kernel32
@@ -101,28 +103,39 @@ def main() -> int:
             return 0
         finally:
             cdp.close()
+    from Bridge.provider_switch import consume, bound_connect, initialize, PrefixAdapter
+    adapter = PrefixAdapter(adapter, ch.prefix)
+    daemon = Daemon(cfg, args.channel, adapter)
     backoff = 2.0
     while True:
-        cdp = connect(ch.cdp_port, adapter.HOST)
-        if not cdp:
-            attempted = getattr(main, "_recreate_attempted", 0.0)
-            now = time.time()
-            if now - attempted > 30.0:
-                if _try_recreate_chat(cfg, args.channel, ch.cdp_port, adapter):
-                    print("b10: recreated chat tab for %s at %s" %
-                          (args.channel, adapter.HOST), flush=True)
-                main._recreate_attempted = now
-            time.sleep(min(backoff, 10.0))
-            backoff = min(backoff * 1.2, 10.0)
-            continue
-        backoff = 2.0
+        cdp = None
         try:
-            daemon.tick(cdp)
+            # This boundary is reached only after the previous tick and report finish.
+            consume(cfg, args.channel)
+            latest = load_config(args.config)
+            fresh = latest.channel(args.channel)
+            if fresh != ch:
+                cfg, ch = latest, fresh
+                adapter = PrefixAdapter(_adapter_for(ch.model), ch.prefix)
+                daemon = Daemon(cfg, args.channel, adapter)
+            cdp = bound_connect(cfg, args.channel, adapter)
+            if not cdp:
+                attempted = getattr(main, "_recreate_attempted", 0.0)
+                now = time.time()
+                if now - attempted > 30.0:
+                    _try_recreate_chat(cfg, args.channel, ch.cdp_port, adapter)
+                    main._recreate_attempted = now
+                backoff = min(backoff * 1.2, 10.0)
+            else:
+                backoff = 2.0
+                if initialize(cfg, args.channel, daemon, cdp):
+                    daemon.tick(cdp)
         except Exception as exc:
             print("[Bridge %s] tick failed: %s" % (args.channel, exc), flush=True)
         finally:
-            cdp.close()
-        time.sleep(daemon.poll_ms / 1000.0)
+            if cdp:
+                cdp.close()
+        time.sleep(backoff if not cdp else daemon.poll_ms / 1000.0)
 
 
 if __name__ == "__main__":

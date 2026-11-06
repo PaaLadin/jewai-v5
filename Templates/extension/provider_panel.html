@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>JewAI adapters</title>
+<style>
+html,body{height:100%;margin:0;background:#000;color:#0f6;font:12px monospace}
+body{display:flex;flex-direction:column}section{padding:8px;border-bottom:1px solid #0a8a3a}
+label{display:flex;gap:6px;align-items:center}select{flex:1;min-width:0}
+select,button{background:#08110a;color:#0f6;border:1px solid #0a8a3a;padding:5px}
+button:disabled{opacity:.4}#provider-status{white-space:pre-wrap;margin-top:6px;color:#ffb000}
+iframe{flex:1;min-height:0;width:100%;border:0}
+</style></head><body><section>
+<label>Адаптер <select id="provider" disabled></select><button id="save-provider" disabled>Save</button></label>
+<div id="provider-status" role="status">Ожидаю настройки агента…</div>
+</section><iframe src="sidepanel.html" title="Управление агентом"></iframe>
+<script src="provider_panel.js"></script></body></html>
