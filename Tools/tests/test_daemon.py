@@ -93,6 +93,7 @@ try:
     blocks_batch[0] = [Block(id='CCAA0001', op='write', path='t.txt', content='hello-daemon')]
     _t.sleep(0.06)
     daemon._last_send_at = 0.0  # bypass min_gap for test
+    daemon._handicap_until = 0.0  # bypass handicap for test
     r3 = daemon.tick(FakeCDP())
     check('tick3 no re-process', r3.processed == 0, str(r3))
 

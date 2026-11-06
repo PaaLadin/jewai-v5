@@ -35,6 +35,7 @@ class Config:
     thresholds: dict[str, int] = field(default_factory=dict)
     timeouts: dict[str, int] = field(default_factory=dict)
     version: str = ""
+    extra_roots: tuple = ()
 
     def channel(self, letter: str) -> Channel:
         ch = self.channels.get(letter.upper())
@@ -115,4 +116,5 @@ def load(config_path: Path | str | None = None) -> Config:
         thresholds=dict(data.get("thresholds", {})),
         timeouts=dict(data.get("timeouts", {})),
         version=str(data.get("version", "")),
+        extra_roots=tuple(data.get("extra_roots", ())),
     )

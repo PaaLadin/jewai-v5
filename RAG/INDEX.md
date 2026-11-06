@@ -73,4 +73,7 @@
 
 ### Порядок: behavior_rules -> ALIVE_AND_SERVICES -> BRIDGE_LIMITS -> INDEX
 
+- `procedures/architecture.md` - короткие решения 13D (архитектурные заметки).
+- `procedures/mainframe_gap.md` - разрыв между старым и новым Mainframe.
+
 ### Связано: Templates/PROMPT_ACTIVATION.md

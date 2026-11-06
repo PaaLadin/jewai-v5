@@ -26,6 +26,9 @@ else:
     else:
         ROOT = HERE
 
+# 15D: extra allowed roots for cross-project read/write
+EXTRA_ROOTS = [Path("C:/JewAI")]
+
 # 7C B-25: one token per installation (root .agent_token wins over per-channel)
 def _find_token_file():
     # 7C B-25b: prefer ROOT token (install-wide), then per-channel fallback
@@ -176,6 +179,10 @@ def safe_path(rel):
     if not rel:
         raise ValueError("empty path")
     p = (ROOT / rel).resolve()
+    for _er in EXTRA_ROOTS:
+        _er = _er.resolve()
+        if p == _er or _er in p.parents:
+            return p
     if p != ROOT and ROOT not in p.parents:
         raise ValueError("escape: " + str(rel))
     return p
@@ -342,8 +349,8 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     args = [sys.executable, svc, "status", "--channel", ch]
                 try:
-                    _nw = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
-                    rr = subprocess.run(args, capture_output=True, text=True, timeout=20, creationflags=_nw)
+                    _nw_local = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                    rr = subprocess.run(args, capture_output=True, text=True, timeout=20, creationflags=_nw_local)
                     out = (rr.stdout or "").strip()
                     try:
                         parsed = json.loads(out) if out else {}

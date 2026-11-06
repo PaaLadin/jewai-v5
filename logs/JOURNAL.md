@@ -1344,3 +1344,133 @@ Dixi. 14D, 2026-11-06.
 - Watchdog D: OFF.
 
 Dixi. 14D, 2026-11-06.
+
+
+## 2026-11-06, ночная сессия 15D (автономно)
+
+**Фаза:** Ф2 (мост), приёмка ночной работы.
+
+### Сделано
+
+- Мост (C:\\DeepSeek\\extension\\agent.py): в safe_path добавлен EXTRA_ROOTS=[Path("C:/JewAI")]. Относительные пути по-прежнему в DeepSeek, абсолютный C:/JewAI разрешён. Бэкапы: agent.py.bak_15d_20261106, agent.py.bak2_15d_20261106. НО: работающий процесс D (pid 16936, старт 04:27) поднят ДО патча, в рантайме старый safe_path. Требуется перезапуск D.
+- Bridge/daemon.py: bootstrap-ветка возвращала 0 даже при отсутствии Templates/PROMPT_ACTIVATION.md, из-за чего tick не доходил до блоков (2 daemon-теста красные). Фикс: return 0 только если шаблон реально есть. Бэкап: daemon.py.bak_15d_20261106.
+- Bridge/run.py: mutex single-instance мешал --once-диагностике (чужой C:\\Jopa\\Bridge\\run.py --channel A держит mutex). Фикс: для --once mutex не берётся. Бэкап: run.py.bak_15d_20261106.
+- Templates/extension/agent.py: UnboundLocalError _nw в do_POST (локальное присваивание _nw в ветке svc ломало /run). Переименовано в _nw_local.
+- test_daemon.py, test_daemon_timing.py: тесты обнуляли _last_send_at, но не _handicap_until; tick упирался в handicap. Бэкапы: *.bak_15d_20261106.
+- test_ext_agent.py: HTTPError-ветка не отдавала тело ответа (диагностика /run). Добавлен _body. Бэкап: *.bak_15d_20261106.
+- TTS: Tools/voice_call.py уже содержит speak() через System.Speech, unmute, get/set volume, ночной режим 22:00-08:00. Громкая проверка отложена до утра (оператор спит).
+- Кнопки мнемосхемы: формат target=agent:X (mnemo.js) совпадает с launchpad.py::boot agent:<CH> (Templates/extension/agent.py, agent_port из config). Соответствие подтверждено.
+- Комета: триггер startPulse("agent-"+L, targetFor(last)) по росту счётчика /api/telemetry, не инжект. Кодово готово. Живая проверка требует запущенного Bridge/daemon (live.json пишет только он).
+- run_all_tests.py: 21/21 pass, 0 fail, 67.1s. Файл: logs/runtime/_v5_all_tests.txt.
+- Git: origin/main == HEAD (424983f), F7 push фактически закрыт (вопреки HANDOVER 14D).
+
+### Открыто для оператора утром
+
+- Перезапустить agent D (8769), чтобы подхватить EXTRA_ROOTS в safe_path. Без перезапуска мост D работает только с C:\\DeepSeek.
+- Поднять Bridge/daemon D (live.json) — оживит комету на реальных операциях.
+- Громкий TTS-вызов проверить днём.
+- F5 real config (llm host:port, mail password), раскатка каналов — блокеры, ОК оператора.
+
+Dixi. 15D (ночная автономная сессия), 2026-11-06.
+
+## 2026-11-06, ночная сессия 15D (автономно)
+
+**Фаза:** Ф2 (мост), приёмка ночной работы.
+
+### Сделано
+
+- Мост (C:\\DeepSeek\\extension\\agent.py): в safe_path добавлен EXTRA_ROOTS=[Path("C:/JewAI")]. Относительные пути по-прежнему в DeepSeek, абсолютный C:/JewAI разрешён. Бэкапы: agent.py.bak_15d_20261106, agent.py.bak2_15d_20261106. НО: работающий процесс D (pid 16936, старт 04:27) поднят ДО патча, в рантайме старый safe_path. Требуется перезапуск D.
+- Bridge/daemon.py: bootstrap-ветка возвращала 0 даже при отсутствии Templates/PROMPT_ACTIVATION.md, из-за чего tick не доходил до блоков (2 daemon-теста красные). Фикс: return 0 только если шаблон реально есть. Бэкап: daemon.py.bak_15d_20261106.
+- Bridge/run.py: mutex single-instance мешал --once-диагностике (чужой C:\\Jopa\\Bridge\\run.py --channel A держит mutex). Фикс: для --once mutex не берётся. Бэкап: run.py.bak_15d_20261106.
+- Templates/extension/agent.py: UnboundLocalError _nw в do_POST (локальное присваивание _nw в ветке svc ломало /run). Переименовано в _nw_local.
+- test_daemon.py, test_daemon_timing.py: тесты обнуляли _last_send_at, но не _handicap_until; tick упирался в handicap. Бэкапы: *.bak_15d_20261106.
+- test_ext_agent.py: HTTPError-ветка не отдавала тело ответа (диагностика /run). Добавлен _body. Бэкап: *.bak_15d_20261106.
+- TTS: Tools/voice_call.py уже содержит speak() через System.Speech, unmute, get/set volume, ночной режим 22:00-08:00. Громкая проверка отложена до утра (оператор спит).
+- Кнопки мнемосхемы: формат target=agent:X (mnemo.js) совпадает с launchpad.py::boot agent:<CH> (Templates/extension/agent.py, agent_port из config). Соответствие подтверждено.
+- Комета: триггер startPulse("agent-"+L, targetFor(last)) по росту счётчика /api/telemetry, не инжект. Кодово готово. Живая проверка требует запущенного Bridge/daemon (live.json пишет только он).
+- run_all_tests.py: 21/21 pass, 0 fail, 67.1s. Файл: logs/runtime/_v5_all_tests.txt.
+- Git: origin/main == HEAD (424983f), F7 push фактически закрыт (вопреки HANDOVER 14D).
+
+### Открыто для оператора утром
+
+- Перезапустить agent D (8769), чтобы подхватить EXTRA_ROOTS в safe_path. Без перезапуска мост D работает только с C:\\DeepSeek.
+- Поднять Bridge/daemon D (live.json) — оживит комету на реальных операциях.
+- Громкий TTS-вызов проверить днём.
+- F5 real config (llm host:port, mail password), раскатка каналов — блокеры, ОК оператора.
+
+Dixi. 15D (ночная автономная сессия), 2026-11-06.
+
+## 2026-11-06, ночная сессия 15D (автономно)
+
+**Фаза:** Ф2 (мост), приёмка ночной работы.
+
+### Сделано
+
+- Мост (C:\\DeepSeek\\extension\\agent.py): в safe_path добавлен EXTRA_ROOTS=[Path("C:/JewAI")]. Относительные пути по-прежнему в DeepSeek, абсолютный C:/JewAI разрешён. Бэкапы: agent.py.bak_15d_20261106, agent.py.bak2_15d_20261106. НО: работающий процесс D (pid 16936, старт 04:27) поднят ДО патча, в рантайме старый safe_path. Требуется перезапуск D.
+- Bridge/daemon.py: bootstrap-ветка возвращала 0 даже при отсутствии Templates/PROMPT_ACTIVATION.md, из-за чего tick не доходил до блоков (2 daemon-теста красные). Фикс: return 0 только если шаблон реально есть. Бэкап: daemon.py.bak_15d_20261106.
+- Bridge/run.py: mutex single-instance мешал --once-диагностике (чужой C:\\Jopa\\Bridge\\run.py --channel A держит mutex). Фикс: для --once mutex не берётся. Бэкап: run.py.bak_15d_20261106.
+- Templates/extension/agent.py: UnboundLocalError _nw в do_POST (локальное присваивание _nw в ветке svc ломало /run). Переименовано в _nw_local.
+- test_daemon.py, test_daemon_timing.py: тесты обнуляли _last_send_at, но не _handicap_until; tick упирался в handicap. Бэкапы: *.bak_15d_20261106.
+- test_ext_agent.py: HTTPError-ветка не отдавала тело ответа (диагностика /run). Добавлен _body. Бэкап: *.bak_15d_20261106.
+- TTS: Tools/voice_call.py уже содержит speak() через System.Speech, unmute, get/set volume, ночной режим 22:00-08:00. Громкая проверка отложена до утра (оператор спит).
+- Кнопки мнемосхемы: формат target=agent:X (mnemo.js) совпадает с launchpad.py::boot agent:<CH> (Templates/extension/agent.py, agent_port из config). Соответствие подтверждено.
+- Комета: триггер startPulse("agent-"+L, targetFor(last)) по росту счётчика /api/telemetry, не инжект. Кодово готово. Живая проверка требует запущенного Bridge/daemon (live.json пишет только он).
+- run_all_tests.py: 21/21 pass, 0 fail, 67.1s. Файл: logs/runtime/_v5_all_tests.txt.
+- Git: origin/main == HEAD (424983f), F7 push фактически закрыт (вопреки HANDOVER 14D).
+
+### Открыто для оператора утром
+
+- Перезапустить agent D (8769), чтобы подхватить EXTRA_ROOTS в safe_path. Без перезапуска мост D работает только с C:\\DeepSeek.
+- Поднять Bridge/daemon D (live.json) — оживит комету на реальных операциях.
+- Громкий TTS-вызов проверить днём.
+- F5 real config (llm host:port, mail password), раскатка каналов — блокеры, ОК оператора.
+
+Dixi. 15D (ночная автономная сессия), 2026-11-06.
+
+## 2026-11-06, ночная сессия 15D (автономно)
+
+**Фаза:** Ф2 (мост), приёмка ночной работы.
+
+### Сделано
+
+- Мост (C:\\DeepSeek\\extension\\agent.py): в safe_path добавлен EXTRA_ROOTS=[Path("C:/JewAI")]. Относительные пути по-прежнему в DeepSeek, абсолютный C:/JewAI разрешён. Бэкапы: agent.py.bak_15d_20261106, agent.py.bak2_15d_20261106. НО: работающий процесс D (pid 16936, старт 04:27) поднят ДО патча, в рантайме старый safe_path. Требуется перезапуск D.
+- Bridge/daemon.py: bootstrap-ветка возвращала 0 даже при отсутствии Templates/PROMPT_ACTIVATION.md, из-за чего tick не доходил до блоков (2 daemon-теста красные). Фикс: return 0 только если шаблон реально есть. Бэкап: daemon.py.bak_15d_20261106.
+- Bridge/run.py: mutex single-instance мешал --once-диагностике (чужой C:\\Jopa\\Bridge\\run.py --channel A держит mutex). Фикс: для --once mutex не берётся. Бэкап: run.py.bak_15d_20261106.
+- Templates/extension/agent.py: UnboundLocalError _nw в do_POST (локальное присваивание _nw в ветке svc ломало /run). Переименовано в _nw_local.
+- test_daemon.py, test_daemon_timing.py: тесты обнуляли _last_send_at, но не _handicap_until; tick упирался в handicap. Бэкапы: *.bak_15d_20261106.
+- test_ext_agent.py: HTTPError-ветка не отдавала тело ответа (диагностика /run). Добавлен _body. Бэкап: *.bak_15d_20261106.
+- TTS: Tools/voice_call.py уже содержит speak() через System.Speech, unmute, get/set volume, ночной режим 22:00-08:00. Громкая проверка отложена до утра (оператор спит).
+- Кнопки мнемосхемы: формат target=agent:X (mnemo.js) совпадает с launchpad.py::boot agent:<CH> (Templates/extension/agent.py, agent_port из config). Соответствие подтверждено.
+- Комета: триггер startPulse("agent-"+L, targetFor(last)) по росту счётчика /api/telemetry, не инжект. Кодово готово. Живая проверка требует запущенного Bridge/daemon (live.json пишет только он).
+- run_all_tests.py: 21/21 pass, 0 fail, 67.1s. Файл: logs/runtime/_v5_all_tests.txt.
+- Git: origin/main == HEAD (424983f), F7 push фактически закрыт (вопреки HANDOVER 14D).
+
+### Открыто для оператора утром
+
+- Перезапустить agent D (8769), чтобы подхватить EXTRA_ROOTS в safe_path. Без перезапуска мост D работает только с C:\\DeepSeek.
+- Поднять Bridge/daemon D (live.json) — оживит комету на реальных операциях.
+- Громкий TTS-вызов проверить днём.
+- F5 real config (llm host:port, mail password), раскатка каналов — блокеры, ОК оператора.
+
+Dixi. 15D (ночная автономная сессия), 2026-11-06.
+
+## 2026-11-06, 15D — доп. ночная работа (по TODO)
+
+- Core/config.py: добавлено поле extra_roots + парсинг из config.json. config.json: extra_roots=[C:/JewAI]. Bridge/daemon.py передаёт cfg.extra_roots в exec.safe_path, extension agent.py — в свой safe_path. Теперь op=read/write C:/... работают через мост.
+- Templates/extension/agent.py: EXTRA_ROOTS + проверка в safe_path. После перезапуска agent D абсолютный C:/JewAI разрешён.
+- Tools/diagnose.py: docstring HANDOVER_14D -> HANDOVER_15D (PROMPT_14D в v5 нет).
+- run_all_tests.py: 21/21 pass после всех правок (65.4s).
+- F6a (5 файлов: marker_protocol, roles_and_chain, council_protocol, id_range_rule, interface_reference) — найдены в C:/DeepSeek/algorithms. Копипаст запрещён ROADMAP §4.7, нужно переписать по контракту или перенести как reference. Решение за оператором.
+- Громкая TTS-проверка отложена до дня: get_volume=-1 в сессии моста (fallback speak всё равно идёт).
+
+Dixi. 15D, 2026-11-06.
+
+
+## 2026-11-06, 15D — финал ночной сессии
+
+- Tools/run_all_tests.py: добавлены test_guard.py и test_rebirth_monitor.py (были вне набора). Итог: 23/23 pass, 0 fail, 71.0s.
+- Tools/diagnose.py: 16/16 imports OK, /api/health 200, /api/status 200, /style.css 200. Блокеров 1: uncommitted changes (12 строк).
+- RAG/INDEX.md: добавлены architecture.md и mainframe_gap.md (были MISS). Теперь 0 MISS.
+- Техдолг: test_guard.py формально зелёный (exit 0), но ALERT-путь пишет dummy kick в C:/Jeho/Sandbox/A/, а проверяет HERE/_test_guard_kick.txt — покрытие ALERT фиктивно. Требует переписать тест (не трогал C:/Jeho).
+
+Dixi. 15D, 2026-11-06.

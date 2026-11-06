@@ -4,7 +4,7 @@ Checks:
 - All v5 module imports OK
 - Ports: 8670 busy? v5 ports 9122-9127, 8666-8672
 - Chrome C profile exists? Chrome process running?
-- AUDIT.md, JOURNAL.md, TODO.md, HANDOVER_14D, PROMPT_14D present
+- AUDIT.md, JOURNAL.md, TODO.md, HANDOVER_15D, PROMPT_15D present
 - Test suites available in Tools/tests/
 
 Usage: python C:/JewAI/Tools/diagnose.py

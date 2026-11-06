@@ -77,7 +77,7 @@ try:
             with urllib.request.urlopen(req, timeout=5) as r:
                 return r.status, json.loads(r.read().decode('utf-8', 'replace'))
         except urllib.error.HTTPError as e:
-            return e.code, {}
+            return e.code, {'_body': e.read().decode('utf-8', 'replace')}
         except Exception as e:
             return None, {'error': repr(e)}
 

@@ -352,7 +352,8 @@ class Daemon:
                     flag.write_text("sent @ " + str(time.time()), encoding="utf-8")
                 except Exception:
                     pass
-            return DaemonResult(self.letter, 0, 0, 0)
+            if text:
+                return DaemonResult(self.letter, 0, 0, 0)
         if transition and not transition[1]:
             # regular resume (flag exists or ledger non-empty)
             self._send_or_buffer(cdp, "Возобновляй работу!")

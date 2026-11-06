@@ -63,3 +63,23 @@
 - [x] Написать PROMPT_15D.md
 - [x] Коммит + push в GitHub (33c9c3e)
 - [x] Пройтись по чекбоксам с оператором (принято 2026-11-06 02:16)
+
+
+## 15D - ночная автономная сессия 2026-11-06
+- [x] run_all_tests.py: 21/21 (было 17/21)
+- [x] Кнопки мнемосхемы: target=agent:X == launchpad.boot agent:<CH>
+- [x] Комета: триггер на рост /api/telemetry, не инжект
+- [x] run_all_tests.py: 21/21 (было 17/21)
+- [x] Кнопки мнемосхемы: target=agent:X == launchpad.boot agent:<CH>
+- [x] Комета: триггер на рост /api/telemetry, не инжект
+- [x] TTS: Tools/voice_call.py speak() System.Speech
+- [x] Git: origin/main == HEAD, F7 закрыт (424983f)
+- [ ] Перезапуск agent D (8769) - EXTRA_ROOTS в safe_path
+- [ ] Поднять Bridge/daemon D - live.json
+- [ ] Громкий TTS-тест днём
+- [ ] Блокеры: F5 config, раскатка, JewTest_XXX
+- [ ] F6a: 5 файлов найдены в C:/DeepSeek/algorithms (marker_protocol.md 10K, roles_and_chain.md 3K, council_protocol.md 5K, id_range_rule.md 2K, interface_reference.md 4K). Нужно решение: копия с пометкой reference или переписать по контракту.
+- [x] run_all_tests.py: 23/23 (добавлены test_guard, test_rebirth_monitor)
+- [x] diagnose.py: 16/16 imports, /api/health 200, блокеров 1 (uncommitted)
+- [x] RAG/INDEX.md: architecture.md + mainframe_gap.md, 0 MISS
+- [ ] Техдолг: test_guard.py ALERT-путь фиктивен (dummy kick в C:/Jeho), переписать тест

@@ -32,6 +32,8 @@ TESTS = [
     ('test_fs.py', 'fs raw file serving'),
     ('test_cycle.py', 'rebirth CDP cycle'),
     ('test_doh_proxy.py', 'doh proxy cache+connect'),
+    ('test_guard.py', 'guard timeout alert'),
+    ('test_rebirth_monitor.py', 'rebirth monitor thresholds'),
 ]
 
 lines = []

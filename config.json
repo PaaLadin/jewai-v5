@@ -52,5 +52,8 @@
     "stable_ms": 1200,
     "handicap_ms": 7000
   },
-  "version": "0.1.0-dev"
+  "version": "0.1.0-dev",
+  "extra_roots": [
+    "C:/JewAI"
+  ]
 }

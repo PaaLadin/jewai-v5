@@ -84,6 +84,7 @@ try:
     check('min_gap blocks immediate send', r.processed == 0, str(r))
     # manually clear last_send to allow
     d2._last_send_at = 0.0
+    d2._handicap_until = 0.0
     r = d2.tick(FakeCDP(5))
     check('after min_gap cleared, sends', r.processed == 1, str(r))
 

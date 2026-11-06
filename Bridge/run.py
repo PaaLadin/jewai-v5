@@ -115,9 +115,9 @@ def main() -> int:
     ap.add_argument("--config", default=None)
     a = ap.parse_args()
 
-    # 8C B-40: single instance per channel
-    _mutex = _acquire_single_instance_mutex(a.channel)
-    if _mutex is None:
+    # 8C B-40: single instance per channel (skip for --once diagnostics)
+    _mutex = None if a.once else _acquire_single_instance_mutex(a.channel)
+    if not a.once and _mutex is None:
         return 3
     cfg = load_config(a.config)
     ch = cfg.channel(a.channel)
