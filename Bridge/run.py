@@ -1,81 +1,48 @@
-"""Bridge/run.py - daemon entrypoint per channel.
-
-Usage:
-  python C:/JewAI/Bridge/run.py --channel C
-  python C:/JewAI/Bridge/run.py --channel D --once
-
-Picks adapter by channel model (deepseek -> DeepSeek, qwen -> Qwen, alice -> Alice).
-Runs Daemon in a loop. --once runs a single tick and exits (debug).
-"""
+"""Channel bridge entrypoint; provider metadata lives in Adapters.registry."""
 from __future__ import annotations
-
 import argparse
 import sys
 import time
 from pathlib import Path
-
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
-
 from Core.config import load as load_config
 from Bridge.cdp import connect
 from Bridge.daemon import Daemon
+from Adapters.registry import PROVIDERS, create
 
-
-ADAPTERS = {
-    "deepseek": ("Adapters.deepseek", "DeepSeek"),
-    "qwen": ("Adapters.qwen", "Qwen"),
-    "alice": ("Adapters.alice", "Alice"),
-}
+ADAPTERS = {k: (v["module"], v["class"]) for k, v in PROVIDERS.items()}
 
 
 def _adapter_for(model: str):
-    mod_name, cls_name = ADAPTERS.get(model.lower(), ADAPTERS["deepseek"])
-    mod = __import__(mod_name, fromlist=[cls_name])
-    return getattr(mod, cls_name)()
+    return create(model)
 
 
 def _try_recreate_chat(cfg, letter, ch_port, adapter):
-    """7C B-10: if CDP is alive but find_chat fails, open the chat tab via Target.createTarget.
-    Uses logs/active_chat_<L>.json if present (from B-11 rebirth), otherwise a fresh chat URL.
-    8C: do NOT auto-open chat while onboarding is unacknowledged.
-    """
-    import json as _j
-    import urllib.request as _u
-    # 8C B-48: only reopen chat AFTER onboarding acked. Before that — do not touch.
+    """Only recreate after onboarding; do not touch unacknowledged profiles."""
+    import json
+    import urllib.request
+    from urllib.parse import urlparse
     try:
-        _flag = cfg.channel_path(letter, "logs", "onboarding_disabled.flag")
-        if not _flag.exists():
+        if not cfg.channel_path(letter, "logs", "onboarding_disabled.flag").exists():
             return False
-    except Exception:
-        return False
-    try:
-        with _u.urlopen("http://127.0.0.1:%d/json/list" % ch_port, timeout=3) as r:
-            targets = _j.loads(r.read().decode("utf-8"))
-    except Exception:
-        return False
-    # need at least one page target to send Target.createTarget via CDP
-    page_targets = [x for x in targets if x.get("type") == "page" and x.get("webSocketDebuggerUrl")]
-    if not page_targets:
-        return False
-    # determine URL
-    url = None
-    active = cfg.path("logs", "active_chat_%s.json" % letter)
-    if active.exists():
-        try:
-            d = _j.loads(active.read_text(encoding="utf-8"))
-            u = d.get("chat_url")
-            if u and (adapter.HOST in u):
-                url = u
-        except Exception:
-            pass
-    if not url:
-        base = "https://" + adapter.HOST + "/"
-        url = base
-    try:
+        with urllib.request.urlopen("http://127.0.0.1:%d/json/list" % ch_port, timeout=3) as r:
+            targets = json.loads(r.read().decode("utf-8"))
+        pages = [t for t in targets if t.get("type") == "page" and t.get("webSocketDebuggerUrl")]
+        if not pages:
+            return False
+        url = "https://" + adapter.HOST + "/"
+        active = cfg.path("logs", "active_chat_%s.json" % letter)
+        if active.exists():
+            try:
+                candidate = json.loads(active.read_text(encoding="utf-8")).get("chat_url", "")
+                if urlparse(candidate).hostname == adapter.HOST:
+                    url = candidate
+            except (ValueError, OSError):
+                pass
         from Bridge.cdp import CDP
-        cdp = CDP(page_targets[0]["webSocketDebuggerUrl"])
+        cdp = CDP(pages[0]["webSocketDebuggerUrl"])
         try:
             cdp.call("Target.createTarget", {"url": url})
         finally:
@@ -86,81 +53,75 @@ def _try_recreate_chat(cfg, letter, ch_port, adapter):
 
 
 def _acquire_single_instance_mutex(channel: str):
-    """8C B-40: Windows named mutex — only ONE Bridge per channel can run.
-    OS auto-releases on process exit. Returns handle (keep alive) or None.
-    """
+    """Windows named mutex; retain returned handle for the process lifetime."""
     try:
         import ctypes
-        name = "Local\\JewAI_Bridge_" + channel
         k32 = ctypes.windll.kernel32
         k32.CreateMutexW.restype = ctypes.c_void_p
-        h = k32.CreateMutexW(None, True, name)
-        if not h:
-            print("[Bridge %s] mutex create failed (err=%d), exiting." % (channel, ctypes.get_last_error()), flush=True)
+        handle = k32.CreateMutexW(None, True, "Local\\JewAI_Bridge_" + channel)
+        if not handle:
+            print("[Bridge %s] mutex create failed" % channel, flush=True)
             return None
-        last = k32.GetLastError()
-        if last == 183:
+        if k32.GetLastError() == 183:
+            k32.CloseHandle.argtypes = [ctypes.c_void_p]
+            k32.CloseHandle(handle)
             print("[Bridge %s] Duplicate instances detected, exiting." % channel, flush=True)
             return None
-        return h
-    except Exception as _e:
-        print("[Bridge %s] mutex init err: %s" % (channel, _e), flush=True)
+        return handle
+    except Exception as exc:
+        print("[Bridge %s] mutex init err: %s" % (channel, exc), flush=True)
         return None
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--channel", required=True, choices=["A", "B", "C", "D", "E", "F"])
+    ap.add_argument("--channel", required=True, type=str.upper)
     ap.add_argument("--once", action="store_true", help="single tick, then exit")
     ap.add_argument("--config", default=None)
-    a = ap.parse_args()
-
-    # 8C B-40: single instance per channel
-    _mutex = _acquire_single_instance_mutex(a.channel)
-    if _mutex is None:
+    args = ap.parse_args()
+    try:
+        cfg = load_config(args.config)
+        ch = cfg.channel(args.channel)
+        adapter = _adapter_for(ch.model)
+    except (KeyError, ValueError, OSError) as exc:
+        ap.error(str(exc))
+    mutex = _acquire_single_instance_mutex(args.channel)
+    if mutex is None:
         return 3
-    cfg = load_config(a.config)
-    ch = cfg.channel(a.channel)
-    adapter = _adapter_for(ch.model)
-    daemon = Daemon(cfg, a.channel, adapter)
-
-    if a.once:
+    daemon = Daemon(cfg, args.channel, adapter)
+    if args.once:
         cdp = connect(ch.cdp_port, adapter.HOST)
         if not cdp:
             print("no_chat_target port=%d host=%s" % (ch.cdp_port, adapter.HOST))
             return 2
         try:
-            r = daemon.tick(cdp)
-            print("processed=%d skipped=%d errors=%d" % (r.processed, r.skipped, r.errors))
+            result = daemon.tick(cdp)
+            print("processed=%d skipped=%d errors=%d" %
+                  (result.processed, result.skipped, result.errors))
             return 0
         finally:
-            try: cdp.close()
-            except Exception: pass
-
-    # continuous loop with auto-reconnect
+            cdp.close()
     backoff = 2.0
     while True:
         cdp = connect(ch.cdp_port, adapter.HOST)
         if not cdp:
-            # 7C B-10: try to recreate the chat tab if CDP is alive
-            _recreate_attempted = getattr(main, "_recreate_attempted", 0.0)
-            now_ts = time.time()
-            if now_ts - _recreate_attempted > 30.0:
-                ok = _try_recreate_chat(cfg, a.channel, ch.cdp_port, adapter)
-                if ok:
-                    print("b10: recreated chat tab for %s at %s" % (a.channel, adapter.HOST), flush=True)
-                main._recreate_attempted = now_ts
+            attempted = getattr(main, "_recreate_attempted", 0.0)
+            now = time.time()
+            if now - attempted > 30.0:
+                if _try_recreate_chat(cfg, args.channel, ch.cdp_port, adapter):
+                    print("b10: recreated chat tab for %s at %s" %
+                          (args.channel, adapter.HOST), flush=True)
+                main._recreate_attempted = now
             time.sleep(min(backoff, 10.0))
             backoff = min(backoff * 1.2, 10.0)
             continue
         backoff = 2.0
         try:
             daemon.tick(cdp)
-        except Exception:
-            pass
+        except Exception as exc:
+            print("[Bridge %s] tick failed: %s" % (args.channel, exc), flush=True)
         finally:
-            try: cdp.close()
-            except Exception: pass
+            cdp.close()
         time.sleep(daemon.poll_ms / 1000.0)
 
 
