@@ -1,8 +1,4 @@
-"""Experimental Perplexity UI adapter; live DOM validation is required.
-
-Never scans the page body for executable blocks. Unsupported DOM returns no
-commands. A completed, unchanged snapshot is required before collection.
-"""
+"""Perplexity UI adapter. Source-checked selectors; live validation still required."""
 from __future__ import annotations
 import hashlib
 import json
@@ -10,9 +6,10 @@ import time
 from pathlib import Path
 from urllib.parse import urlparse
 
-DOM = Path(__file__).with_name("perplexity_dom.js").read_text(encoding="utf-8")
-INPUT = ('textarea, [contenteditable="true"][role="textbox"], '
-         '#ask-input[contenteditable="true"]')
+SELECTORS = json.loads(Path(__file__).with_name("perplexity_selectors.json").read_text(encoding="utf-8"))
+DOM = Path(__file__).with_name("perplexity_dom.js").read_text(encoding="utf-8").replace(
+    "__JEWAI_SELECTORS__", json.dumps(SELECTORS, ensure_ascii=True))
+INPUT = ", ".join(SELECTORS["inputs"])
 
 
 class Perplexity:
@@ -73,9 +70,15 @@ class Perplexity:
         if not s.get("input") or s.get("busy") or str(s.get("draft", "")).strip():
             return False
         focus = """(() => {
-          const el = [...document.querySelectorAll(%s)].find(e => e.getClientRects().length);
-          if (!el) return false; el.focus(); return true;
-        })()""" % json.dumps(INPUT)
+          const cfg = %s;
+          for (const selector of cfg.inputs) {
+            const el = [...document.querySelectorAll(selector)].find(e =>
+              e.getClientRects().length && !e.disabled && !e.readOnly &&
+              e.getAttribute('aria-disabled') !== 'true' && !e.closest(cfg.exclude));
+            if (el) { el.focus(); return true; }
+          }
+          return false;
+        })()""" % json.dumps(SELECTORS, ensure_ascii=True)
         if not cdp.eval_expr(focus):
             return False
         cdp.call("Input.insertText", {"text": text})
@@ -83,7 +86,6 @@ class Perplexity:
         s = self.snapshot(cdp)
         if str(s.get("draft", "")).replace("\r\n", "\n").strip() != text.replace("\r\n", "\n").strip():
             return False
-        # One real CDP key press only; no double-submit on an uncertain result.
         cdp.call("Input.dispatchKeyEvent", {"type": "keyDown", "key": "Enter",
                                           "code": "Enter", "windowsVirtualKeyCode": 13})
         cdp.call("Input.dispatchKeyEvent", {"type": "keyUp", "key": "Enter",
@@ -98,7 +100,6 @@ class Perplexity:
         return False
 
     def verify_prompt_hits(self, cdp, markers):
-        # Only assistant output counts; an echoed user prompt is not proof.
         s = self.snapshot(cdp)
         if s.get("busy") or not s.get("supported"):
             return 0

@@ -1,0 +1,11 @@
+{
+  "inputs": [
+    "[data-lexical-editor=\"true\"][contenteditable=\"true\"]",
+    "#ask-input[contenteditable=\"true\"]",
+    "textarea#ask-input:not([disabled]):not([readonly])"
+  ],
+  "container": ".scrollable-container .max-w-threadContentWidth",
+  "answer": ".prose[data-renderer=\"lm\"]",
+  "exclude": "[data-message-bubble=\"right\"], [data-message-author-role=\"user\"], [data-role=\"user\"], aside, nav, [role=\"dialog\"], [role=\"alertdialog\"]",
+  "stop": "button[aria-label], button[data-testid]"
+}
