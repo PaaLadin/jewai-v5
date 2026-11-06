@@ -83,3 +83,8 @@
 - [x] diagnose.py: 16/16 imports, /api/health 200, блокеров 1 (uncommitted)
 - [x] RAG/INDEX.md: architecture.md + mainframe_gap.md, 0 MISS
 - [ ] Техдолг: test_guard.py ALERT-путь фиктивен (dummy kick в C:/Jeho), переписать тест
+- [x] Adapters/google.py: AI-Swing-Bridge механика, execCommand insertText + CDP Enter, NO click
+- [x] Bridge/run.py: ADAPTERS[google]=(Adapters.google,Google)
+- [x] Tools/tests/test_google_adapter.py: 10 проверок, в наборе
+- [x] run_all_tests.py: 24/24 pass
+- [ ] Посадить Google вместо Qwen: config channels.<L>.model=google, agent_port, cdp=порт Google-вкладки

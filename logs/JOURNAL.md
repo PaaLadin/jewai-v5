@@ -1474,3 +1474,72 @@ Dixi. 15D, 2026-11-06.
 - Техдолг: test_guard.py формально зелёный (exit 0), но ALERT-путь пишет dummy kick в C:/Jeho/Sandbox/A/, а проверяет HERE/_test_guard_kick.txt — покрытие ALERT фиктивно. Требует переписать тест (не трогал C:/Jeho).
 
 Dixi. 15D, 2026-11-06.
+
+
+## 2026-11-06, 15D — Google adapter (AI-Swing-Bridge mechanic)
+
+Источник: C:/DeepSeek/AI-Swing-Bridge (content.js + background.js + swing_daemon.py).
+
+Механика, которую взяли:
+- Поиск поля: textarea с getBoundingClientRect w>0 h>0 (fallback [role=textbox]). На живой Google AI Mode две textarea: скрытая поисковая и видимая 572x24.
+- Ввод: focus -> clear -> execCommand(insertText) -> input/change -> повторный focus.
+- Отправка: CDP Input.dispatchKeyEvent keyDown+keyUp VK 13 (Enter), БЕЗ клика по кнопке. Это решает старую боль: клик по send открывал боковую панель.
+- Чтение ответа: document.body.innerText + parse_blocks (DOM Google AI Mode нестабилен, ledger защищает от replay).
+
+Live-проверка на вкладке 9225 (google.com/search?...udm=50): сообщение ушло, ответ ACK получен, кнопку не трогали, боковая панель не открывалась.
+
+Файлы:
+- Adapters/google.py (HOST=google.com, MARKER=/search, TEXTAREA_SELECTOR=textarea, Google).
+- Bridge/run.py: ADAPTERS[google] = (Adapters.google, Google).
+- Tools/tests/test_google_adapter.py (в наборе, 10 проверок: execCommand, CDP Enter x2, NO Mouse click, busy guard, verify_prompt_hits).
+- run_all_tests.py: 24/24 pass, 0 fail, 70.8s.
+
+Подключение к каналу: в config.json channels.<L>.model = google. Сейчас A-D на deepseek; чтобы посадить Google вместо Qwen — добавить/переключить канал с model=google, agent_port=порт канала (напр. 8669 у D или отдельный), cdp=порт Chrome с открытой вкладкой google.com/search?udm=50.
+
+Dixi. 15D, 2026-11-06.
+
+
+## 2026-11-06, 15D — Google adapter (AI-Swing-Bridge mechanic)
+
+Источник: C:/DeepSeek/AI-Swing-Bridge (content.js + background.js + swing_daemon.py).
+
+Механика, которую взяли:
+- Поиск поля: textarea с getBoundingClientRect w>0 h>0 (fallback [role=textbox]). На живой Google AI Mode две textarea: скрытая поисковая и видимая 572x24.
+- Ввод: focus -> clear -> execCommand(insertText) -> input/change -> повторный focus.
+- Отправка: CDP Input.dispatchKeyEvent keyDown+keyUp VK 13 (Enter), БЕЗ клика по кнопке. Это решает старую боль: клик по send открывал боковую панель.
+- Чтение ответа: document.body.innerText + parse_blocks (DOM Google AI Mode нестабилен, ledger защищает от replay).
+
+Live-проверка на вкладке 9225 (google.com/search?...udm=50): сообщение ушло, ответ ACK получен, кнопку не трогали, боковая панель не открывалась.
+
+Файлы:
+- Adapters/google.py (HOST=google.com, MARKER=/search, TEXTAREA_SELECTOR=textarea, Google).
+- Bridge/run.py: ADAPTERS[google] = (Adapters.google, Google).
+- Tools/tests/test_google_adapter.py (в наборе, 10 проверок: execCommand, CDP Enter x2, NO Mouse click, busy guard, verify_prompt_hits).
+- run_all_tests.py: 24/24 pass, 0 fail, 70.8s.
+
+Подключение к каналу: в config.json channels.<L>.model = google. Сейчас A-D на deepseek; чтобы посадить Google вместо Qwen — добавить/переключить канал с model=google, agent_port=порт канала (напр. 8669 у D или отдельный), cdp=порт Chrome с открытой вкладкой google.com/search?udm=50.
+
+Dixi. 15D, 2026-11-06.
+
+
+## 2026-11-06, 15D — Google adapter (AI-Swing-Bridge mechanic)
+
+Источник: C:/DeepSeek/AI-Swing-Bridge (content.js + background.js + swing_daemon.py).
+
+Механика, которую взяли:
+- Поиск поля: textarea с getBoundingClientRect w>0 h>0 (fallback [role=textbox]). На живой Google AI Mode две textarea: скрытая поисковая и видимая 572x24.
+- Ввод: focus -> clear -> execCommand(insertText) -> input/change -> повторный focus.
+- Отправка: CDP Input.dispatchKeyEvent keyDown+keyUp VK 13 (Enter), БЕЗ клика по кнопке. Это решает старую боль: клик по send открывал боковую панель.
+- Чтение ответа: document.body.innerText + parse_blocks (DOM Google AI Mode нестабилен, ledger защищает от replay).
+
+Live-проверка на вкладке 9225 (google.com/search?...udm=50): сообщение ушло, ответ ACK получен, кнопку не трогали, боковая панель не открывалась.
+
+Файлы:
+- Adapters/google.py (HOST=google.com, MARKER=/search, TEXTAREA_SELECTOR=textarea, Google).
+- Bridge/run.py: ADAPTERS[google] = (Adapters.google, Google).
+- Tools/tests/test_google_adapter.py (в наборе, 10 проверок: execCommand, CDP Enter x2, NO Mouse click, busy guard, verify_prompt_hits).
+- run_all_tests.py: 24/24 pass, 0 fail, 70.8s.
+
+Подключение к каналу: в config.json channels.<L>.model = google. Сейчас A-D на deepseek; чтобы посадить Google вместо Qwen — добавить/переключить канал с model=google, agent_port=порт канала (напр. 8669 у D или отдельный), cdp=порт Chrome с открытой вкладкой google.com/search?udm=50.
+
+Dixi. 15D, 2026-11-06.

@@ -27,6 +27,7 @@ ADAPTERS = {
     "deepseek": ("Adapters.deepseek", "DeepSeek"),
     "qwen": ("Adapters.qwen", "Qwen"),
     "alice": ("Adapters.alice", "Alice"),
+    "google": ("Adapters.google", "Google"),
 }
 
 
