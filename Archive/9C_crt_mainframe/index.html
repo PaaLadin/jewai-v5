@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes">
+<meta name="theme-color" content="#0a0a0a">
+<title>JewAI v5 // ПУЛЬТ</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="crt">
+<div class="topbar">
+  <div class="top-left">JewAI v5 // ПУЛЬТ</div>
+  <div class="top-center" id="clock">--:--:--</div>
+  <div class="top-right" id="netstat">СЕТЬ: ---</div>
+</div>
+<div class="tabs">
+  <button class="tab active" data-tab="agents">АГЕНТЫ</button>
+  <button class="tab" data-tab="chat">ЧАТ</button>
+  <button class="tab" data-tab="projects">ПРОЕКТЫ</button>
+  <button class="tab" data-tab="logs">ЛОГИ</button>
+  <button class="tab" data-tab="roadmap">ROADMAP</button>
+</div><main>
+<section class="tab-body active" id="tab-agents">
+  <div class="bulk">
+    <button class="bulk-btn" id="btn-pause-all">ПАУЗА ВСЕМ</button>
+    <button class="bulk-btn" id="btn-resume-all">ПРОДОЛЖИТЬ ВСЕМ</button>
+    <button class="bulk-btn" id="btn-selftest">SELF-TEST</button>
+    <span class="bulk-meta" id="bulk-meta"></span>
+  </div>
+  <div class="grid" id="agents-grid"></div>
+</section><section class="tab-body" id="tab-chat">
+  <div class="chat-wrap">
+    <div class="chat-side">
+      <div class="panel-block">
+        <div class="panel-title">КАНАЛ</div>
+        <select id="chat-ch"></select>
+      </div>
+      <div class="panel-block">
+        <div class="panel-title">ПУЛЬТ</div>
+        <div class="pult">
+          <button class="pbtn" id="btn-meeting">СОВЕЩАНИЕ</button>
+          <button class="pbtn" id="btn-pauseall">ПАУЗА ВСЕМ</button>
+          <button class="pbtn" id="btn-resumeall">ПРОДОЛЖИТЬ</button>
+        </div>
+      </div>
+    </div>
+    <div class="chat-main">
+      <div class="chat-title">ОБЩИЙ ЧАТ</div>
+      <div class="feed" id="chat-feed"></div>
+      <div class="composer">
+        <span class="prompt">&gt;</span>
+        <textarea id="chat-text" placeholder="сообщение..."></textarea>
+        <button class="send-btn" id="chat-send">&gt;_</button>
+      </div>
+    </div>
+  </div>
+</section><section class="tab-body" id="tab-projects">
+  <div class="list-wrap">
+    <div class="panel-title">ПРОЕКТЫ (ROADMAP.html)</div>
+    <div id="projects-list" class="list"></div>
+  </div>
+</section>
+<section class="tab-body" id="tab-logs">
+  <div class="logs-wrap">
+    <div class="log-tabs" id="log-tabs">
+      <button class="log-tab active" data-log="chat">CHAT</button>
+      <button class="log-tab" data-log="server">SERVER</button>
+      <button class="log-tab" data-log="agent">AGENT</button>
+      <button class="log-tab" data-log="svc">SVC</button>
+    </div>
+    <pre class="log-body" id="log-body">выберите лог...</pre>
+  </div>
+</section><section class="tab-body" id="tab-roadmap">
+  <div class="rm-wrap">
+    <div class="rm-bar">
+      <select id="rm-name"></select>
+      <button class="bulk-btn" id="rm-load">LOAD</button>
+    </div>
+    <pre class="rm-content" id="rm-content">выберите проект...</pre>
+  </div>
+</section>
+</main>
+<div class="log-strip" id="log-strip"></div>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>
