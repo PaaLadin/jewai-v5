@@ -283,6 +283,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             b = self._body()
             op = self.path
+            # 9C fix: no-op endpoint for voice-stop, prevents 5-min fetch hang
+            if op == "/notify-stop":
+                return self._j(200, {"ok": True, "noop": True})
             if op == "/onboarding/disable":
                 try:
                     _onboarding_disabled_path().parent.mkdir(parents=True, exist_ok=True)

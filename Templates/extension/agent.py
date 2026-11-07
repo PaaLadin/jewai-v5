@@ -303,6 +303,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             b = self._body()
             op = self.path
+            # 9C fix: no-op endpoint for voice-stop, prevents 5-min fetch hang
+            if op == "/notify-stop":
+                return self._j(200, {"ok": True, "noop": True})
             _MUTATING = ("/write", "/mkdir", "/delete", "/run")
             if op in _MUTATING:
                 _ps = _pause_state()
