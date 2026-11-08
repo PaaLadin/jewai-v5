@@ -38,3 +38,10 @@
 - PANEL.md: Pip-Boy -> 15D (8 табов, мнемосхема, wiki).
 - voice stop: путь stop-файла, fire-and-forget, фильтр [, __pycache__.
 - rebirth: single-guard, cooldown, TABLE STALE, PROMPT_ACTIVATION.
+
+### BUG-006: Экспорт старых чатов (share) не портирован
+
+- В DeepSeek: `sandbox/export_share.py` через Playwright.
+- В v5: Playwright НЕ переносим. Нужен аналог через Bridge/cdp.py.
+- Приоритет: средний (нужен перед rebirth — сохранить старый диалог).
+- TODO 10C: `Tools/export_share.py` на CDP (изолированный контекст, scroll-loop, дедуп).

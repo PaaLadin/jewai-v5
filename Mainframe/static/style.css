@@ -1113,3 +1113,14 @@ body { height: 100vh !important; margin: 0 !important; padding: 0 !important; }
 /* 9C: wiki tab */
 .wiki-wrap { width: 100%; height: calc(100vh - 200px); padding: 8px; box-sizing: border-box; }
 .wiki-frame { width: 100%; height: 100%; border: 1px solid #222; background: #000; }
+
+.top-gear{background:transparent;border:1px solid #333;color:#4a8a5a;font-size:18px;cursor:pointer;padding:4px 10px;margin-right:10px;border-radius:2px;}.top-gear:hover{border-color:#4a8a5a;color:#6afa6a;}
+.topbar{display:flex;align-items:center;justify-content:space-between;}
+
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.modal-box{background:#111;border:2px solid #333;border-radius:4px;padding:20px;min-width:420px;max-width:600px;color:#ccc;font-family:monospace;}
+.modal-box h3{color:#4a8a5a;margin:0 0 15px;font-size:14px;letter-spacing:2px;}
+.modal-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #222;}
+.modal-row select{background:#000;color:#4a8a5a;border:1px solid #333;padding:4px 8px;font-family:inherit;font-size:12px;}
+.modal-btns{margin-top:15px;text-align:right;}
+.modal-btns button{background:#222;color:#4a8a5a;border:1px solid #444;padding:6px 16px;font-family:inherit;cursor:pointer;}

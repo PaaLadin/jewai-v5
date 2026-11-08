@@ -9,7 +9,7 @@ ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
 
 from Core.config import load as load_config
-from Mainframe import web, api, llm, mail, rag_channel, council, health, svc_api, launchpad, controls
+from Mainframe import web, api, llm, mail, rag_channel, council, health, svc_api, launchpad, controls, settings
 
 
 def _qs(path):
@@ -26,6 +26,8 @@ def _qs(path):
 def build_routes():
     return {
         ("GET", "/api/status"): api.status,
+        ("GET", "/api/settings"): lambda c, p, b: settings.get_all(c),
+        ("POST", "/api/settings"): lambda c, p, b: settings.set_adapter(c, (b or {}).get("channel", ""), (b or {}).get("model", "")),
         ("GET", "/api/telemetry"): api.telemetry,
         ("GET", "/api/health"): lambda c, p, b: health.collect(c),
         ("POST", "/api/svc"): lambda c, p, b: svc_api.handle(c, (b or {}).get("channel", ""), (b or {}).get("kind", ""), (b or {}).get("action", ""), b),

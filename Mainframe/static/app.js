@@ -260,3 +260,39 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(refreshStatus, 5000);
   loadChat();
 });
+
+// 9C: settings gear
+async function openSettings() {
+  const m = document.getElementById("settings-modal");
+  const b = document.getElementById("settings-body");
+  m.style.display = "flex";
+  b.innerHTML = "загрузка...";
+  try {
+    const j = await jget("/api/settings");
+    let h = "";
+    const opts = j.adapters.map(a => '<option value="' + a + '">' + a + '</option>').join("");
+    for (const L of Object.keys(j.channels).sort()) {
+      const cur = j.channels[L];
+      const oo = opts.replace('value="' + cur + '"', 'value="' + cur + '" selected');
+      h += '<div class="modal-row"><span>Канал ' + L + '</span><select data-ch="' + L + '">' + oo + '</select></div>';
+    }
+    b.innerHTML = h;
+    b.querySelectorAll("select").forEach(s => {
+      s.addEventListener("change", async () => {
+        try {
+          await jpost("/api/settings", {channel: s.dataset.ch, model: s.value});
+          s.style.borderColor = "#4a8a5a";
+          setTimeout(() => s.style.borderColor = "", 1000);
+        } catch (e) { alert("err: " + e.message); }
+      });
+    });
+  } catch (e) { b.innerHTML = "err: " + e.message; }
+}
+function bindGear() {
+  const g = document.getElementById("btn-settings");
+  const c = document.getElementById("settings-close");
+  const m = document.getElementById("settings-modal");
+  if (g) g.addEventListener("click", openSettings);
+  if (c) c.addEventListener("click", () => { m.style.display = "none"; });
+}
+document.addEventListener("DOMContentLoaded", bindGear);

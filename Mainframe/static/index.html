@@ -26,7 +26,7 @@
 <div class="topbar">
   <div class="top-left">JewAI v5 // ПУЛЬТ</div>
   <div class="top-center" id="clock">--:--:--</div>
-  <div class="top-right" id="netstat">СЕТЬ: ---</div>
+  <button id="btn-settings" class="top-gear" title="Настройки">G</button><div class="top-right" id="netstat">СЕТЬ: ---</div>
 </div>
 <div class="tabs">
   <button class="tab active" data-tab="agents">АГЕНТЫ</button>
@@ -577,5 +577,7 @@ init();
 })();
 
 </script>
+
+<div id="settings-modal" class="modal" style="display:none"><div class="modal-box"><h3>Настройки адаптеров</h3><div id="settings-body"></div><div class="modal-btns"><button id="settings-close">Закрыть</button></div></div></div>
 </body>
 </html>
