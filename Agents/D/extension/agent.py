@@ -1,3 +1,6 @@
+import sys
+sys.dont_write_bytecode = True
+
 """Extension/agent.py - HTTP endpoint for a channel.
 
 Contract (from AUDIT section 18, rewritten from scratch):

@@ -79,6 +79,52 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         sendResponse({ ok: true });
         return;
       }
+      if (msg.type === 'notify') {
+        // 9C: start voice notification (returns immediately, fire-and-forget)
+        const st = await getState();
+        if (!st.agentUrl || !st.token) {
+          sendResponse({ ok: false, error: 'NO_STATE' });
+          return;
+        }
+        try {
+          const r = await callAgent(st.agentUrl, st.token, '/notify', {
+            text: msg.text || '',
+            repeat: msg.repeat || 5,
+            interval: msg.interval || 300,
+          });
+          sendResponse(r);
+        } catch (e) {
+          sendResponse({ ok: false, error: String(e) });
+        }
+        return;
+      }
+      if (msg.type === 'notify-stop') {
+        // 9C: create runtime/notify.stop. Fire-and-forget so onMessage never blocks.
+        const st = await getState();
+        if (!st.agentUrl || !st.token) {
+          sendResponse({ ok: true, skipped: 'NO_STATE' });
+          return;
+        }
+        (async () => {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 5 * 60 * 1000);
+          try {
+            const resp = await fetch(st.agentUrl + '/notify-stop', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Token': st.token },
+              body: '{}',
+              signal: ctrl.signal,
+            });
+            await resp.json();
+          } catch (e) {
+            // silent — fire-and-forget
+          } finally {
+            clearTimeout(timer);
+          }
+        })();
+        sendResponse({ ok: true, queued: true });
+        return;
+      }
     } catch (e) {
       sendResponse({ ok: false, error: String(e) });
     }

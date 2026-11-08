@@ -154,8 +154,11 @@ async function typeAndSend(text) {
 }
 
 console.log('[jewai-v5-deepseek] content script loaded v' + V);
-setInterval(scan, POLL_MS);
-window.addEventListener('load', () => setTimeout(scan, 800));
+// V5 FIX: Bridge polling is handled by Python daemon (Bridge/daemon.py).
+// Extension acting as a bridge causes duplicate reports and rate limits.
+// Disabled scan().
+// setInterval(scan, POLL_MS);
+// window.addEventListener('load', () => setTimeout(scan, 800));
 // --- checkStuck v5 ---
 function checkStuck() {
   if (!window.location.href.includes('/a/chat/s/')) return;
@@ -214,3 +217,22 @@ function checkStuck() {
 }
 setInterval(checkStuck, 2000);
 
+// 9C: voice stop detection. If operator types in textarea (not bridge text,
+// not starting with "["), send notify-stop to halt TTS repeats.
+let voiceStopSent = false;
+let lastInsertedText = '';
+
+function _voiceStopCheck() {
+  const ta = document.querySelector('textarea');
+  if (!ta) { voiceStopSent = false; return; }
+  const v = (ta.value || '').trim();
+  if (v && v.startsWith('[')) { voiceStopSent = false; return; }
+  if (!v || v === lastInsertedText) { voiceStopSent = false; return; }
+  if (voiceStopSent) return;
+  voiceStopSent = true;
+  try {
+    chrome.runtime.sendMessage({ type: 'notify-stop' }).catch(() => {});
+  } catch (e) {}
+}
+
+setInterval(_voiceStopCheck, 1000);

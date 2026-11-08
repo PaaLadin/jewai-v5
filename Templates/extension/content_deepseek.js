@@ -217,3 +217,22 @@ function checkStuck() {
 }
 setInterval(checkStuck, 2000);
 
+// 9C: voice stop detection. If operator types in textarea (not bridge text,
+// not starting with "["), send notify-stop to halt TTS repeats.
+let voiceStopSent = false;
+let lastInsertedText = '';
+
+function _voiceStopCheck() {
+  const ta = document.querySelector('textarea');
+  if (!ta) { voiceStopSent = false; return; }
+  const v = (ta.value || '').trim();
+  if (v && v.startsWith('[')) { voiceStopSent = false; return; }
+  if (!v || v === lastInsertedText) { voiceStopSent = false; return; }
+  if (voiceStopSent) return;
+  voiceStopSent = true;
+  try {
+    chrome.runtime.sendMessage({ type: 'notify-stop' }).catch(() => {});
+  } catch (e) {}
+}
+
+setInterval(_voiceStopCheck, 1000);

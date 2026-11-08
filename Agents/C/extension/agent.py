@@ -1,3 +1,6 @@
+import sys
+sys.dont_write_bytecode = True
+
 """Extension/agent.py - HTTP endpoint for a channel.
 
 Contract (from AUDIT section 18, rewritten from scratch):
@@ -25,6 +28,9 @@ else:
         ROOT = ROOT.parent
     else:
         ROOT = HERE
+
+# 15D: extra allowed roots for cross-project read/write
+EXTRA_ROOTS = [Path("C:/JewAI")]
 
 # 7C B-25: one token per installation (root .agent_token wins over per-channel)
 def _find_token_file():
@@ -176,6 +182,10 @@ def safe_path(rel):
     if not rel:
         raise ValueError("empty path")
     p = (ROOT / rel).resolve()
+    for _er in EXTRA_ROOTS:
+        _er = _er.resolve()
+        if p == _er or _er in p.parents:
+            return p
     if p != ROOT and ROOT not in p.parents:
         raise ValueError("escape: " + str(rel))
     return p
@@ -244,6 +254,19 @@ class Handler(BaseHTTPRequestHandler):
                                  "recovery": _svc_state("recovery")})
         if self.path == "/pause_state":
             return self._j(200, {"ok": True, **_pause_state()})
+        if self.path == "/live":
+            lp = _logs_dir() / "live.json"
+            if not lp.exists():
+                return self._j(200, {"ok": True, "channel": _ch_letter(),
+                                     "entries": [], "last_action": {},
+                                     "watermark": None, "paused": bool(_pause_state().get("paused")),
+                                     "updated": None})
+            try:
+                data = json.loads(lp.read_text(encoding="utf-8"))
+                data["ok"] = True
+                return self._j(200, data)
+            except Exception as e:
+                return self._j(200, {"ok": False, "error": type(e).__name__ + ": " + str(e)})
         if self.path == "/onboarding/status":
             return self._j(200, {"ok": True, "disabled": _onboarding_is_disabled(),
                                  "channel": _ch_letter(), "name": _ch_name()})
@@ -283,9 +306,51 @@ class Handler(BaseHTTPRequestHandler):
         try:
             b = self._body()
             op = self.path
-            # 9C fix: no-op endpoint for voice-stop, prevents 5-min fetch hang
+            # 9C: /notify - start voice notification (notify_me.py in background)
+            if op == "/notify":
+                text = b.get("text", "Джошуа на связи. Нужна помощь.")
+                repeat = int(b.get("repeat", 5))
+                interval = int(b.get("interval", 300))
+                script = ROOT / "Tools" / "notify_me.py"
+                if not script.exists():
+                    return self._j(200, {"ok": False, "error": "notify_me.py missing"})
+                tf = ROOT / "runtime" / "notify.txt"
+                try:
+                    tf.parent.mkdir(parents=True, exist_ok=True)
+                    tf.write_text(text, encoding="utf-8")
+                except Exception as e:
+                    return self._j(200, {"ok": False, "error": "text write: " + repr(e)[:120]})
+                flags = 0
+                if sys.platform == "win32":
+                    flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+                try:
+                    proc = subprocess.Popen(
+                        [sys.executable, "-B", str(script), "--file", str(tf),
+                         "--repeat", str(repeat), "--interval", str(interval)],
+                        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL, creationflags=flags, cwd=str(ROOT))
+                    log("NOTIFY", "pid=" + str(proc.pid) + " text=" + text[:60])
+                    return self._j(200, {"ok": True, "pid": proc.pid})
+                except Exception as e:
+                    log("NOTIFY-ERR", repr(e))
+                    return self._j(200, {"ok": False, "error": repr(e)[:200]})
+
+            # 9C: /notify-stop - create runtime/notify.stop to halt notify_me.py
             if op == "/notify-stop":
-                return self._j(200, {"ok": True, "noop": True})
+                stopfile = ROOT / "runtime" / "notify.stop"
+                try:
+                    stopfile.parent.mkdir(parents=True, exist_ok=True)
+                    stopfile.write_text("stop", encoding="utf-8")
+                    log("NOTIFY-STOP", "created at " + str(stopfile))
+                    return self._j(200, {"ok": True, "path": str(stopfile)})
+                except Exception as e:
+                    return self._j(200, {"ok": False, "error": repr(e)[:200]})
+            _MUTATING = ("/write", "/mkdir", "/delete", "/run")
+            if op in _MUTATING:
+                _ps = _pause_state()
+                if _ps.get("paused"):
+                    return self._j(423, {"ok": False, "paused": True,
+                                         "error": "paused: operation blocked (dialog with operator)"})
             if op == "/onboarding/disable":
                 try:
                     _onboarding_disabled_path().parent.mkdir(parents=True, exist_ok=True)
@@ -326,8 +391,8 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     args = [sys.executable, svc, "status", "--channel", ch]
                 try:
-                    _nw = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
-                    rr = subprocess.run(args, capture_output=True, text=True, timeout=20, creationflags=_nw)
+                    _nw_local = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                    rr = subprocess.run(args, capture_output=True, text=True, timeout=20, creationflags=_nw_local)
                     out = (rr.stdout or "").strip()
                     try:
                         parsed = json.loads(out) if out else {}
@@ -471,10 +536,28 @@ def _port_busy(port):
         b.close()
 
 
+def _resolve_port():
+    # priority: argv > env JEWAI_AGENT_PORT > channel config > default 8666
+    if len(sys.argv) > 1 and str(sys.argv[1]).isdigit():
+        return int(sys.argv[1]), "argv"
+    envp = (os.environ.get("JEWAI_AGENT_PORT") or "").strip()
+    if envp.isdigit():
+        return int(envp), "env"
+    cfg = CHANNEL_CFG or {}
+    for key in ("agent_port", "agent"):
+        v = cfg.get(key)
+        try:
+            if v:
+                return int(v), "config." + key
+        except Exception:
+            pass
+    return 8666, "default"
+
+
 if __name__ == "__main__":
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8666
+    port, _src = _resolve_port()
     if _port_busy(port):
-        print("[guard] port", port, "busy, exit")
+        print("[guard] port", port, "busy, exit (from " + _src + ")")
         sys.exit(1)
-    print("[agent] v" + VERSION + " root=" + str(ROOT) + " port=" + str(port))
+    print("[agent] v" + VERSION + " root=" + str(ROOT) + " port=" + str(port) + " (from " + _src + ")")
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()

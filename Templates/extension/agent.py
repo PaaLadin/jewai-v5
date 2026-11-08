@@ -1,3 +1,6 @@
+import sys
+sys.dont_write_bytecode = True
+
 """Extension/agent.py - HTTP endpoint for a channel.
 
 Contract (from AUDIT section 18, rewritten from scratch):
@@ -303,9 +306,45 @@ class Handler(BaseHTTPRequestHandler):
         try:
             b = self._body()
             op = self.path
-            # 9C fix: no-op endpoint for voice-stop, prevents 5-min fetch hang
+            # 9C: /notify - start voice notification (notify_me.py in background)
+            if op == "/notify":
+                text = b.get("text", "Джошуа на связи. Нужна помощь.")
+                repeat = int(b.get("repeat", 5))
+                interval = int(b.get("interval", 300))
+                script = ROOT / "Tools" / "notify_me.py"
+                if not script.exists():
+                    return self._j(200, {"ok": False, "error": "notify_me.py missing"})
+                tf = ROOT / "runtime" / "notify.txt"
+                try:
+                    tf.parent.mkdir(parents=True, exist_ok=True)
+                    tf.write_text(text, encoding="utf-8")
+                except Exception as e:
+                    return self._j(200, {"ok": False, "error": "text write: " + repr(e)[:120]})
+                flags = 0
+                if sys.platform == "win32":
+                    flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+                try:
+                    proc = subprocess.Popen(
+                        [sys.executable, "-B", str(script), "--file", str(tf),
+                         "--repeat", str(repeat), "--interval", str(interval)],
+                        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL, creationflags=flags, cwd=str(ROOT))
+                    log("NOTIFY", "pid=" + str(proc.pid) + " text=" + text[:60])
+                    return self._j(200, {"ok": True, "pid": proc.pid})
+                except Exception as e:
+                    log("NOTIFY-ERR", repr(e))
+                    return self._j(200, {"ok": False, "error": repr(e)[:200]})
+
+            # 9C: /notify-stop - create runtime/notify.stop to halt notify_me.py
             if op == "/notify-stop":
-                return self._j(200, {"ok": True, "noop": True})
+                stopfile = ROOT / "runtime" / "notify.stop"
+                try:
+                    stopfile.parent.mkdir(parents=True, exist_ok=True)
+                    stopfile.write_text("stop", encoding="utf-8")
+                    log("NOTIFY-STOP", "created at " + str(stopfile))
+                    return self._j(200, {"ok": True, "path": str(stopfile)})
+                except Exception as e:
+                    return self._j(200, {"ok": False, "error": repr(e)[:200]})
             _MUTATING = ("/write", "/mkdir", "/delete", "/run")
             if op in _MUTATING:
                 _ps = _pause_state()
