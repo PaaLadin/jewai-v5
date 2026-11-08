@@ -40,6 +40,20 @@ HERE = Path(__file__).resolve().parent
 ROOT = _find_root(HERE)
 sys.path.insert(0, str(ROOT))
 
+# 9C: single-instance guard. If another monitor runs, exit.
+# Uses exclusive CreateFileW on logs/rebirth/monitor.lock (Windows).
+try:
+    import ctypes as _ct
+    _MON_LOCK = ROOT / "logs" / "rebirth" / "monitor.lock"
+    _MON_LOCK.parent.mkdir(parents=True, exist_ok=True)
+    _k = _ct.windll.kernel32
+    _h = _k.CreateFileW(str(_MON_LOCK), 0x40000000, 0, None, 4, 0x80, None)
+    if _h in (None, -1, 0xFFFFFFFF, 0xFFFFFFFFFFFFFFFF):
+        sys.stderr.write("rebirth_monitor: already running, exit\n")
+        sys.exit(0)
+except Exception:
+    pass
+
 from Core.config import load as load_config
 from Rebirth.master import Master, set_ready
 from Rebirth.table import Table
@@ -77,6 +91,19 @@ def _log(path: Path, msg: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as f:
         f.write("[%s] %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), msg))
+
+
+_LAST_KICK = {}
+
+
+def _recent_kick(ch, window_sec=600):
+    """9C: cooldown between any kicks per channel (default 10 min)."""
+    now = time.time()
+    last = _LAST_KICK.get(ch, 0)
+    if (now - last) < window_sec:
+        return True
+    _LAST_KICK[ch] = now
+    return False
 
 
 class Monitor:
@@ -206,6 +233,10 @@ class Monitor:
         if self.dry:
             _log(self.log, "DRY kick %s: %s" % (ch, text[:80]))
             return
+        # 9C: cooldown — no kicks within 10 min on same channel
+        if _recent_kick(ch, 600):
+            _log(self.log, "kick %s skipped (cooldown 10m)" % ch)
+            return
         try:
             import subprocess
             kick = self.cfg.path("Tools", "kick.py")
@@ -227,6 +258,14 @@ class Monitor:
         start = _num_id(info.get("range", [""])[0] or "")
         if n is None or start is None:
             return {"ch": letter, "status": "parse_fail", "last_id": lid}
+        # 9C: TABLE STALE guard. If lastId > range_end, table is behind;
+        # skip kick, log warning. Operator must fix series_table.json.
+        end_id = info.get("range", [None, None])[1]
+        end_n = _num_id(end_id) if end_id else None
+        if end_n is not None and n > end_n:
+            _log(self.log, "TABLE STALE %s lastId=%s > range_end=%s" % (letter, lid, end_id))
+            return {"ch": letter, "status": "table_stale", "last_id": lid,
+                    "range_end": end_id}
         cmds = n - start
         level = None
         if cmds >= self.th["critical"]:
