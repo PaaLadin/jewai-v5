@@ -50,3 +50,17 @@ tools/chrome-win64.zip
 Tools/tests/_testroot/
 Tools/tests/_tg_*/
 logs/guard/
+
+# Rebirth runtime state (logs/rebirth/)
+logs/rebirth/*.lock
+logs/rebirth/*.log
+logs/rebirth/*.jsonl
+logs/rebirth/*.tmp
+logs/rebirth/ready_*.json
+logs/rebirth/force_*.flag
+logs/rebirth/hold_*.flag
+logs/rebirth/pending_*.json
+logs/rebirth/monitor.lock
+
+# But keep series_table.json committed (source of truth)
+!logs/rebirth/series_table.json

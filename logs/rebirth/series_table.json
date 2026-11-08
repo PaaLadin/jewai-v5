@@ -1,0 +1,97 @@
+{
+  "_comment": "Fresh series table for JewAI v5. Each channel starts at series 1.",
+  "rule": {
+    "prefixes": [
+      "AAAA",
+      "BBAA",
+      "CCAA",
+      "DDAA"
+    ],
+    "series_block": 1000,
+    "id_format": "<PREFIX><NNNN>",
+    "note": "Series = 1000-id block. AAAB0001-0999=1A, AAAB1000-1999=2A."
+  },
+  "channels": {
+    "A": {
+      "name": "Arkady",
+      "current_series": "1A",
+      "prefix": "AAAA",
+      "range": [
+        "AAAA0001",
+        "AAAA0999"
+      ],
+      "next_series": "2A",
+      "next_range": [
+        "AAAA1000",
+        "AAAA1999"
+      ],
+      "last_id": "AAAA0001",
+      "last_id_source": "init_v5 by 9C 2026-11-08",
+      "chat_url": "",
+      "share_url": ""
+    },
+    "B": {
+      "name": "Boris",
+      "current_series": "1B",
+      "prefix": "BBAA",
+      "range": [
+        "BBAA0001",
+        "BBAA0999"
+      ],
+      "next_series": "2B",
+      "next_range": [
+        "BBAA1000",
+        "BBAA1999"
+      ],
+      "last_id": "BBAA0001",
+      "last_id_source": "init_v5 by 9C 2026-11-08",
+      "chat_url": "",
+      "share_url": ""
+    },
+    "C": {
+      "name": "Semen",
+      "current_series": "1C",
+      "prefix": "CCAA",
+      "range": [
+        "CCAA0001",
+        "CCAA0999"
+      ],
+      "next_series": "2C",
+      "next_range": [
+        "CCAA1000",
+        "CCAA1999"
+      ],
+      "last_id": "CCAA0001",
+      "last_id_source": "init_v5 by 9C 2026-11-08",
+      "chat_url": "",
+      "share_url": ""
+    },
+    "D": {
+      "name": "Dimon",
+      "current_series": "1D",
+      "prefix": "DDAA",
+      "range": [
+        "DDAA0001",
+        "DDAA0999"
+      ],
+      "next_series": "2D",
+      "next_range": [
+        "DDAA1000",
+        "DDAA1999"
+      ],
+      "last_id": "DDAA0001",
+      "last_id_source": "init_v5 by 9C 2026-11-08",
+      "chat_url": "",
+      "share_url": ""
+    }
+  },
+  "rebirth": {
+    "thresholds": {
+      "info": 500,
+      "warn": 700,
+      "critical": 850
+    },
+    "lock": "logs/rebirth/rebirth.lock",
+    "one_at_a_time": true
+  }
+}

@@ -91,7 +91,19 @@ def run_cycle(cfg: Config, letter: str, adapter: Any, cdp: Any, table: Table) ->
     prompt_text = prompt_text.replace("{{SERIES}}", next_series)
     prompt_text = prompt_text.replace("{{ID_PREFIX}}", ch.prefix)
     
-    body = header + "\n\n" + prompt_text
+    # 9C: prepend PROMPT_ACTIVATION if present (format instructions for new agent)
+    activation_text = ""
+    act_path = cfg.path("Templates", "PROMPT_ACTIVATION.md")
+    if act_path.exists():
+        try:
+            activation_text = act_path.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            activation_text = ""
+
+    if activation_text:
+        body = header + "\n\n" + activation_text + "\n\n---\n\n" + prompt_text
+    else:
+        body = header + "\n\n" + prompt_text
     t0 = time.time()
 
     try:

@@ -94,3 +94,72 @@ python Tools/see_chat.py --cdp 9222 --text-only --out logs/A/see_A.txt
 | `logs/rebirth/rebirth.lock` | Lock (TTL 1h) |
 | `logs/rebirth/rebirth_log.jsonl` | Лог циклов (OK и FAIL) |
 
+## 11. Фиксы 9C (2026-11-08) — rebirth
+
+### 11.1. Single-instance guard (Monitor)
+
+**Проблема:** одновременно жили 8 копий `Tools/rebirth_monitor.py` — каждая кикала свои reminders. Спам «Пора перерождаться» на каждом тике.
+
+**Решение:** при старте Monitor — Windows `CreateFileW` exclusive lock на `logs/rebirth/monitor.lock`. Если файл уже занят — `sys.exit(0)` с сообщением `already running`.
+
+**Когда срабатывает:** только на старте процесса. Не блокирует dry-run `--once` внутри уже запущенного демона.
+
+**Проверка:** `python Tools/rebirth_monitor.py --once` при живом демоне → `already running, exit`.
+
+### 11.2. Cooldown между киками (10 мин)
+
+**Проблема:** если уровень меняется (warn→critical) или lastId растёт каждый тик, Monitor кикал на каждый новый `lastId`.
+
+**Решение:** `_recent_kick(ch, 600)` — глобальный словарь `_LAST_KICK`. После кика по каналу — 10 минут тишины для этого канала. Остальные каналы не блокируются.
+
+### 11.3. TABLE STALE guard
+
+**Проблема:** если `series_table.json` устарел (например, `range=BBAB2000-2999`, а реально `lastId=BBAB3162`), Monitor считает `cmds = 3162-2000 = 1162` → «critical». Хотя реально `cmds = 162`.
+
+**Решение:** перед подсчётом `cmds` — проверка `n > range_end`. Если true → не кикать, писать `TABLE STALE <CH> lastId=X > range_end=Y` в `watchdog.log`. Оператор должен обновить таблицу.
+
+### 11.4. Формат handover — PROMPT_ACTIVATION
+
+**Проблема:** новый агент получал PROMPT_<next>.md без шапки про формат блоков. В старом DeepSeek `rebirth_send_prompt.py` давал литеральные `|` (модель понимала как одну строку) и не оборачивал в бэктики.
+
+**Решение:**
+- `Templates/PROMPT_ACTIVATION.md` — шапка, которая приклеивается к PROMPT.
+- `Rebirth/cycle.py` — при формировании body читает этот файл (если есть) и вставляет между header и prompt_text.
+- Явные правила: оборачивать в бэктики, каждое поле на своей строке, никаких `|`.
+
+### 11.5. `rebirth_table.update()` — только после `cycle`
+
+**Проблема (инцидент 08.11):** кто-то вызвал `rebirth_table.update('B')` напрямую, минуя master. Таблица B ушла в 14B, хотя агент был в 13B. Ложное перерождение.
+
+**Рекомендация (не реализовано в v5):** `update()` не должен двигать таблицу, если последняя запись в `rebirth_log.jsonl` для канала не `result=OK`. Проверять в начале `update()`, отказывать при отсутствии.
+
+### 11.6. Гейт 850 (проверка)
+
+**Проверено в v5:**
+- `Tools/rebirth_monitor.py` — при `cmds < 850` не кикает, в логах только `monitor ok: A=X B=Y C=Z`.
+- `Rebirth/master.py` — без `ready_<CH>.json` не запускается.
+- `Master.check_gate()` → verdict `threshold` только при `cmds >= threshold`.
+- `Master.run(live=False)` — dry_run_ok, без изменений.
+
+### 11.7. `series_table.json` для v5
+
+**Создан:** 2026-11-08, 9C.
+**Содержание:** A=1A (AAAA0001), B=1B (BBAA0001), C=1C (CCAA0001), D=1D (DDAA0001).
+**Смысл:** v5 чистый проект, начинаем с 1-й серии. По мере роста (850 команд) — rebirth сдвигает в 2A/2B/2C/2D, потом 3A... После 9999 — следующая буква префикса (AAAA→AAAB).
+
+### 11.8. Архитектурная заметка про `no_last_id`
+
+**Симптом в v5:** Monitor возвращает `no_last_id` по всем каналам A/B/C/D.
+
+**Причина:** `Monitor.last_id_of()` делает GET `http://127.0.0.1:<agent_port>/status`, ожидая поле `lastId` в JSON-ответе. Агент v5 (`Templates/extension/agent.py`) отдаёт `/ping`, `/svc_status`, `/live`, но **не `/status`**.
+
+**Варианты для будущего:**
+- (а) Агент v5 добавить `/status` с полем `lastId` (из ledger).
+- (б) Monitor изменить: `last_id_of()` читает `Profiles/<CH>/logs/ledger_<CH>.json` напрямую (файл).
+- (в) `last_id_of()` фолбэк: probe панели через CDP (как в DeepSeek).
+
+**Пока не реализовано** — Monitor в v5 работает в no-op режиме для lastId, пороги не срабатывают. Это безопасно (нет ложных киков), но и rebirth не запустится автоматически — нужен ручной ready-flag от агента/оператора.
+
+---
+
+Dixi. 9C (Семён), 2026-11-08.
