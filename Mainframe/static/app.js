@@ -34,6 +34,14 @@ function lamp(v) {
   return 'led unk';
 }
 
+function _wikiTabLoad() {
+  const f = $('wiki-frame');
+  if (!f) return;
+  if (!f.src || f.src === 'about:blank' || f.src.endsWith('/about:blank')) {
+    f.src = '/wiki';
+  }
+}
+
 function setupTabs() {
   document.querySelectorAll('.tab').forEach(function(t) {
     t.addEventListener('click', function() {
@@ -42,6 +50,7 @@ function setupTabs() {
       document.querySelectorAll('.tab-body').forEach(function(x) { x.classList.toggle('active', x.id === 'tab-' + n); });
       if (n === 'chat') loadChat();
       else if (n === 'projects') loadProjects();
+      else if (n === 'wiki') _wikiTabLoad();
       else if (n === 'logs') loadLog(state.activeLog);
       else if (n === 'roadmap') loadRoadmap();
     });

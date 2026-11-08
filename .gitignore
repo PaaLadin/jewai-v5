@@ -64,3 +64,9 @@ logs/rebirth/monitor.lock
 
 # But keep series_table.json committed (source of truth)
 !logs/rebirth/series_table.json
+
+# 9C: config.json contains SMTP passwords - never commit
+config.json
+config.json.bak_*
+.secret/
+.secret/**

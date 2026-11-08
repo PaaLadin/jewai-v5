@@ -1,30 +1,37 @@
-# Панель управления (Pip-Boy UI)
+# PANEL (v5 15D)
 
-**Файл:** `Mainframe/static/{index.html, style.css, app.js}`.
-**Назначение:** терминал управления мостом и сервисами конкретного агента.
+Актуально на 2026-11-09.
 
 ## Структура
 
-1. **Верх:** литера канала и имя агента.
-2. **Центр (CRT):** лента событий (Ledger/логи) с отметками `[IN]`/`[OUT]`. Поддерживает `SCROLL LOCK` для остановки автопрокрутки.
-3. **Низ (Светофор):** 
-   - `WALK` (белый) - мост активен, CDP и агент живы.
-   - `DON'T WALK` (красный) - пауза или сбой.
-   - Кнопка `||>` - пауза канала (шлет `[SYS] СТОП` агенту).
-4. **Индикаторы:** `CDP`, `WATCHDOG`, `RECOVERY`. Три лампы (красная/желтая/зеленая) на каждый сервис.
-5. **Переключатели:** тумблеры сервисов и поля ввода интервалов (сек) с кнопками `SAVE`.
-6. **Кнопки:** `REBOOT (CDP+AGENT)` (перезапуск агента), `SELF-TEST` (диагностика).
+Mainframe на 8670, 8 табов:
+- AGENTS — сетка карточек (лампы, cmds, кнопки PAUSE/RESUME/REBOOT/LOGIN)
+- MNEMO — мнемосхема каналов (canvas + блоки, связи)
+- CHAT — общий чат + пульт (Совещание, Пауза всем, Продолжить)
+- PERS — персональные чаты (оператор <-> канал)
+- PROJECTS — список проектов с ROADMAP.html
+- LOGS — табы chat/server/agent/svc
+- ROADMAP — просмотр ROADMAP проектов
+- СПРАВКА — wiki через iframe (/wiki)
 
-## API (Mainframe 8670)
+## API (основные)
 
-- `GET /api/status`: матрица статусов каналов.
-- `POST /api/pause`: `{channel, on}` - пауза моста (пишет флаг `pause_CH.json`).
-- `POST /api/svc`: `{channel, kind, action, interval}` - управление Watchdog/Recovery.
-- `POST /api/restart`: `{target: "agent:A"}` - перезапуск агента.
-- `POST /api/diagnose`: `{}` - запуск самодиагностики.
+- GET /api/status — каналы (agent_alive, cdp_alive, lastId, auth_status)
+- GET /api/health — матрица (content, agent, watchdog, recovery)
+- GET /api/launchpad/status — блоки (server, agent:A, chrome:A, doh)
+- POST /api/pause {channel, on}, POST /api/restart {target}
+- GET/POST /api/meeting, /api/pause_all
+- GET /api/messages, POST /api/send {from, to, text}
+- GET/POST /api/chat/<CH>
+- GET /api/logs?name=, GET /api/roadmap?name=
+- GET /api/projects, GET /wiki
 
-## Логика цветов
+## Что ушло от Pip-Boy
 
-- Зеленая лампа = сервис работает (`true`).
-- Красная = сервис остановлен или сломан (`false`).
-- Желтая = промежуточный статус (в коде заложено, но приходит только `true/false`).
+Старый Pip-Boy был: CRT-рамка, лампы AG/CH/WD/RC, светофор WALK/DONT WALK, кнопка SELF-TEST, литера канала 48pt.
+
+15D: мнемосхема с блоками каналов (canvas-анимация), мнемоника агентов, 8 табов, iframe-справка. Старая ламповая панель сохранена в Archive/9C_crt_mainframe/.
+
+## Известные баги v5
+
+См. RAG/procedures/BUGS_V5.md.

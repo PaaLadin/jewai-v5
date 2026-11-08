@@ -1,22 +1,21 @@
-# Current state (2026-10-29 02:23:14, 11B)
+# Current state (2026-11-09)
 
-## per-agent layout (NEW)
-- Profiles/<L>/{chrome, config, logs, docs, extension} - one folder per agent.
-- Profiles/<L>/config/config.json - per-channel config (channel, name, prefix, agent_port, cdp_port, agent_url, extension, model, root, chat_port).
-- Profiles/<L>/extension/ - per-channel extension copy.
-- Profiles/<L>/logs/ledger_<L>.json + stale_<L>.log - per-channel replay-guard.
-- Agents/<L> - REMOVED (single source of truth).
-- Migration: move Profiles/<L> -> agent fully moved.
+## Что работает
 
-## Extension knows own port
-- Installer writes per-channel config.
-- Tools/launcher.py after CDP start pushes agentUrl/token/channel/name into chrome.storage.local via CDP.
-- sidepanel.html: autodetect port 8666-8675 if storage empty.
-- manifest host_permissions: 8666-8675 (was 8666-8669+8671-8672).
+- Мост: агент -> блок -> диск -> [AGENT REPORT].
+- Панель 8670 (15D): 8 табов, мнемосхема, чат, персональные, проекты, логи, roadmap, справка.
+- Rebirth v5: гейт 850, hold, force, cycle, PROMPT_ACTIVATION. Live-тест не прогонялся.
+- TTS notify + stop: портировано 2026-11-08, живой тест OK.
+- Watchdog/Recovery/Autorestart: есть, гейт оператора (не перебивают печать).
+- RAG: 30 процедур, INDEX обновлён.
 
-## Config / core
-- Core/config.py: channel_root(L), channel_path(L, *parts), channel_config(L).
-- Installer ignores .agent_token (does not copy from source).
+## Что не проверено живьём
 
-## Tests: see last run
-- 21/21 pass before refactor. Refactor in progress.
+- Rebirth CDP cycle на v5.
+- Qwen/Alice адаптеры (каркасы есть).
+- LocalAI (порт 8090) - не портирован.
+- SMTP - см. BUGS_V5.
+
+## Известные баги
+
+См. RAG/procedures/BUGS_V5.md.
