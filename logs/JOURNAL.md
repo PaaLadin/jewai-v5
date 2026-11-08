@@ -1543,3 +1543,96 @@ Live-проверка на вкладке 9225 (google.com/search?...udm=50): с
 Подключение к каналу: в config.json channels.<L>.model = google. Сейчас A-D на deepseek; чтобы посадить Google вместо Qwen — добавить/переключить канал с model=google, agent_port=порт канала (напр. 8669 у D или отдельный), cdp=порт Chrome с открытой вкладкой google.com/search?udm=50.
 
 Dixi. 15D, 2026-11-06.
+
+## 2026-11-08/09 — 9C (Семён): TTS, rebirth, doc audit, settings
+
+**Сессия:** ночь 08.11 -> утро 09.11. Канал C, диапазон CCAA9000-9999.
+
+### Что сделано
+
+**TTS notify + stop — портировано из DeepSeek в v5:**
+- `Tools/notify_me.py` (новый): TTS через PowerShell SAPI + SSML, repeat, lock (O_EXCL+PID+120s stale), stop-file `runtime/notify.stop`, activity backoff.
+- `Templates/extension/agent.py`: `/notify` (запуск notify_me.py detached с `-B`), `/notify-stop` (создаёт runtime/notify.stop).
+- `Templates/extension/background.js`: `notify` + `notify-stop` handlers. Fire-and-forget fetch с AbortController 5 мин. onMessage НЕ блокируется.
+- `Templates/extension/content_deepseek.js`: `_voiceStopCheck` (1с interval). Не считает «оператор печатает», если текст начинается с `[` (это кики, [AGENT REPORT], [SYS]).
+- Синхронизировано в `Agents/C/extension/`.
+- **Тест живьём:** гимн 3x30сек, оператор напечатал после 1-го -> TTS замолк. 2-го и 3-го повтора НЕ было.
+
+**Корень залипаний DeepSeek (найден и исправлен):**
+- `content.js` шлёт notify-stop на любой ввод. `background.js` висел на fetch без таймаута. `/notify-stop` в agent.py писал в `ROOT/notify.stop`, а `notify_me.py` смотрел в `runtime/notify.stop`. Пути не совпадали.
+- Фикс: путь унифицирован, fire-and-forget, фильтр `[`.
+
+**Rebirth — починено в DeepSeek:**
+- 8 копий `la_rebirth_monitor.py` жили одновременно -> 1 (single-instance guard).
+- `series_table.json`: C 8C->9C, B 12B->13B (были устаревшие, ложные kick).
+- `_recent_kick` (cooldown 10 мин), `TABLE STALE` guard (если lastId > range_end, не кикать).
+- `rebirth_send_prompt.py`: убран `|` (модель понимала как одну строку), добавлен пример в бэктиках.
+- `activate_chat.py`: добавлен `import os` (NameError).
+- Ложный advance B (14B -> 13B) откачен.
+
+**Rebirth — портирован в v5:**
+- `Tools/rebirth_monitor.py`: single-instance, cooldown, TABLE STALE.
+- `Rebirth/cycle.py`: приклеивает `Templates/PROMPT_ACTIVATION.md` к body.
+- `Templates/PROMPT_ACTIVATION.md` (новый): правила формата блоков (бэктики, каждое поле на строке, без `|`).
+- `Templates/config.example.json`: sanitized, `rebirth_cmds: 850`.
+- `logs/rebirth/series_table.json`: A=1A, B=1B, C=1C, D=1D (чистый v5).
+- RAG/REBIRTH.md §11: 8 подпунктов фиксов.
+
+**Mainframe 15D + вики-вкладка:**
+- Wiki вынесен в отдельный таб «СПРАВКА» (iframe /wiki). 8-я вкладка.
+- +4 секции в wiki: Голос (TTS), Шестерёнка адаптеров, SMTP, Адаптеры моделей.
+
+**Аудит документации:**
+- KICK_PROTOCOL.md: `bridge_kick2/3` -> `Tools/kick.py` + `POST /api/send` (12 неверных упоминаний).
+- agent_layout.md: «Extension ABSENT» -> реально есть в `Agents/<L>/extension`.
+- PANEL.md: Pip-Boy -> 15D.
+- SYSTEM_MESSAGES.md: добавлен §9 формат [AGENT REPORT].
+- current_state.md: переписан.
+- RAG/INDEX: добавлены SMTP.md, BUGS_V5.md, AUDIT_GAP.md + порядок чтения (10 пунктов).
+- RAG/procedures/BUGS_V5.md: 7 багов (svc_api path, watchdog host, google adapter, export_share, ...).
+
+**SMTP — критическая находка:**
+- `config.json` **был в git**. Если бы туда попал SMTP-пароль — утёк в публичный jewai-v5.
+- `git rm --cached config.json`, добавлен в `.gitignore`.
+- `Mainframe/mail.py` переписан: читает `.secret/smtp.json`, fallback `config.mail` (legacy).
+- `Templates/.secret/smtp.example.json`, `RAG/procedures/SMTP.md`.
+
+**Шестерёнка адаптеров (⚙):**
+- `Mainframe/settings.py`: `get_all`, `set_adapter`. Адаптеры: deepseek, qwen, alice, google.
+- API: `GET /api/settings`, `POST /api/settings {"channel":"A","model":"qwen"}`.
+- UI: кнопка ⚙ в topbar, модалка со списком каналов.
+
+**Аудит JewAI v5 (AUDIT_9C.md):**
+- 12 секций, 21 КБ.
+- Восстановлен после truncate (op=write перезаписал секцию 11, стёр 1-10).
+- GitHub, форки на C:\, докуметация, Mainframe, voice, rebirth, рекомендации.
+
+### Грабли 9C
+
+1. `config.json` в git -> утечка секретов. Проверять `git ls-files` перед сохранением паролей.
+2. `op=write` перезаписывает целиком. AUDIT_9C был обрезан до 1 секции.
+3. Литеральные `###` и тройные бэктики в теле write рвут блок. Через `chr(35)*3` и `chr(96)*3`.
+4. Write race: отчёт OK, файла нет. Проверять read-back.
+5. Многострочный `python -c` через мост — SyntaxError. Только файлом.
+6. `__pycache__` в extension ломает Chrome (`_` префикс). `sys.dont_write_bytecode = True` + `python -B`.
+
+### Артефакты
+
+- `C:\jewai\AUDIT_9C.md` — аудит.
+- `C:\jewai\PROMPT_9C.md` — промт (устарел, см. PROMPT_10C).
+- `C:\jewai\Rebirth\SERIES_TABLE.md` — таблица серий.
+- `C:\jewai\Archive\9C_crt_mainframe\` — мой CRT в архиве.
+- `C:\jewai\RAG\procedures\BUGS_V5.md` — открытые баги.
+- `C:\jewai\RAG\procedures\SMTP.md` — SMTP.
+- `C:\jewai\RAG\procedures\VOICE_CALL.md` §9 — TTS.
+
+### Git
+
+5 коммитов в `PaaLadin/jewai-v5`:
+- `4c9c651` — wiki sections + RAG index + bugs
+- `90a9cae` — settings gear + BUG-006
+- `793dd7a` — doc audit + wiki tab + SMTP
+- `ec5d514` — TTS notify + stop
+- `ba147fc` — rebirth port v5 + audit
+
+Dixi. 9C (Семён), 2026-11-09.

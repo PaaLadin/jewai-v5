@@ -241,90 +241,34 @@ Dixi. Dora (A), 2026-11-04. Черновик v0.2, ждёт приёмки оп�
 
 ---
 
-## Status after 14D session (2026-11-05, night)
+## Status after 9C (2026-11-09, night)
 
-### Done this session
-- B-45: Chrome 156+ fix in Tools/launcher.py.
-- Activation: PROMPT_ACTIVATION.md 9K to 4K, real BEGIN/END markers.
-- send_text: CDP Input.insertText. textarea.value check.
-- Pause buffer: outbox_CH.jsonl on busy.
-- Telemetry: cfg.channel_path (was cfg.path).
-- Mnemo: 10-slot grid, placeholders, x1.4/x2/x1.75, card k=0.51, comet Tron.
-- CRT: inset 14px, border 8px, outline 3px, radius 20px, Consolas.
-- Chat: panels + feed + composer + mic. Glow + blink prompt.
-- Pers: list + feed + /api/chat/CH.
+**Фазы:**
 
-### Open (for 15D)
-- E2E: live DeepSeek to bridge to exec. Only direct HTTP tested.
-- Mnemo buttons: target=agent:X, check launchpad.boot format.
-- Comet on real ops (not inject).
-- TTS voice call operator: not implemented.
-- F5c/F5d/F6a-c: not started.
+| Фаза | Название | Статус |
+|---|---|---|
+| Ф0 | Скелет | done |
+| Ф1 | Аудит | done (AUDIT.md 44 КБ, 29 разделов + §30) |
+| Ф2 | Мост + Extension | done (мост работает, extension в Agents/<L>/extension) |
+| Ф3 | Mainframe 8670 | done (15D: 8 табов, мнемосхема, wiki) |
+| Ф4 | Rebirth v5 | partial (гейт 850, cycle; живой цикл не прогонялся) |
+| Ф5 | Надстройки (SMTP, TTS, settings) | partial (SMTP/secret, TTS+stop, settings gear готовы) |
+| Ф6 | Раскатка A/B/D/E/F | в плане |
+| Ф7 | Релиз | pending |
 
-### Pitfalls for 15D
-- web.py whitelist: new .js inline or STATIC_EXTS.
-- CDP ws: suppress_origin=True (Chrome 111+ 403).
-- CSS bump in index.html (style.css?v=X).
-- op=write >200b loses body: staging + read.
+**Закрыто 9C (2026-11-08/09):**
+- TTS notify + stop (Tools/notify_me.py, agent.py /notify, background.js fire-and-forget, content_deepseek _voiceStopCheck).
+- Rebirth (DeepSeek фикс + v5 порт: single-guard, cooldown, TABLE STALE, PROMPT_ACTIVATION).
+- Doc audit: 7 расхождений исправлено.
+- SMTP: config.json убран из git, mail.py через .secret/smtp.json.
+- Settings gear: Mainframe/settings.py, /api/settings, UI ⚙.
+- Wiki 8-я вкладка + 4 секции (Голос, Шестерёнка, SMTP, Адаптеры).
+- AUDIT_9C.md (12 секций).
 
-Dixi. 14D, 2026-11-05.
+**Открыто (см. logs/TODO.md, RAG/procedures/BUGS_V5.md):**
+- P0: живой тест rebirth v5. BUG-007 (svc_api path).
+- P1: BUG-002 (watchdog HOST), BUG-006 (export_share CDP), BUG-004 (google adapter).
+- P2: ROADMAP подрезать (сделано), SESSION_STATE (сделано).
+- P3/v6: LocalAI, STT/wake.
 
----
-
-## Status after 14D session (2026-11-05, night)
-
-### Done this session
-- B-45: Chrome 156+ fix in Tools/launcher.py.
-- Activation: PROMPT_ACTIVATION.md 9K to 4K, real BEGIN/END markers.
-- send_text: CDP Input.insertText. textarea.value check.
-- Pause buffer: outbox_CH.jsonl on busy.
-- Telemetry: cfg.channel_path (was cfg.path).
-- Mnemo: 10-slot grid, placeholders, x1.4/x2/x1.75, card k=0.51, comet Tron.
-- CRT: inset 14px, border 8px, outline 3px, radius 20px, Consolas.
-- Chat: panels + feed + composer + mic. Glow + blink prompt.
-- Pers: list + feed + /api/chat/CH.
-
-### Open (for 15D)
-- E2E: live DeepSeek to bridge to exec. Only direct HTTP tested.
-- Mnemo buttons: target=agent:X, check launchpad.boot format.
-- Comet on real ops (not inject).
-- TTS voice call operator: not implemented.
-- F5c/F5d/F6a-c: not started.
-
-### Pitfalls for 15D
-- web.py whitelist: new .js inline or STATIC_EXTS.
-- CDP ws: suppress_origin=True (Chrome 111+ 403).
-- CSS bump in index.html (style.css?v=X).
-- op=write >200b loses body: staging + read.
-
-Dixi. 14D, 2026-11-05.
-
----
-
-## Status after 14D session (2026-11-05, night)
-
-### Done this session
-- B-45: Chrome 156+ fix in Tools/launcher.py.
-- Activation: PROMPT_ACTIVATION.md 9K to 4K, real BEGIN/END markers.
-- send_text: CDP Input.insertText. textarea.value check.
-- Pause buffer: outbox_CH.jsonl on busy.
-- Telemetry: cfg.channel_path (was cfg.path).
-- Mnemo: 10-slot grid, placeholders, x1.4/x2/x1.75, card k=0.51, comet Tron.
-- CRT: inset 14px, border 8px, outline 3px, radius 20px, Consolas.
-- Chat: panels + feed + composer + mic. Glow + blink prompt.
-- Pers: list + feed + /api/chat/CH.
-
-### Open (for 15D)
-- E2E: live DeepSeek to bridge to exec. Only direct HTTP tested.
-- Mnemo buttons: target=agent:X, check launchpad.boot format.
-- Comet on real ops (not inject).
-- TTS voice call operator: not implemented.
-- F5c/F5d/F6a-c: not started.
-
-### Pitfalls for 15D
-- web.py whitelist: new .js inline or STATIC_EXTS.
-- CDP ws: suppress_origin=True (Chrome 111+ 403).
-- CSS bump in index.html (style.css?v=X).
-- op=write >200b loses body: staging + read.
-
-Dixi. 14D, 2026-11-05.
+Dixi. 9C (Семён), 2026-11-09.

@@ -689,3 +689,40 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 - [x] `RAG/INDEX.md` — обновлён.
 - [ ] Перенос в jewai — после приёмки оператора.
 - [x] B-45: Fix launcher.py for Chrome 156+ (get real Ext ID via chrome://extensions, force sidepanel, fix push_storage). Verified in test.
+## TODO после 9C (2026-11-09)
+
+9C закрыл: TTS+stop, rebirth (DeepSeek и v5), doc audit, SMTP secure, settings gear, wiki.
+
+### P0 — блокирует
+
+- [ ] **Живой тест rebirth в v5.** Гейт 850 работает (dry-run проверен). CDP cycle не прогонялся на живом агенте.
+- [ ] **BUG-007:** `svc_api.py` читает `logs/svc/<kind>_<ch>.json`, `svc.py` пишет `Profiles/<L>/logs/svc_<kind>_<L>.json`. Панель показывает watchdog=false при живом сервисе. Фикс: svc_api читает из Profiles.
+
+### P1 — важное
+
+- [ ] **BUG-002:** `watchdog.py::_kick` вызывает `Bridge.cdp.connect(port)` без `HOST`. find_chat ищет deepseek по HOST, не находит. ALIVE может не дойти.
+- [ ] **BUG-006:** `export_share` через CDP (не Playwright). Нужен перед rebirth: сохранить старый диалог. Аналог `Tools/export_share.py` на `Bridge/cdp.py`.
+- [ ] **BUG-004:** `Adapters/google.py` есть (5607 б), но не описан. Нужен `RAG/procedures/ADAPTERS.md`.
+
+### P2 — причёсывание
+
+- [ ] **ROADMAP.md** (14217 б) — 5 секций «Status after 14D» (дубли). Подрезать, оставить 1 актуальную.
+- [ ] **HANDOVER_9C.md** — создать (для 10C).
+- [ ] **PROMPT_10C.md** — создать (диапазон CCAB0000-CCAB0999).
+- [ ] **SESSION_STATE.md** в jewai — нет файла. Создать (сейчас только блок в SESSION_STATE DeepSeek).
+
+### P3 — внешнее
+
+- [ ] **v6 — LLM в v5.** LocalAI (Qwen 3B :8090) в v5 не портирован. Оператор: план на v6.
+- [ ] **STT + wake-word «Джошуа»** — в долгий ящик. На Хабре кто-то выкладывал, изучить.
+
+### Правила 9C (передать 10C)
+
+1. `config.json` в `.gitignore`. SMTP-пароли только в `.secret/smtp.json`.
+2. `op=write` перезаписывает целиком. Для append — `open(...,'a')` через `run`.
+3. Литеральные `###` и бэктики в теле write — `chr(35)*3` / `chr(96)*3`.
+4. Write race — read-back после каждого write.
+5. `__pycache__` в extension ломает Chrome. `sys.dont_write_bytecode = True`.
+6. Пуш: токен из `.secret/github_token`, inline URL, `GIT_TERMINAL_PROMPT=0`.
+7. Rebirth: гейт 850. Не обходить. force только через `force_<CH>.flag`.
+Dixi. 9C, 2026-11-09.
