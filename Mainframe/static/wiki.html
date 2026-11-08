@@ -132,5 +132,51 @@
 <a class="back" href="/">← Назад в Mainframe</a>
 
 </div>
+
+<h2 id="voice">Голос (TTS notify + stop)</h2>
+<p>Агент может позвать тебя голосом (Windows SAPI через PowerShell).</p>
+<p><b>Откуда зовётся:</b> кнопка/агент дёргает <code>POST /api/notify</code> на порту агента, либо <code>POST /api/notify</code> на Mainframe (8670) — там роут проксирует.</p>
+<p><b>Что делает:</b> <code>Tools/notify_me.py</code> говорит фразу N раз с интервалом. Если оператор начал печатать в чате — TTS замолкает (stop-файл <code>runtime/notify.stop</code>).</p>
+<p><b>Остановить вручную:</b> <code>POST /api/notify-stop</code> на порту агента.</p>
+<p><b>Если не работает:</b></p>
+<ul>
+<li>Проверь, что <code>Tools/notify_me.py</code> есть.</li>
+<li>Проверь <code>logs/runtime/notify.log</code> — там start/speak/stop/done.</li>
+<li>Если говорит дважды, хотя печатал — проверь, что content.js обновлён (фильтр по <code>[</code> в начале).</li>
+</ul>
+
+<h2 id="gear">Шестерёнка адаптеров (⚙)</h2>
+<p><b>Зачем:</b> переключить канал на другую модель без правки config.json руками.</p>
+<p><b>Где:</b> в topbar Mainframe, кнопка <b>⚙</b> справа. Открывает модалку со списком каналов.</p>
+<p><b>Доступные адаптеры:</b> deepseek, qwen, alice, google.</p>
+<p><b>Что происходит при смене:</b> пишется <code>channels.&lt;L&gt;.model</code> в <code>config.json</code>. Чтобы применить — рестарт Bridge канала: <code>stop-&lt;L&gt;.ps1 / start-&lt;L&gt;.ps1</code> или <code>svc.py restart</code>.</p>
+<p><b>API:</b> <code>GET /api/settings</code> (список), <code>POST /api/settings {"channel":"A","model":"qwen"}</code>.</p>
+<p><b>Что НЕ делает:</b> не перезапускает Chrome и не меняет cookies (профиль остаётся). Если ставишь qwen — залогинься в chat.qwen.ai в профиле A.</p>
+
+<h2 id="smtp">Настройка SMTP (email)</h2>
+<p>Файл: <b>.secret/smtp.json</b> в корне проекта (рядом с github_token).</p>
+<p>Пример: скопируй <b>Templates/.secret/smtp.example.json</b> в <b>.secret/smtp.json</b> и заполни.</p>
+<pre>{
+  "smtp_host": "smtp.yandex.ru",
+  "smtp_port": 465,
+  "from_addr": "you@yandex.ru",
+  "password": "&lt;app-password&gt;",
+  "to_addr": "operator@example.com",
+  "use_tls": true
+}</pre>
+<p><b>Провайдеры:</b> Yandex (465 SSL, пароль приложения), Gmail (587 STARTTLS, App Password), Mail.ru (465 SSL).</p>
+<p><b>Проверка:</b> <code>GET http://127.0.0.1:8670/api/mail</code> → {configured: true/false, source: "secret"|"config_legacy"|"none"}.</p>
+<p><b>Отправка агентом:</b> <code>POST /api/mail/send {"subject":"...","body":"..."}</code>.</p>
+<p><b>Безопасность:</b> пароль в git НЕ коммитим. .secret/ в .gitignore. Если утёк — сменить пароль в почте + почистить историю.</p>
+
+<h2 id="adapters">Адаптеры моделей — какие есть</h2>
+<ul>
+<li><b>deepseek</b> — chat.deepseek.com (основной, A-D).</li>
+<li><b>qwen</b> — chat.qwen.ai (канал E).</li>
+<li><b>alice</b> — alice.yandex.ru (канал F).</li>
+<li><b>google</b> — Google AI Studio (каркас, не тестировался).</li>
+</ul>
+<p>Какой адаптер сейчас у канала — видно в панели (карточка канала) или через <code>GET /api/settings</code>.</p>
+<p>Сменить — шестерёнка (⚙) в topbar. Или править <code>config.json channels.&lt;L&gt;.model</code> руками и рестарт Bridge.</p>
 </body>
 </html>

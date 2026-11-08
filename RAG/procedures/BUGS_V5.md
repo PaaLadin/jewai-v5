@@ -45,3 +45,20 @@
 - В v5: Playwright НЕ переносим. Нужен аналог через Bridge/cdp.py.
 - Приоритет: средний (нужен перед rebirth — сохранить старый диалог).
 - TODO 10C: `Tools/export_share.py` на CDP (изолированный контекст, scroll-loop, дедуп).
+
+### BUG-007: Mainframe/svc_api.py: путаница путей watchdog/recovery
+
+- svc_api.py: `_read_state(cfg, ch, kind)` читает `logs/svc/<kind>_<ch>.json`
+- Tools/svc.py пишет: `Profiles/<L>/logs/svc_<kind>_<L>.json`
+- Симптом: панель показывает watchdog=false, хотя процесс жив
+- Причина: два разных места хранения состояния
+- Решение: svc_api.py должен читать из `cfg.channel_path(ch, logs, svc_<kind>_<ch>.json)`
+- Приоритет: средний (ложные красные лампы)
+### BUG-004 (детали): Adapters/google.py есть, не задокументирован
+
+- Файл: `Adapters/google.py` (5607 б, Google AI Studio).
+- Класс: `Google`, host: `aistudio.google.com` (или AI Studio URL).
+- Bridge/run.py: `ADAPTERS[google] = (Adapters.google, Google)`.
+- В RAG не описан. В wiki нет.
+- Состояние: каркас, live-тест не прогонялся.
+- TODO: описать в RAG/procedures/ADAPTERS.md (новый файл).

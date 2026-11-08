@@ -77,3 +77,27 @@
 - `procedures/mainframe_gap.md` - разрыв между старым и новым Mainframe.
 
 ### Связано: Templates/PROMPT_ACTIVATION.md
+
+## Дополнено 9C (2026-11-09)
+
+### procedures/ - исправления и новые
+
+- `procedures/SMTP.md` - SMTP email: настройка через .secret/smtp.json (оператор + агенты).
+- `procedures/BUGS_V5.md` - известные баги v5 (svc_api path, watchdog host, google adapter, export_share).
+
+### architecture/
+
+- `architecture/AUDIT_GAP.md` - разрывы аудита (разница old vs v5), что осталось не перенесено.
+
+### Порядок чтения (для нового агента v5)
+
+1. `procedures/BEHAVIOR.md` - первым.
+2. `procedures/KICK_PROTOCOL.md` - как отвечать коллегам (Tools/kick.py, POST /api/send).
+3. `procedures/SYSTEM_MESSAGES.md` - маркеры, [AGENT REPORT], [ALIVE?].
+4. `procedures/ALIVE_AND_SERVICES.md` - watchdog, recovery, autorestart.
+5. `procedures/REBIRTH.md` - перерождение (порог 850).
+6. `procedures/VOICE_CALL.md` - TTS notify + stop.
+7. `procedures/SMTP.md` - если задача про почту.
+8. `procedures/agent_layout.md` - где что лежит (Agents/, Profiles/, Templates/).
+9. `architecture/ARCHITECTURE.md` - общая схема.
+10. `architecture/AUDIT.md` + `AUDIT_GAP.md` - что перенесли и что нет.
