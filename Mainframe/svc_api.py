@@ -29,7 +29,7 @@ def _nw() -> int:
 
 
 def _read_state(cfg: Config, ch: str, kind: str) -> bool:
-    p = cfg.path("logs", "svc", ("%s_%s.json" % (kind, ch)))
+    p = cfg.channel_path(ch.upper(), "logs", ("svc_%s_%s.json" % (kind, ch.upper()))) if cfg.channel_path(ch.upper(), "logs", ("svc_%s_%s.json" % (kind, ch.upper()))).exists() else cfg.path("logs", "svc", ("%s_%s.json" % (kind, ch)))
     if not p.exists():
         return False
     try:
