@@ -35,11 +35,7 @@ function lamp(v) {
 }
 
 function _wikiTabLoad() {
-  const f = $('wiki-frame');
-  if (!f) return;
-  if (!f.src || f.src === 'about:blank' || f.src.endsWith('/about:blank')) {
-    f.src = '/wiki';
-  }
+  if (window.__wikiInit) window.__wikiInit();
 }
 
 function setupTabs() {

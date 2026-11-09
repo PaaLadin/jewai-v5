@@ -145,8 +145,15 @@
 </section>
 </main>
 <section class="tab-body" id="tab-wiki">
-  <div class="wiki-wrap">
-    <iframe id="wiki-frame" class="wiki-frame" src="about:blank" title="Справка JewAI"></iframe>
+  <div class="wiki-layout">
+    <aside class="wiki-side">
+      <div class="wiki-search"><input id="wikiSearch" type="search" placeholder="поиск..." autocomplete="off"></div>
+      <div class="wiki-tree" id="wikiTree"></div>
+      <div class="wiki-search-results" id="wikiSearchResults"></div>
+    </aside>
+    <section class="wiki-main">
+      <article class="wiki-content" id="wikiContent">загрузка...</article>
+    </section>
   </div>
 </section>
 
@@ -156,6 +163,7 @@
 
 
 
+<script src="/wiki.js"></script>
 <script src="/app.js?v=f2"></script>
 <script src="/chat.js?v=f2"></script>
 <script src="/pers.js?v=f2"></script>

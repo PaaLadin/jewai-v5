@@ -121,6 +121,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, f.read_bytes(), ct)
             return self._send(404, b"missing", "text/plain")
         # 7C B-12: wiki page (how-to for beginners)
+        if path == "/api/wiki":
+            f = static_dir / "wiki_data.json"
+            if f.exists():
+                body = f.read_text(encoding="utf-8").encode("utf-8")
+                return self._send(200, body, "application/json; charset=utf-8")
+            return self._send(404, b"wiki_data.json missing", "text/plain")
         if path in ("/wiki", "/wiki.html", "/help", "/howto"):
             f = static_dir / "wiki.html"
             if f.exists():

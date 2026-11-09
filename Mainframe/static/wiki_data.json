@@ -1,0 +1,232 @@
+{
+ "pages": {
+  "functions/bridge": {
+   "title": "Мост: команды и отчёты",
+   "tags": [
+    "мост",
+    "блоки",
+    "agent-report"
+   ],
+   "related": [
+    "functions/channels"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Мост: команды и отчёты</h1>\n<p>Агент оборачивает команду в <strong>блок</strong> внутри трёх обратных кавычек. Мост ловит,\nшлёт локальному Python, тот выполняет и возвращает <code>[AGENT REPORT]</code>.</p>\n<h2>Формат блока</h2>\n<ul>\n<li>Открывающая строка: три решётки + BEGIN + три решётки</li>\n<li>Внутри — <code>id</code>, <code>op</code>, <code>path</code> (каждый на своей строке)</li>\n<li>Закрывающая: три решётки + END + три решётки</li>\n</ul>\n<h2>Операции</h2>\n<table>\n<thead>\n<tr>\n<th>op</th>\n<th>Что</th>\n<th>Поля</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>read</td>\n<td>прочитать</td>\n<td>path</td>\n</tr>\n<tr>\n<td>list</td>\n<td>список</td>\n<td>path</td>\n</tr>\n<tr>\n<td>write</td>\n<td>записать</td>\n<td>path + тело</td>\n</tr>\n<tr>\n<td>mkdir</td>\n<td>создать папку</td>\n<td>path</td>\n</tr>\n<tr>\n<td>delete</td>\n<td>удалить</td>\n<td>path</td>\n</tr>\n<tr>\n<td>hash</td>\n<td>sha256</td>\n<td>path</td>\n</tr>\n<tr>\n<td>run</td>\n<td>выполнить</td>\n<td>cmd, cwd, timeout</td>\n</tr>\n</tbody>\n</table>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/channels\" class=\"wiki-link\">functions/channels</a></li>\n</ul>"
+  },
+  "functions/channels": {
+   "title": "Каналы и агенты",
+   "tags": [
+    "каналы",
+    "агенты",
+    "порты",
+    "cdp"
+   ],
+   "related": [
+    "functions/bridge",
+    "functions/rebirth",
+    "functions/panel"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Каналы и агенты</h1>\n<p>JewAI v5 поддерживает 4 канала в отдельных профилях Chrome. Каждый — свой чат,\nсвой логин, свои логи. Порты базовые из <code>config.json</code> (8680+).</p>\n<h2>Таблица (базовые значения)</h2>\n<table>\n<thead>\n<tr>\n<th>Буква</th>\n<th>Агент</th>\n<th>CDP</th>\n<th>Кто</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>A</td>\n<td>8680</td>\n<td>9122</td>\n<td>Аркадий (ведущий)</td>\n</tr>\n<tr>\n<td>B</td>\n<td>8681</td>\n<td>9123</td>\n<td>Борис</td>\n</tr>\n<tr>\n<td>C</td>\n<td>8682</td>\n<td>9124</td>\n<td>Семён</td>\n</tr>\n<tr>\n<td>D</td>\n<td>8683</td>\n<td>9125</td>\n<td>Димон</td>\n</tr>\n</tbody>\n</table>\n<p>Точные порты — в <code>Profiles\\&lt;L&gt;\\config\\config.json</code> (могут быть сдвинуты при\nустановке, если базовые заняты).</p>\n<h2>Профили Chrome</h2>\n<p><code>Profiles/&lt;L&gt;/chrome/</code> — профиль Chrome с логинами. Не удалять.</p>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/bridge\" class=\"wiki-link\">functions/bridge</a></li>\n<li><a href=\"#/functions/panel\" class=\"wiki-link\">functions/panel</a></li>\n<li><a href=\"#/functions/rebirth\" class=\"wiki-link\">functions/rebirth</a></li>\n</ul>"
+  },
+  "functions/files": {
+   "title": "Где что лежит",
+   "tags": [
+    "файлы",
+    "структура",
+    "пути"
+   ],
+   "related": [
+    "functions/channels"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Где что лежит</h1>\n<h2>Корень <code>C:\\jewai</code></h2>\n<table>\n<thead>\n<tr>\n<th>Путь</th>\n<th>Что</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>Core/</code></td>\n<td>config, общие утилиты</td>\n</tr>\n<tr>\n<td><code>Bridge/</code></td>\n<td>cdp, read, exec, daemon, run</td>\n</tr>\n<tr>\n<td><code>Adapters/</code></td>\n<td>deepseek, qwen, alice</td>\n</tr>\n<tr>\n<td><code>Tools/</code></td>\n<td>launcher, boot, diagnose, rebirth_monitor, guard</td>\n</tr>\n<tr>\n<td><code>Mainframe/</code></td>\n<td>панель 8670 (web.py, static/)</td>\n</tr>\n<tr>\n<td><code>Rebirth/</code></td>\n<td>table, master, onboard</td>\n</tr>\n<tr>\n<td><code>Profiles/&lt;L&gt;/</code></td>\n<td>профили Chrome, логи, конфиг канала</td>\n</tr>\n<tr>\n<td><code>RAG/</code></td>\n<td>база знаний агентов</td>\n</tr>\n<tr>\n<td><code>Templates/</code></td>\n<td>PROMPT_ACTIVATION, шаблоны</td>\n</tr>\n<tr>\n<td><code>logs/</code></td>\n<td>общие логи</td>\n</tr>\n<tr>\n<td><code>wiki/</code></td>\n<td>эта вики (markdown)</td>\n</tr>\n</tbody>\n</table>\n<h2>Не удалять</h2>\n<p><code>Profiles/&lt;L&gt;/chrome/</code> — профили Chrome с логинами.</p>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/panel\" class=\"wiki-link\">functions/panel</a></li>\n</ul>"
+  },
+  "functions/install": {
+   "title": "Установка и запуск",
+   "tags": [
+    "установка",
+    "install",
+    "запуск"
+   ],
+   "related": [
+    "functions/channels"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Установка и запуск</h1>\n<p>JewAI v5 ставится из <code>install.bat</code> в корне репозитория.</p>\n<h2>Порядок</h2>\n<ol>\n<li>Скопировать <code>C:\\jewai</code> в целевую папку (или запустить <code>install.bat</code>).</li>\n<li>Installer спросит имя, каналы, порты.</li>\n<li>Создаст <code>config.json</code>, <code>Profiles/&lt;L&gt;/</code>, скачает Chrome for Testing.</li>\n<li>Запустит launcher — откроются окна Chrome с расширением.</li>\n<li>Логин в чаты через каждое окно.</li>\n</ol>\n<h2>Запуск после установки</h2>\n<ul>\n<li><code>launchers\\start-all.ps1</code> — все каналы</li>\n<li><code>launchers\\start-A.ps1</code> — только A</li>\n<li>Mainframe поднимается сам на 8670</li>\n</ul>\n<h2>Остановка</h2>\n<ul>\n<li><code>launchers\\stop-all.ps1</code> — мягко</li>\n<li>Mainframe → AGENTS → STOP для одного канала</li>\n</ul>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/keys\" class=\"wiki-link\">functions/keys</a></li>\n<li><a href=\"#/functions/panel\" class=\"wiki-link\">functions/panel</a></li>\n</ul>"
+  },
+  "functions/keys": {
+   "title": "Ключи и токены",
+   "tags": [
+    "безопасность",
+    "токены",
+    "ключи"
+   ],
+   "related": [
+    "functions/install"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Ключи и токены</h1>\n<h2>Где лежат</h2>\n<ul>\n<li><code>config.json</code> — порты, каналы, имена (не коммитится, в .gitignore)</li>\n<li><code>.agent_token</code> — токен агента, генерируется при install</li>\n<li><code>.secret</code> — секретные ключи (SMTP, API)</li>\n<li><code>Profiles/&lt;L&gt;/config/config.json</code> — конфиг агента</li>\n</ul>\n<h2>Правила</h2>\n<ul>\n<li><strong>Секреты НЕ в git.</strong> Проверено <code>.gitignore</code>.</li>\n<li>Токен один на install (root), не per-channel.</li>\n<li>При смене токена — рестарт всех агентов.</li>\n</ul>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/install\" class=\"wiki-link\">functions/install</a></li>\n</ul>"
+  },
+  "functions/panel": {
+   "title": "Mainframe — панель оператора (8670)",
+   "tags": [
+    "панель",
+    "mainframe",
+    "8670"
+   ],
+   "related": [
+    "functions/channels"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Mainframe</h1>\n<p>Адрес: <code>http://127.0.0.1:8670/</code></p>\n<h2>Вкладки</h2>\n<table>\n<thead>\n<tr>\n<th>Вкладка</th>\n<th>Что</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>AGENTS</td>\n<td>Каналы: агенты, статусы, пауза/резюм, self-test</td>\n</tr>\n<tr>\n<td>MNEMO</td>\n<td>Живая схема связей</td>\n</tr>\n<tr>\n<td>CHAT</td>\n<td>Общий чат</td>\n</tr>\n<tr>\n<td>PERS</td>\n<td>Персональные чаты оператор↔агент</td>\n</tr>\n<tr>\n<td>PROJECTS</td>\n<td>Список проектов</td>\n</tr>\n<tr>\n<td>LOGS</td>\n<td>Хвосты логов</td>\n</tr>\n<tr>\n<td>ROADMAP</td>\n<td>План проекта</td>\n</tr>\n<tr>\n<td>WIKI</td>\n<td>Эта вики</td>\n</tr>\n</tbody>\n</table>\n<h2>API</h2>\n<ul>\n<li><code>GET /api/status</code> — состояние каналов</li>\n<li><code>GET /api/svc</code> — состояние сервисов (watchdog, recovery)</li>\n<li><code>POST /api/chat/&lt;CH&gt;</code> — персональный чат</li>\n<li><code>GET /api/wiki</code> — данные вики (JSON)</li>\n</ul>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/channels\" class=\"wiki-link\">functions/channels</a></li>\n<li><a href=\"#/functions/bridge\" class=\"wiki-link\">functions/bridge</a></li>\n</ul>"
+  },
+  "functions/rebirth": {
+   "title": "Перерождение (rebirth)",
+   "tags": [
+    "rebirth",
+    "серии",
+    "handover"
+   ],
+   "related": [
+    "functions/channels"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Перерождение</h1>\n<p>Когда чат агента переполняется (порог <strong>850 команд</strong> в серии), JewAI открывает\nновый чат, отправляет промт активации, обновляет таблицу серий.</p>\n<h2>Порядок</h2>\n<ol>\n<li>Агент видит, что пора (метрика <code>cmds_from_start</code>).</li>\n<li>Готовит артефакты: <code>HANDOVER.md</code>, <code>TODO.md</code>, <code>PROMPT_&lt;следующая&gt;.md</code>, дневник.</li>\n<li>Ставит флаг.</li>\n<li><code>rebirth_monitor</code> видит флаг, запускает rebirth-цикл.</li>\n<li>Таблица серий сдвигается.</li>\n<li>Новый агент читает PROMPT и стартует.</li>\n</ol>\n<h2>Только A/B/C/D</h2>\n<p>E и F (Qwen, Алиса) не перерождаются. Правило оператора 26.10.</p>\n<h2>Подробнее</h2>\n<p>См. <code>RAG/procedures/REBIRTH.md</code> и <code>RAG/procedures/rebirth_scope.md</code>.</p>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/channels\" class=\"wiki-link\">functions/channels</a></li>\n</ul>"
+  },
+  "index": {
+   "title": "Вики JewAI v5",
+   "tags": [
+    "главная",
+    "обзор"
+   ],
+   "related": [],
+   "updated": "2026-11-09",
+   "html": "<h1>Вики JewAI v5</h1>\n<p>JewAI v5 — чистый переписанный проект. Мост между браузерным чатом с ИИ и локальным компьютером.\nВерсия <code>0.1.0-dev</code>, 4 канала A/B/C/D.</p>\n<h2>Функции системы</h2>\n<ul>\n<li><a href=\"#/functions/channels\" class=\"wiki-link\">functions/channels</a> — Каналы и агенты</li>\n<li><a href=\"#/functions/bridge\" class=\"wiki-link\">functions/bridge</a> — Мост: команды и отчёты</li>\n<li><a href=\"#/functions/rebirth\" class=\"wiki-link\">functions/rebirth</a> — Перерождение</li>\n<li><a href=\"#/functions/panel\" class=\"wiki-link\">functions/panel</a> — Mainframe (панель оператора 8670)</li>\n<li><a href=\"#/functions/install\" class=\"wiki-link\">functions/install</a> — Установка и запуск</li>\n<li><a href=\"#/functions/keys\" class=\"wiki-link\">functions/keys</a> — Ключи и токены</li>\n<li><a href=\"#/functions/files\" class=\"wiki-link\">functions/files</a> — Где что лежит</li>\n</ul>\n<h2>Категории</h2>\n<ul>\n<li><a href=\"#/troubleshooting/index\" class=\"wiki-link\">troubleshooting/index</a> — <strong>Траблшутинг</strong></li>\n</ul>\n<h2>Про RAG</h2>\n<p>Технические подробности — в RAG: <code>C:\\jewai\\RAG\\</code> (<code>architecture/</code>, <code>procedures/</code>, <code>knowledge/</code>).\nВики — для оператора, RAG — для агентов.</p>"
+  },
+  "troubleshooting/bridge_no_response": {
+   "title": "Мост не отвечает",
+   "tags": [
+    "мост",
+    "agent-report"
+   ],
+   "related": [
+    "functions/bridge"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Мост не отвечает</h1>\n<p>Симптом: отправил блок, <code>[AGENT REPORT]</code> не приходит.</p>\n<h2>Проверки</h2>\n<ol>\n<li><strong>Агент /ping</strong> — <code>curl http://127.0.0.1:8680/ping</code>. Если нет — Chrome не запущен.</li>\n<li><strong>Формат блока</strong> — открывающая строка, <code>id/op/path</code> каждый на своей строке,\n   закрывающая. Лишние теги (<code>tool_call</code>, <code>result</code>) — мост не парсит.</li>\n<li><strong>Токен</strong> — <code>.agent_token</code> в корне совпадает у агента и моста.</li>\n<li><strong>Префикс id</strong> — должен соответствовать каналу.</li>\n</ol>\n<h2>Если ничего не помогло</h2>\n<p>Reload extension: <code>chrome://extensions/</code> → JewAI → Reload.</p>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/bridge\" class=\"wiki-link\">functions/bridge</a></li>\n<li><a href=\"#/functions/keys\" class=\"wiki-link\">functions/keys</a></li>\n</ul>"
+  },
+  "troubleshooting/cdp_closed": {
+   "title": "CDP не отвечает (Chrome упал)",
+   "tags": [
+    "cdp",
+    "chrome",
+    "падение"
+   ],
+   "related": [
+    "functions/channels"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>CDP не отвечает</h1>\n<p>Симптом: <code>/api/status</code> показывает CDP=false, панель красная.</p>\n<h2>Причины</h2>\n<ul>\n<li>Chrome канала упал (закрыт руками, краш).</li>\n<li>Порт CDP занят другим процессом.</li>\n<li>Профиль Chrome повреждён.</li>\n</ul>\n<h2>Лечение</h2>\n<ol>\n<li>Mainframe → AGENTS → STOP на канале.</li>\n<li>START — Chrome перезапустится.</li>\n<li>Если не помогает — <code>launchers\\start-&lt;L&gt;.ps1</code> вручную.</li>\n<li>Профиль повреждён: переименовать <code>Profiles/&lt;L&gt;/chrome/</code> → <code>chrome.bak</code>,\n   запустить заново, залогиниться.</li>\n</ol>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/channels\" class=\"wiki-link\">functions/channels</a></li>\n<li><a href=\"#/troubleshooting/panel_stuck\" class=\"wiki-link\">troubleshooting/panel_stuck</a></li>\n</ul>"
+  },
+  "troubleshooting/index": {
+   "title": "Траблшутинг",
+   "tags": [
+    "index",
+    "troubleshooting"
+   ],
+   "related": [],
+   "updated": "2026-11-09",
+   "html": "<h1>Траблшутинг</h1>\n<p>Что делать, если что-то сломалось.</p>\n<ul>\n<li><a href=\"#/troubleshooting/panel_stuck\" class=\"wiki-link\">troubleshooting/panel_stuck</a> — панель залипла</li>\n<li><a href=\"#/troubleshooting/bridge_no_response\" class=\"wiki-link\">troubleshooting/bridge_no_response</a> — мост не отвечает</li>\n<li><a href=\"#/troubleshooting/cdp_closed\" class=\"wiki-link\">troubleshooting/cdp_closed</a> — CDP не отвечает, Chrome упал</li>\n<li><a href=\"#/troubleshooting/rebirth_failed\" class=\"wiki-link\">troubleshooting/rebirth_failed</a> — rebirth не создал новый чат</li>\n</ul>"
+  },
+  "troubleshooting/panel_stuck": {
+   "title": "Панель залипла (PANEL-STUCK)",
+   "tags": [
+    "panel-stuck",
+    "lastid",
+    "зависание"
+   ],
+   "related": [
+    "functions/panel"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Панель залипла (PANEL-STUCK)</h1>\n<p>Симптом: команды не исполняются, lastId стоит, в логах «Panel-stuck: N команд висят &gt;90s».</p>\n<h2>Диагностика</h2>\n<ol>\n<li><code>GET http://127.0.0.1:8670/api/status</code> — какой lastId видит сервер.</li>\n<li>Открыть Chrome канала через CDP (<code>chrome://inspect</code>), посмотреть textarea.</li>\n<li>Если textarea непустой — возможно, оператор пишет.</li>\n</ol>\n<h2>Лечение</h2>\n<ol>\n<li>Reload extension: <code>chrome://extensions/</code> → JewAI → Reload.</li>\n<li>Перезапустить bridge канала через Mainframe (STOP → START).</li>\n<li>Повтор с новым id.</li>\n</ol>\n<h2>Частые причины</h2>\n<ul>\n<li>Двойной сервер на 8670 (netstat покажет два LISTEN).</li>\n<li>Stale recentlySentIds в chrome.storage — нужен reload extension.</li>\n<li>Перегрузка сервера при поллинге.</li>\n</ul>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/panel\" class=\"wiki-link\">functions/panel</a></li>\n<li><a href=\"#/functions/channels\" class=\"wiki-link\">functions/channels</a></li>\n</ul>"
+  },
+  "troubleshooting/rebirth_failed": {
+   "title": "Rebirth не создал новый чат",
+   "tags": [
+    "rebirth",
+    "ошибка"
+   ],
+   "related": [
+    "functions/rebirth"
+   ],
+   "updated": "2026-11-09",
+   "html": "<h1>Rebirth не создал новый чат</h1>\n<p>Симптом: монитор видит флаг, но новый чат не появился.</p>\n<h2>Проверки</h2>\n<ol>\n<li><code>logs/rebirth_log.jsonl</code> — последние записи, <code>result</code> и <code>new_url</code>.</li>\n<li>Таблица серий (<code>Rebirth/table.py</code> показывает текущее состояние).</li>\n<li>PROMPT — <code>Templates/PROMPT_&lt;следующая&gt;.md</code> существует.</li>\n</ol>\n<h2>Guard</h2>\n<p>Если <code>new_url</code> пуст — rebirth НЕ должен сдвигать таблицу. Иначе следующий\nагент получит неправильный диапазон и не запустится.</p>\n<h2>Ручной запуск</h2>\n<p>Через Mainframe → AGENTS → кнопка REBIRTH на канале.</p>\n<h2>См. также</h2>\n<ul>\n<li><a href=\"#/functions/rebirth\" class=\"wiki-link\">functions/rebirth</a></li>\n</ul>"
+  }
+ },
+ "tree": {
+  "functions": [
+   [
+    "functions/panel",
+    "Mainframe — панель оператора (8670)"
+   ],
+   [
+    "functions/files",
+    "Где что лежит"
+   ],
+   [
+    "functions/channels",
+    "Каналы и агенты"
+   ],
+   [
+    "functions/keys",
+    "Ключи и токены"
+   ],
+   [
+    "functions/bridge",
+    "Мост: команды и отчёты"
+   ],
+   [
+    "functions/rebirth",
+    "Перерождение (rebirth)"
+   ],
+   [
+    "functions/install",
+    "Установка и запуск"
+   ]
+  ],
+  "troubleshooting": [
+   [
+    "troubleshooting/cdp_closed",
+    "CDP не отвечает (Chrome упал)"
+   ],
+   [
+    "troubleshooting/rebirth_failed",
+    "Rebirth не создал новый чат"
+   ],
+   [
+    "troubleshooting/bridge_no_response",
+    "Мост не отвечает"
+   ],
+   [
+    "troubleshooting/panel_stuck",
+    "Панель залипла (PANEL-STUCK)"
+   ],
+   [
+    "troubleshooting/index",
+    "Траблшутинг"
+   ]
+  ]
+ },
+ "index": {
+  "title": "Вики JewAI v5",
+  "tags": [
+   "главная",
+   "обзор"
+  ],
+  "related": [],
+  "updated": "2026-11-09",
+  "html": "<h1>Вики JewAI v5</h1>\n<p>JewAI v5 — чистый переписанный проект. Мост между браузерным чатом с ИИ и локальным компьютером.\nВерсия <code>0.1.0-dev</code>, 4 канала A/B/C/D.</p>\n<h2>Функции системы</h2>\n<ul>\n<li><a href=\"#/functions/channels\" class=\"wiki-link\">functions/channels</a> — Каналы и агенты</li>\n<li><a href=\"#/functions/bridge\" class=\"wiki-link\">functions/bridge</a> — Мост: команды и отчёты</li>\n<li><a href=\"#/functions/rebirth\" class=\"wiki-link\">functions/rebirth</a> — Перерождение</li>\n<li><a href=\"#/functions/panel\" class=\"wiki-link\">functions/panel</a> — Mainframe (панель оператора 8670)</li>\n<li><a href=\"#/functions/install\" class=\"wiki-link\">functions/install</a> — Установка и запуск</li>\n<li><a href=\"#/functions/keys\" class=\"wiki-link\">functions/keys</a> — Ключи и токены</li>\n<li><a href=\"#/functions/files\" class=\"wiki-link\">functions/files</a> — Где что лежит</li>\n</ul>\n<h2>Категории</h2>\n<ul>\n<li><a href=\"#/troubleshooting/index\" class=\"wiki-link\">troubleshooting/index</a> — <strong>Траблшутинг</strong></li>\n</ul>\n<h2>Про RAG</h2>\n<p>Технические подробности — в RAG: <code>C:\\jewai\\RAG\\</code> (<code>architecture/</code>, <code>procedures/</code>, <code>knowledge/</code>).\nВики — для оператора, RAG — для агентов.</p>"
+ }
+}
