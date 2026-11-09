@@ -57,7 +57,7 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 - [x] **B-30:** уже закрыт. `app.js load()` вызывает `loadPauseState()`, читает `/pause_state`, пишет в `chrome.storage.local.set({paused})`. Проверено 10C read.
 - [x] **B-12:** уже закрыт. Wiki-таб + `/wiki` + 18 файлов в `Mainframe/`. Проверено 10C.
 - [ ] **checkStuck живьём:** проверить авто-клик Continue/Retry в `content_deepseek.js` на живом залипании.
-- [ ] **TEST OUT paths:** вынести OUT-пути из хардкода `C:/jewai` в `Path(__file__).resolve().parent.parent.parent` (динамически от расположения теста).
+- [x] **TEST OUT paths:** FIXED 2026-11-09 (10C). 21 тест-файл переведён на `ROOT = Path(__file__).resolve().parent.parent.parent`. Тесты вскрыли старый баг `test_imports` (ждал 6 каналов A-F, реально 4 A-D) - тоже исправлен. 25/25 наборов зелёные.
 
 ## P3 / v6 - внешнее
 

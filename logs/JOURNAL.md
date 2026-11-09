@@ -1882,3 +1882,26 @@ checkStuck живьём (нужен живой Chrome), TEST OUT paths (косм
 - Возможно: поднять CDP, живой тест export_share.
 
 Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - TEST OUT paths + test_imports fix
+
+**Фаза:** тесты.
+
+**Что сделано:**
+- 21 тест-файл: `ROOT = Path(r'C:/JewAI')` -> `ROOT = Path(__file__).resolve().parent.parent.parent`
+  (тест работает из любого расположения).
+- test_ext_agent.py: SRC_AGENT = ROOT/"Templates"/"extension"/"agent.py".
+- Патч вскрыл старый скрытый баг: test_imports.py раньше читал C:/JewAI (а там старый config,
+  6 каналов A-F), не C:/jewai. Теперь тест проверяет реальный конфиг -> assert провалился.
+  Факт: config.json содержит A-D (E/F не активны, см. SESSION_STATE). Тест исправлен.
+
+**Чем проверено:**
+- 25/25 наборов: smoke, daemon, cycle, timing, boot, rebirth, cdp, ext, doh, edge, fs, run,
+  adapters, council, f5, f5_configured, google, launchpad, mf_8671, mf_ext, srv_subproc,
+  guard, rebirth_monitor, export_share, cdp_find_chat. Все rc=0.
+
+**Что дальше:**
+- Открыты: B-06 (UI rewrite, нужен оператор), P0 rebirth live (B/D), checkStuck live,
+  v6 LLM, STT, раскатка B-F (оператор).
+
+Dixi. 10C (Семён), 2026-11-09.

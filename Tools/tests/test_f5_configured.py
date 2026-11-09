@@ -7,7 +7,7 @@ from email import message_from_bytes
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-ROOT = Path(r'C:/JewAI')
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 import dataclasses

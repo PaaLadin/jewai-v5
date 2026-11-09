@@ -9,7 +9,7 @@ env JEWAI_CONFIG=tmp/config.json, probe, terminate.
 import json, os, shutil, socket, subprocess, sys, tempfile, time, urllib.request, urllib.error
 from pathlib import Path
 
-ROOT = Path(r'C:/JewAI')
+ROOT = Path(__file__).resolve().parent.parent.parent
 OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_server_subprocess.txt')
 lines = []
 fails = 0

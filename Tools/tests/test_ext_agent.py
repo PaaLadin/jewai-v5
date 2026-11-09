@@ -9,7 +9,8 @@ Steps:
 import json, os, shutil, socket, subprocess, sys, tempfile, time, urllib.request, urllib.error
 from pathlib import Path
 
-SRC_AGENT = Path(r'C:/JewAI/Templates/extension/agent.py')
+ROOT = Path(__file__).resolve().parent.parent.parent
+SRC_AGENT = ROOT / "Templates" / "extension" / "agent.py"
 OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_ext_agent_test.txt')
 lines = []
 fails = 0

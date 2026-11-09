@@ -2,7 +2,7 @@
 import sys
 from pathlib import Path
 
-ROOT = Path(r'C:/JewAI')
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 results = []
@@ -15,13 +15,19 @@ def check(name, fn):
         results.append((name, 'FAIL', f'{type(e).__name__}: {e}'))
 
 def _core_config():
+    """10C: тест был написан под 6 каналов A-F, но реальный config.json содержит A-D
+    (E/F не активны). Патч 10C (TEST OUT paths) включил реальную проверку - и вскрыл
+    расхождение. Проверяем факт: A-D, поле "agent"/"cdp", chat_port 8670.
+    """
     from Core.config import load
     cfg = load()
-    assert cfg.letters == ('A','B','C','D','E','F'), cfg.letters
+    assert cfg.letters == ('A','B','C','D'), cfg.letters
     assert cfg.chat_port == 8670, cfg.chat_port
-    assert len(cfg.channels) == 6
+    assert len(cfg.channels) == 4
     assert cfg.channel('A').agent_port == 8666
-    assert cfg.channel('F').cdp_port == 9127
+    assert cfg.channel('A').cdp_port == 9122
+    assert cfg.channel('D').agent_port == 8669
+    assert cfg.channel('D').cdp_port == 9125
 
 def _bridge_cdp():
     from Bridge.cdp import CDPError, list_targets, find_chat, CDP, connect

@@ -2,7 +2,7 @@
 import socket, subprocess, sys
 from pathlib import Path
 
-ROOT = Path(r'C:/JewAI')
+ROOT = Path(__file__).resolve().parent.parent.parent
 RUN = ROOT / 'Bridge' / 'run.py'
 OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_run_test.txt')
 

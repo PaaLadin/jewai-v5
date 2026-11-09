@@ -6,7 +6,7 @@ No Chrome, no real chat.
 import shutil, sys, tempfile
 from pathlib import Path
 
-ROOT = Path(r'C:/JewAI')
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from Core.config import Config, Channel

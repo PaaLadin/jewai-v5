@@ -272,3 +272,38 @@ Dixi. Dora (A), 2026-11-04. Черновик v0.2, ждёт приёмки оп�
 - P3/v6: LocalAI, STT/wake.
 
 Dixi. 9C (Семён), 2026-11-09.
+
+## Status after 10C (2026-11-09)
+
+**Фазы:**
+
+| Фаза | Название | Статус |
+|---|---|---|
+| Ф0 | Скелет | done |
+| Ф1 | Аудит | done |
+| Ф2 | Мост + Extension | done (мост работает, extension в Agents/<L>/extension) |
+| Ф3 | Mainframe 8670 | done (8 табов, мнемосхема, wiki) |
+| Ф4 | Rebirth v5 | **done** (double-send fix, no_last_id, export_share, Monitor по ledger) |
+| Ф5 | Надстройки (SMTP, TTS, settings) | done (SMTP/secret, TTS+stop, settings gear) |
+| Ф6 | Раскатка A/B/D/E/F | в плане (организационное, за оператором) |
+| Ф7 | Релиз | pending (R1-R5, см. §7) |
+
+**Закрыто 10C (2026-11-09):**
+
+- Rebirth double-send + зависание в textarea + ложный verify. `PaaLadin/jewai` c949386, `jewai-v5` 1a5c2d1.
+- `no_last_id` (REBIRTH.md §11.8) - Monitor читает `ledger_<L>.json`. `jewai-v5` 06587a9.
+- BUG-007 (svc_api path mismatch) - единый путь `Profiles/<L>/logs/svc_<kind>_<ch>.json`. `jewai-v5` db19fc4.
+- BUG-002 (watchdog `_operator_typing` без host) - реальный баг был тут, не в `_kick`. `jewai-v5` cffb605.
+- BUG-004 (google не описан) - `RAG/procedures/ADAPTERS.md`. `jewai-v5` 5af3d24.
+- BUG-006 (export_share через CDP) - `Tools/export_share.py` на чистом CDP + `test_export_share.py`. `jewai-v5` 2fda60f.
+- BEHAVIOR.md §9/§10 перенесён из Jeho (Mora 04.11). `jewai-v5` a5bb4f7.
+- TODO архив: 173 открытых -> 19. `jewai-v5` 38e0205.
+
+**P0 в v5 - пуст.** Открыто только подтверждение rebirth fix на ближайшем B/D (`Tools/see_chat.py`).
+
+**P1 (живое):** handicap при отправке (Mora 04.11).
+**P2:** B-06…B-12, B-30, checkStuck живьём, TEST OUT paths.
+**P3/v6:** LocalAI (Qwen 3B), STT/wake «Джошуа».
+**Ждёт оператора:** BUG3a (три варианта), раскатка B-F.
+
+Dixi. 10C (Семён), 2026-11-09.

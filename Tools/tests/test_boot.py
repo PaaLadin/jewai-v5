@@ -2,7 +2,7 @@
 import json, socket, subprocess, sys
 from pathlib import Path
 
-ROOT = Path(r'C:/JewAI')
+ROOT = Path(__file__).resolve().parent.parent.parent
 BOOT = ROOT / 'Tools' / 'boot.py'
 OUT = Path(__file__).resolve().parent.parent.parent / Path('logs/runtime/_v5_boot_test.txt')
 

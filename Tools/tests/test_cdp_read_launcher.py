@@ -3,7 +3,7 @@ Tools/launcher.py dry-run and helpers."""
 import json, socket, sys, threading, urllib.request, urllib.error, shutil, tempfile
 from pathlib import Path
 
-ROOT = Path(r'C:/JewAI')
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 import dataclasses

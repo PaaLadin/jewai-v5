@@ -2,7 +2,7 @@
 import json, shutil, sys, tempfile, threading, time, urllib.request, urllib.error, socket
 from pathlib import Path
 
-ROOT = Path(r'C:/JewAI')
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 import dataclasses
