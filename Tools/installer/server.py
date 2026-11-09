@@ -209,8 +209,48 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if os.path.exists(tpl_src) and not os.path.exists(tpl_dst):
                         shutil.copyfile(tpl_src, tpl_dst)
                         log(f"Seeded logs/{tpl_name}")
+            # 10C BUG-008/BUG-009: ищем CfT (Chrome for Testing) ДО init профилей.
+            # Без CfT Chrome 137+ игнорирует --load-extension (B-44) - блокер.
+            def _find_cft():
+                cands = []
+                cands.append((os.path.join(ROOT, "tools", "chrome-for-testing"), "ROOT/tools"))
+                cands.append((os.path.join(target, "tools", "chrome-for-testing"), "target/tools"))
+                _cfgp = os.path.join(target, "config.json")
+                if os.path.exists(_cfgp):
+                    try:
+                        _c = json.loads(open(_cfgp, encoding="utf-8").read())
+                        _cp = _c.get("chrome_path") or ""
+                        if _cp and os.path.isfile(_cp) and "chrome-for-testing" in _cp.lower():
+                            cands.insert(0, (os.path.dirname(_cp), "config.chrome_path"))
+                    except Exception:
+                        pass
+                for _dir, _src in cands:
+                    _exe = os.path.join(_dir, "chrome.exe")
+                    if os.path.isfile(_exe):
+                        return _exe, _src
+                return None, None
+            cft_exe, cft_src_name = _find_cft()
+            if cft_exe is None:
+                raise RuntimeError(
+                    "10C BUG-008: Chrome for Testing (CfT) не найден.\n"
+                    "  Проверены: ROOT/tools, target/tools, config.chrome_path.\n"
+                    "  Без CfT Chrome 137+ НЕ загрузит unpacked extension (B-44).\n"
+                    "  Скачай: https://googlechromelabs.github.io/chrome-for-testing/\n"
+                    "  Положи chrome.exe + DLL в <source>/tools/chrome-for-testing/.\n"
+                    "  Или задай config.chrome_path перед запуском installer."
+                )
+            log(f"10C CfT: {cft_exe} (from {cft_src_name})")
+            _tc = os.path.join(target, "config.json")
+            try:
+                _tcj = json.loads(open(_tc, encoding="utf-8").read()) if os.path.exists(_tc) else {}
+                _tcj["chrome_path"] = cft_exe
+                open(_tc, "w", encoding="utf-8").write(json.dumps(_tcj, ensure_ascii=False, indent=2))
+                log(f"10C chrome_path -> {cft_exe}")
+            except Exception as _e:
+                log(f"10C chrome_path write WARN: {_e}")
             letters = list("ABCDEFGHIJ")[:n]
             chrome_paths = [
+                cft_exe,  # 10C: CfT приоритет (системный Chrome 137+ не грузит ext)
                 r"C:\Program Files\Google\Chrome\Application\chrome.exe",
                 r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
             ]
@@ -345,7 +385,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     else:
                         log(f"CfT copy failed: {_e}")
             else:
-                log("Chrome for Testing not found in source (tools/chrome-for-testing); using regular Chrome")
+                log("10C: CfT copy skipped (CfT already in use: %s)" % cft_exe)
             # 11B: generate launchers (start/stop/restart per channel + server)
             # 11B: remove stale launchers copied from source before regenerating
             stale_la = os.path.join(target, 'Tools', 'launchers')
