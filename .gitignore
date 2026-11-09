@@ -70,3 +70,7 @@ config.json
 config.json.bak_*
 .secret/
 .secret/**
+
+AUDIT_*.md
+PROMPT_*.md
+SESSION_STATE.md
