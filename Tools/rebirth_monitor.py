@@ -152,16 +152,36 @@ class Monitor:
                                 "cmds": cmds}, ensure_ascii=False) + "\n")
 
     def last_id_of(self, letter: str) -> str | None:
-        """Probe lastId via agent /status or panel. Adapter-free: use agent HTTP."""
+        """10C: lastId via agent /status OR ledger_<L>.json watermark.
+
+        10C-REBIRTH-NO-LAST-ID fix:
+          v5 agent.py has /ping, /svc_status, /live - но нет /status.
+          Раньше Monitor всегда возвращал no_last_id и порог 850 не работал.
+          Теперь после неудачи HTTP читаем Profiles/<L>/logs/ledger_<L>.json
+          (поле watermark - последний исполненный id, пишет Bridge/exec.py::Ledger).
+        """
         ch = self.cfg.channel(letter)
         url = "http://127.0.0.1:%d/status" % ch.agent_port
         try:
             import urllib.request
             with urllib.request.urlopen(url, timeout=5) as r:
                 j = json.loads(r.read().decode("utf-8", "replace"))
-            return j.get("lastId") or j.get("last_id")
+            lid = j.get("lastId") or j.get("last_id")
+            if lid:
+                return lid
         except Exception:
-            return None
+            pass
+        # Fallback: читаем ledger-файл напрямую
+        try:
+            lp = self.cfg.channel_path(letter, "logs", "ledger_%s.json" % letter)
+            if lp.exists():
+                data = json.loads(lp.read_text(encoding="utf-8"))
+                wm = str(data.get("watermark") or "").strip()
+                if wm:
+                    return wm
+        except Exception:
+            pass
+        return None
 
     def pending_path(self, ch: str) -> Path:
         return self.dir / ("pending_%s.json" % ch)

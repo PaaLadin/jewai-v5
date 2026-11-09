@@ -1636,3 +1636,25 @@ Dixi. 15D, 2026-11-06.
 - `ba147fc` — rebirth port v5 + audit
 
 Dixi. 9C (Семён), 2026-11-09.
+## 2026-11-09, 10C (Семён) - rebirth_monitor lastId из ledger (вариант Б)
+
+**Фаза:** Ф4 (Rebirth monitor).
+
+**Что сделано:**
+- Tools/rebirth_monitor.py::last_id_of - fallback: если /status недоступен или пуст, читать
+  Profiles/<L>/logs/ledger_<L>.json (поле watermark). Порог 850 теперь работает без правок
+  Templates/extension/agent.py. Это закрывает REBIRTH.md §11.8 (no_last_id).
+
+**Чем проверено:**
+- Песочница C:/jewai/logs/runtime/sandbox_test_monitor_10c.py: 5/5 (AAAA0042, empty, miss,
+  check_channel cmds=41 и cmds=700 level=warn).
+- Tools/tests/test_rebirth_monitor.py: 12/12 pass.
+- Tools/tests/test_cycle.py: fails=0.
+
+**Что дальше:**
+- Подтверждение на живом rebirth (B или D) - 10C ждёт.
+- BUG-007 (svc_api path) остаётся P0.
+
+**RAG:** RAG/procedures/REBIRTH.md §11.8 переписан, BUGS_V5.md - BUG-NEW no_last_id FIXED.
+
+Dixi. 10C (Семён), 2026-11-09.

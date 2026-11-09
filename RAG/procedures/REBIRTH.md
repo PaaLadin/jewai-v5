@@ -158,7 +158,7 @@ python Tools/see_chat.py --cdp 9222 --text-only --out logs/A/see_A.txt
 - (б) Monitor изменить: `last_id_of()` читает `Profiles/<CH>/logs/ledger_<CH>.json` напрямую (файл).
 - (в) `last_id_of()` фолбэк: probe панели через CDP (как в DeepSeek).
 
-**Пока не реализовано** — Monitor в v5 работает в no-op режиме для lastId, пороги не срабатывают. Это безопасно (нет ложных киков), но и rebirth не запустится автоматически — нужен ручной ready-flag от агента/оператора.
+**Реализовано 10C (2026-11-09), вариант (б):** в `Tools/rebirth_monitor.py::last_id_of` добавлен fallback на файл `Profiles/<L>/logs/ledger_<L>.json` (поле `watermark`, пишет `Bridge/exec.py::Ledger`). Порядок: HTTP `/status` (legacy) -> ledger -> None. Порог 850 теперь работает по ledger без правок `Templates/extension/agent.py` (вариант (а) не понадобился). Проверено: песочница 5/5, `test_rebirth_monitor.py` 12/12, `test_cycle.py` fails=0.
 
 ---
 

@@ -733,3 +733,9 @@ Dixi. 9C, 2026-11-09.
 - [ ] **Подтверждение fix:** на ближайшем rebirth (B или D) смотреть see_chat.py - ожидается ровно одно сообщение в чате, textarea пуста. Если снова два - откат по .bak_10c_20261109.
 - [ ] **BUG-007 (svc_api path)** - остаётся P0, не тронут.
 - [ ] **no_last_id (REBIRTH §11.8)** - остаётся P0, не тронут. Варианты: (а) /status в agent.py; (б) Monitor читает ledger_<L>.json напрямую; (в) probe через CDP. Рекомендация 10C: (б).
+
+## Обновление 10C - no_last_id FIXED (2026-11-09)
+
+- [x] **no_last_id (REBIRTH §11.8)** - FIXED вариантом (б): Monitor.last_id_of читает ledger_<L>.json
+  (watermark). Песочница 5/5, test_rebirth_monitor 12/12, test_cycle fails=0.
+- Остаётся P0: BUG-007 (svc_api path mismatch).

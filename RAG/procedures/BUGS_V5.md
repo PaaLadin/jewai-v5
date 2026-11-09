@@ -91,3 +91,27 @@ Git:
 - C:/jewai/Adapters/deepseek.py.bak_10c_20261109
 
 Подтверждение: на ближайшем rebirth (B или D) — see_chat.py, ожидается ровно одно сообщение в чате, textarea пуста.
+
+### BUG-NEW: rebirth_monitor no_last_id (все каналы) — FIXED
+
+Симптом: Monitor.last_id_of() делает GET http://127.0.0.1:<agent_port>/status,
+но v5 agent.py отдаёт /ping, /svc_status, /live, а /status отсутствует.
+Итог: lastId всегда None -> rebirth по порогу 850 не срабатывает в v5.
+Это REBIRTH.md §11.8 (9C описал, не починил).
+
+Fix 10C (вариант Б, оператор):
+- Tools/rebirth_monitor.py::last_id_of - добавлен fallback на файл
+  Profiles/<L>/logs/ledger_<L>.json (поле watermark, пишет Bridge/exec.py::Ledger).
+- Порядок: HTTP /status (legacy, если агент расширен) -> ledger_<L>.json -> None.
+
+Проверено:
+- песочница: 5/5 (HTTP down + ledger=AAAA0042 -> AAAA0042; ledger empty -> None;
+  ledger miss -> None; check_channel start AAAA0001+watermark AAAA0042 -> cmds=41;
+  watermark AAAA0701 -> cmds=700 level=warn).
+- Tools/tests/test_rebirth_monitor.py: 12/12 pass.
+- Tools/tests/test_cycle.py: fails=0.
+
+Git:
+- PaaLadin/jewai-v5: (этот коммит)
+
+RAG: RAG/procedures/REBIRTH.md §11.8 переписан.
