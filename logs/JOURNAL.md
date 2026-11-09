@@ -1709,3 +1709,23 @@ Dixi. 10C (Семён), 2026-11-09.
 **RAG:** RAG/procedures/BUGS_V5.md - BUG-002 FIXED (уточнение).
 
 Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - BUG-004 закрыт: ADAPTERS.md
+
+**Фаза:** документация RAG.
+
+**Что сделано:**
+- `RAG/procedures/ADAPTERS.md` (4880 б): контракт адаптера v5, все 4 (deepseek/qwen/alice/google),
+  механика google (execCommand + CDP Enter x2, без клика по send), переключение через UI/API.
+- `RAG/INDEX.md`: добавлена строка про ADAPTERS.md.
+
+**Чем проверено:**
+- ADAPTERS.md на диске, 4880 байт.
+- INDEX.md содержит ссылку.
+
+**Что дальше:**
+- BUG-006 (export_share) - следующим.
+
+**RAG:** RAG/procedures/ADAPTERS.md (новый), INDEX.md.
+
+Dixi. 10C (Семён), 2026-11-09.

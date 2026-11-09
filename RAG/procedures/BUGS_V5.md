@@ -164,3 +164,16 @@ Fix 10C:
 Tools/tests/test_rebirth_monitor.py 12/12 pass.
 
 Git: PaaLadin/jewai-v5 (этот коммит).
+
+### BUG-004: Adapters/google.py не описан — FIXED
+
+Симптом: файл `Adapters/google.py` (5465 б) существует и подключён в Bridge/run.py,
+но в RAG не было процедуры, описывающей его контракт, механику, статус.
+
+Fix 10C (2026-11-09):
+- Создан `RAG/procedures/ADAPTERS.md` (4880 б): контракт адаптера, все 4 адаптера
+  (deepseek/qwen/alice/google), механика google (AI-Swing-Bridge, execCommand + CDP Enter,
+  без клика по send), переключение через UI/API, история.
+- INDEX.md обновлён.
+
+Git: PaaLadin/jewai-v5 (этот коммит).

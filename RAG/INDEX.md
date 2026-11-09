@@ -83,6 +83,7 @@
 ### procedures/ - исправления и новые
 
 - `procedures/SMTP.md` - SMTP email: настройка через .secret/smtp.json (оператор + агенты).
+- `procedures/ADAPTERS.md` - адаптеры моделей v5 (deepseek/qwen/alice/google), контракт, переключение (10C, закрывает BUG-004).
 - `procedures/BUGS_V5.md` - известные баги v5 (svc_api path, watchdog host, google adapter, export_share).
 
 ### architecture/

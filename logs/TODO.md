@@ -43,7 +43,7 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 
 - [x] **BUG-002:** FIXED 2026-11-09 (10C). Реально баг был в `_operator_typing` (connect без host -> TypeError -> False). Теперь watchdog видит набор оператора. `_kick` уже был с host.
 - [ ] **BUG-006:** `export_share` через CDP (не Playwright). Нужен перед rebirth: сохранить старый диалог. Аналог `Tools/export_share.py` на `Bridge/cdp.py` (изолированный контекст, scroll-loop, дедуп). DeepSeek-версия: `C:/DeepSeek/sandbox/export_share.py` (Playwright, не переносим).
-- [ ] **BUG-004:** `Adapters/google.py` есть (5607 б), но не описан. Нужен `RAG/procedures/ADAPTERS.md`.
+- [x] **BUG-004:** FIXED 2026-11-09 (10C). `RAG/procedures/ADAPTERS.md` создан (4880 б), INDEX обновлён.
 - [ ] **Handicap при отправке (Mora 04.11):** `Bridge/daemon.py` после отправки `[AGENT REPORT]` в чат ставит паузу 7-10 с (outbox как при paused). Настройка `config.json -> timeouts.handicap_ms` (default 7000). Действует для любого источника текста. Исполнитель: Dora или Mora.
 - [ ] **BEHAVIOR.md §9/§10 в jewai:** Mora 04.11 сделала в Jeho, в jewai не перенесено. §9 дисциплина отправки, §10 не переиспользовать id. Живой файл `C:/jewai/RAG/procedures/BEHAVIOR.md` секций 9-10 НЕ содержит (проверено 10C).
 
