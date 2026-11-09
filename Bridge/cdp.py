@@ -39,17 +39,28 @@ def list_targets(port: int, timeout: float = 5.0) -> list[dict]:
 
 
 def find_chat(port: int, host: str, marker: str = "/a/chat/s/") -> dict | None:
-    """Найти вкладку чата по host в URL. marker — типовой путь чата."""
-    for t in list_targets(port):
+    """Найти вкладку чата по host в URL. marker - типовой путь чата.
+
+    10C BUG3a (вариант в): fallback только при ровно одном page-табе с HOST.
+    Раньше fallback возвращал первый таб с host - на одном CDP могут жить
+    DeepSeek + Qwen/Alice, прицеп к чужому табу. Теперь:
+      1. Сначала ищем точно: host в URL + marker (/a/chat/s/).
+      2. Если не нашли - смотрим все page-табы с этим host. Ровно один -> его.
+         Ноль или несколько -> None (пусть оператор решит, что делать: закрыть
+         лишние вкладки или открыть нужный чат).
+    """
+    targets = list_targets(port)
+    for t in targets:
         if t.get("type") != "page":
             continue
         u = t.get("url", "")
         if host in u and marker in u:
             return t
-    # fallback: только host
-    for t in list_targets(port):
-        if t.get("type") == "page" and host in t.get("url", ""):
-            return t
+    # fallback: ровно один page-таб с host
+    cands = [t for t in targets
+             if t.get("type") == "page" and host in t.get("url", "")]
+    if len(cands) == 1:
+        return cands[0]
     return None
 
 

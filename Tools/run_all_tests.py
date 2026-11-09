@@ -36,6 +36,7 @@ TESTS = [
     ('test_rebirth_monitor.py', 'rebirth monitor thresholds'),
     ('test_google_adapter.py', 'google adapter (execCommand+CDP Enter)'),
     ('test_export_share.py', 'export_share NDA+header'),
+    ('test_cdp_find_chat.py', 'find_chat fallback (BUG3a)'),
 ]
 
 lines = []
