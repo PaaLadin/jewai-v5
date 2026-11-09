@@ -159,6 +159,16 @@ class Daemon:
         except Exception:
             return True
 
+    def _note_send(self) -> None:
+        """10C handicap: любая успешная отправка в чат продлевает паузу.
+
+        Раньше _handicap_until ставился только после [AGENT REPORT]. Kick/outbox
+        отправлялись в обход - следующий отчёт мог уйти сразу за киком.
+        Теперь handicap действует для любого источника текста (Mora 04.11).
+        """
+        self._last_send_at = time.time()
+        self._handicap_until = time.time() + self.handicap_ms / 1000.0
+
     def _send_or_buffer(self, cdp: CDP, text: str) -> bool:
         """If paused or busy — append to outbox; else send to chat."""
         if self._is_paused():
@@ -184,6 +194,7 @@ class Daemon:
                 return True
             except Exception:
                 return False
+        self._note_send()
         return True
 
     def _drain_outbox(self, cdp: CDP) -> bool:
@@ -208,6 +219,7 @@ class Daemon:
                 ok = self.adapter.send_text(cdp, text)
                 if not ok:
                     remaining.append(ln); break
+                self._note_send()
                 time.sleep(2.0)
             except Exception:
                 remaining.append(ln); break
@@ -291,6 +303,7 @@ class Daemon:
                 ok = self.adapter.send_text(cdp, text)
                 if not ok:
                     remaining.append(ln); break
+                self._note_send()
                 time.sleep(1.0)
             except Exception:
                 remaining.append(ln); break
@@ -416,10 +429,8 @@ class Daemon:
                 next_id = self._next_id(max_id)
                 report = self._fmt_report(results, next_id)
                 self._set_status("Отправка [AGENT REPORT]")
-                sent = self._send_or_buffer(cdp, report)
-                if sent:
-                    self._last_send_at = time.time()
-                    self._handicap_until = time.time() + self.handicap_ms / 1000.0
+                # 10C: _send_or_buffer уже вызывает _note_send
+                self._send_or_buffer(cdp, report)
         finally:
             self._inflight_since = 0.0
             try:

@@ -1774,3 +1774,48 @@ Dixi. 10C (Семён), 2026-11-09.
 **RAG:** RAG/procedures/BUGS_V5.md (BUG-006 FIXED), RAG/procedures/REBIRTH.md §7.5.
 
 Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - handicap для любого send_text
+
+**Фаза:** Ф2 (мост).
+
+**Что сделано:**
+- Bridge/daemon.py: добавлен helper _note_send() (last_send + handicap_until).
+- Вызовы: _send_or_buffer, _drain_outbox, _drain_kick_buffer - любой успешный send_text
+  продлевает handicap (default 7000мс).
+- Раньше handicap ставился только после [AGENT REPORT], кики/буфер шли в обход.
+
+**Чем проверено:**
+- test_daemon.py fails=0.
+- test_daemon_timing.py fails=0.
+- py_compile Bridge/daemon.py OK.
+
+**Что дальше:**
+- P2: B-07/B-08 (onboarding) - следующим.
+- BUG3a - решение принято: вариант (в), к работе.
+
+**RAG:** RAG/procedures/BUGS_V5.md - FEAT-NEW handicap FIXED.
+
+Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - BUG3a find_chat fallback (вариант в)
+
+**Фаза:** Ф2 (мост).
+
+**Что сделано:**
+- Bridge/cdp.py::find_chat: точный match (host + marker) -> иначе fallback ТОЛЬКО при
+  ровно одном page-табе с host -> иначе None.
+- Устраняет прицеп к чужому табу (DeepSeek + Qwen/Alice на одном CDP).
+- Решение оператора: вариант (в).
+- Tools/tests/test_cdp_find_chat.py (5 проверок) + в run_all_tests.
+
+**Чем проверено:**
+- test_cdp_find_chat.py 5/5.
+- py_compile Bridge/cdp.py OK.
+
+**Что дальше:**
+- P2: B-07/B-08 onboarding - следующим.
+
+**RAG:** RAG/procedures/BUGS_V5.md - BUG3a FIXED.
+
+Dixi. 10C (Семён), 2026-11-09.

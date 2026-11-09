@@ -44,7 +44,7 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 - [x] **BUG-002:** FIXED 2026-11-09 (10C). Реально баг был в `_operator_typing` (connect без host -> TypeError -> False). Теперь watchdog видит набор оператора. `_kick` уже был с host.
 - [x] **BUG-006:** FIXED 2026-11-09 (10C). `Tools/export_share.py` на чистом CDP (без Playwright): изолированный context, scroll-loop, дедуп, NDA-redact, header. `test_export_share.py` 14/14. Живой тест на share - при следующем rebirth.
 - [x] **BUG-004:** FIXED 2026-11-09 (10C). `RAG/procedures/ADAPTERS.md` создан (4880 б), INDEX обновлён.
-- [ ] **Handicap при отправке (Mora 04.11):** `Bridge/daemon.py` после отправки `[AGENT REPORT]` в чат ставит паузу 7-10 с (outbox как при paused). Настройка `config.json -> timeouts.handicap_ms` (default 7000). Действует для любого источника текста. Исполнитель: Dora или Mora.
+- [x] **Handicap при отправке (Mora 04.11):** FIXED 2026-11-09 (10C). Базовая пауза была; добавлен `_note_send()` helper и вызовы в `_send_or_buffer`/`_drain_outbox`/`_drain_kick_buffer`. Теперь любой send_text продлевает handicap_ms (default 7000). test_daemon + test_daemon_timing зелёные.
 - [x] **BEHAVIOR.md §9/§10 в jewai:** FIXED 2026-11-09 (10C). Перенесено из `C:/Jeho/RAG/procedures/BEHAVIOR.md` (2550 б). §9 дисциплина отправки, §10 не переиспользовать id. Файл 6652 б, секции 9-10 на месте.
 
 ## P2 - причёсывание
@@ -66,10 +66,7 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 
 ## Ждёт решения оператора
 
-- [ ] **BUG3a (Bridge/DeepSeek redirect chat -> www).** Три варианта, файл `Bridge/cdp.py` не тронут, бэкап `.bak_7c_bug3a` есть:
-    - (а) `--no-proxy` при первом запуске + ручной логин.
-    - (б) фиксированный URL чата `/a/chat/s/<id>`.
-    - (в) fallback только если на CDP ровно один page-таб.
+- [x] **BUG3a (Bridge/DeepSeek redirect chat -> www).** FIXED 2026-11-09 (10C) вариантом (в): `find_chat` fallback только при ровно одном page-табе с host. `test_cdp_find_chat.py` 5/5.
 - [ ] **Раскатка B-F:** каналы, живые агенты, приёмка. Организационное, за оператором.
 
 ## Правила 9C (наследие, действует)

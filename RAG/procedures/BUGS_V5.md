@@ -200,3 +200,44 @@ Usage: `python Tools/export_share.py --url <share_url> --out <path.md> --port 92
 При следующем rebirth C/D (после see_chat) - проверить на живом share.
 
 Git: PaaLadin/jewai-v5 (этот коммит).
+
+### FEAT-NEW: handicap для любого источника текста (Mora 04.11) — FIXED
+
+Симптом (по Mora 04.11): после [AGENT REPORT] мост должен ставить паузу 7-10с,
+не писать в textarea, чтобы агент успел подумать. Действует для любого источника
+(блок, кик, system message).
+
+Уточнение 10C:
+- Базовая пауза УЖЕ была в Bridge/daemon.py: self.handicap_ms из config, default 7000,
+  проверка в tick() перед стабильностью. Ставилась только после [AGENT REPORT].
+- Дырка: kick_buffer и outbox в _drain_* отправляли в обход, handicap не продлевался.
+  Следующий [AGENT REPORT] мог уйти сразу за киком.
+
+Fix 10C (2026-11-09):
+- Bridge/daemon.py::_note_send() - helper: _last_send_at + _handicap_until = now + handicap_ms.
+- Вызывается в 3 местах: _send_or_buffer, _drain_outbox, _drain_kick_buffer.
+- Значит handicap действует для ЛЮБОГО успешного send_text в чат.
+
+Проверено: Tools/tests/test_daemon.py fails=0, test_daemon_timing.py fails=0.
+
+Git: PaaLadin/jewai-v5 (этот коммит).
+
+### BUG3a: find_chat fallback -> неверный таб (DeepSeek redirect) — FIXED
+
+Симптом (7C, 2026-11-02): DeepSeek после логина редиректит `chat.deepseek.com` ->
+`www.deepseek.com/en`. `find_chat` fallback возвращает ПЕРВЫЙ page-таб с host,
+на одном CDP могут жить DeepSeek + Qwen/Alice - прицеп к чужому табу.
+
+Решение оператора: вариант (в) - fallback только при ровно одном page-табе.
+
+Fix 10C (2026-11-09):
+- `Bridge/cdp.py::find_chat`:
+  1. Сначала точный match (host + marker `/a/chat/s/`).
+  2. Иначе - смотрим все page-табы с этим host. Ровно один -> его.
+  3. Ноль или несколько -> None (пусть оператор решит: закрыть лишние вкладки
+     или открыть нужный чат).
+
+Проверено: `Tools/tests/test_cdp_find_chat.py` 5/5 (exact, fallback one, fallback many,
+zero, exact wins over fallback).
+
+Git: PaaLadin/jewai-v5 (этот коммит).
