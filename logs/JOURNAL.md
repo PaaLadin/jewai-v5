@@ -1961,3 +1961,41 @@ Dixi. 10C (Семён), 2026-11-10.
 **RAG:** RAG/procedures/BUGS_V5.md - BUG-008/009 FIXED.
 
 Dixi. 10C (Семён), 2026-11-10.
+
+## 2026-11-10 ночь, 10C (Семён) - HERETIC: аудит + фиксы (BUG-010..013)
+
+**Фаза:** Ф0 (установка) + Ф2 (мост).
+
+**Контекст:** оператор раскатал v5 на HERETIC (192.168.1.15) из git clone.
+CfT скачался (10C fix работает), extension скопирован, но sidepanel UNKNOWN,
+агент не найден, Bridge A не стартует. Оператор ушёл спать, сказал "починить к утру".
+
+**Что нашёл:**
+- BUG-010 (P0): нет websocket-client -> launcher push_storage FAILED, Bridge A не стартует.
+- BUG-011 (P1): autodetect 8666..8675 не покрывает 8680.
+- BUG-012 (P2): НЕ баг (кнопки mnemo настоящие, просто Bridge мёртв).
+- BUG-013 (P0): НЕ баг (agent.py находит root .agent_token walk-up).
+
+**Что сделал:**
+- requirements.txt (websocket-client>=1.7.0).
+- server.py: проверка deps до copy + авто pip install. chrome_path в config dict (был баг:
+  писался до config-дампа и терялся).
+- Templates/extension/app.js: autodetect 8660..8720 + Mainframe fallback + save-to-storage.
+- SMB-канал на HERETIC: sync source (jewai-v5-main) + target, 204 файла.
+- HERETIC Startup: `_10c_fix.bat` (pip install + kill + install.bat + self-cleanup).
+- HERETIC `_10C_README.md` - инструкция на утро.
+
+**Чем проверено:**
+- py_compile server.py OK.
+- get_cft.py --check, --dry-run.
+- Скобки в app.js сбалансированы.
+- SMB sync: 204 copied, 325 skipped, 0 errors.
+
+**Что осталось (утром):**
+- HERETIC: логин -> Startup->_10c_fix.bat -> installer -> проверить install.log.
+- Проверить BUG-014/015 (Bridge A, ledger).
+- Если всё работает - закрыть HERETIC-блок в TODO.
+
+**RAG:** RAG/procedures/BUGS_V5.md - BUG-010/011 FIXED, BUG-012/013 verified non-bugs.
+
+Dixi. 10C (Семён), 2026-11-10 ~02:15.

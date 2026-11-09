@@ -138,6 +138,64 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 f.write(msg + "\n")
         try:
             log(f"Target: {target}")
+            # 10C BUG-010: проверка Python-зависимостей до копирования.
+            # websocket-client нужен для Bridge/cdp.py, Tools/launcher.py push_storage,
+            # Tools/kick_cdp.py. Без него Bridge A не стартует, launcher не пушит agentUrl
+            # в sidepanel -> autodetect не находит агента -> "Failed to fetch".
+            _need = ["websocket"]
+            _missing = []
+            for _m in _need:
+                try:
+                    __import__(_m)
+                except Exception:
+                    _missing.append(_m)
+            if _missing:
+                log(f"10C: отсутствуют Python-модули: {_missing}. Пробую pip install...")
+                _req_src = os.path.join(ROOT, "requirements.txt")
+                _req_dst = os.path.join(target, "requirements.txt")
+                _pip_ok = False
+                if os.path.isfile(_req_src):
+                    try:
+                        _r = subprocess.run(
+                            [sys.executable, "-m", "pip", "install", "-r", _req_src],
+                            capture_output=True, text=True, timeout=180,
+                            encoding="utf-8", errors="replace")
+                        for _ln in (_r.stdout or "").splitlines()[-4:]:
+                            log("  pip: " + _ln[:200])
+                        if _r.returncode != 0:
+                            log("  pip rc=%d stderr=%s" % (_r.returncode, (_r.stderr or "")[:300]))
+                        else:
+                            _pip_ok = True
+                    except Exception as _e:
+                        log("  pip ERR: %r" % _e)
+                else:
+                    # fallback: ставим поштучно известные пакеты
+                    _pkg = {"websocket": "websocket-client"}
+                    try:
+                        _args = [sys.executable, "-m", "pip", "install"] + [_pkg.get(m, m) for m in _missing]
+                        _r = subprocess.run(_args, capture_output=True, text=True, timeout=180,
+                                            encoding="utf-8", errors="replace")
+                        if _r.returncode == 0:
+                            _pip_ok = True
+                    except Exception as _e:
+                        log("  pip ERR: %r" % _e)
+                # Перепроверка
+                _still = []
+                for _m in _missing:
+                    try:
+                        __import__(_m)
+                    except Exception:
+                        _still.append(_m)
+                if _still:
+                    raise RuntimeError(
+                        "10C BUG-010: не установлены Python-модули: %s.\n"
+                        "  Ручной фикс: %s -m pip install -r %s\n"
+                        "  На Windows Python из Microsoft Store ограничивает pip - поставь с python.org."
+                        % (_still, sys.executable, _req_src)
+                    )
+                log("10C: зависимости OK после установки.")
+            else:
+                log("10C: Python-зависимости в порядке.")
             # 8C B-35: kill Chrome BEFORE copying CfT from ROOT (was WinError 32).
             _kill_chrome_for_target(target, log)
             _kill_python_for_target(target, log)
@@ -338,7 +396,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "channels": channels,
                 "thresholds": {"rebirth_cmds": 850},
                 "timeouts": {"cdp": 5, "poll_ms": 2000, "stable_ms": 1200},
-                "version": "0.1.0-dev"
+                "version": "0.1.0-dev",
+                # 10C BUG-008: chrome_path обязателен в config - launcher его читает.
+                # Иначе Chrome A ищется в системных путях -> 137+ не грузит unpacked ext.
+                "chrome_path": cft_exe if cft_exe else "",
             }
             with open(os.path.join(target, 'config.json'), 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)

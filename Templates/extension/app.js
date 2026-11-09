@@ -139,7 +139,9 @@ async function load() {
   if (!agentBaseUrl) {
     addLog('Поиск агента (autodetect 8666..8675)...');
     let foundList = [];
-    for (let port = 8666; port <= 8675; port++) {
+    // 10C BUG-011: installer может ставить base_port 8680+; старые порты 8666..8675 не покрывают.
+    // Расширили до 8660..8720 (61 порт), плюс fallback через Mainframe /api/status ниже.
+    for (let port = 8660; port <= 8720; port++) {
       try {
         const r = await fetch('http://127.0.0.1:' + port + '/ping', {cache: 'no-store'});
         if (r.ok) {
@@ -149,10 +151,48 @@ async function load() {
         }
       } catch (e) { /* next */ }
     }
-    if (foundList.length > 0) {
-      addLog('Autodetect: found ' + foundList.length + ' agent(s): ' + JSON.stringify(foundList));
-      addLog('NOT saving to storage (waiting for launcher push). Set URL manually or redeploy.');
+    if (foundList.length === 1) {
+      const only = foundList[0];
+      agentBaseUrl = 'http://127.0.0.1:' + only.port;
+      agentChannel = only.channel || '?';
+      agentName = only.name || 'UNKNOWN';
+      els.letter.textContent = agentChannel;
+      els.name.textContent = agentName;
+      addLog('Autodetect: found 1 agent: port=' + only.port + ' ch=' + only.channel + ' name=' + only.name + ' -> saved to storage');
+      try {
+        await chrome.storage.local.set({agentUrl: agentBaseUrl, channel: agentChannel, name: agentName});
+      } catch (e) { addLog('autodetect storage save ERR: ' + e); }
+    } else if (foundList.length > 1) {
+      addLog('Autodetect: found ' + foundList.length + ' agents: ' + JSON.stringify(foundList));
+      addLog('NOT saving (multiple agents, set URL manually).');
+    } else {
+      addLog('Autodetect: no agent found in 8660..8720');
     }
+  }
+  // 10C BUG-011 fallback: если autodetect не нашёл - спрашиваем Mainframe (8670)
+  if (!agentBaseUrl) {
+    try {
+      const mf = await fetch('http://127.0.0.1:8670/api/status', {cache: 'no-store'});
+      if (mf.ok) {
+        const j = await mf.json().catch(() => ({}));
+        const mat = j.matrix || {};
+        const keys = Object.keys(mat);
+        for (const L of keys) {
+          const row = mat[L] || {};
+          const ap = row.agent_port;
+          if (ap && row.agent) {
+            agentBaseUrl = 'http://127.0.0.1:' + ap;
+            agentChannel = L;
+            agentName = row.name || 'UNKNOWN';
+            els.letter.textContent = agentChannel;
+            els.name.textContent = agentName;
+            addLog('Mainframe fallback: port=' + ap + ' ch=' + L + ' name=' + agentName);
+            try { await chrome.storage.local.set({agentUrl: agentBaseUrl, channel: agentChannel, name: agentName}); } catch (e) {}
+            break;
+          }
+        }
+      }
+    } catch (e) { /* ignore */ }
   }
   els.url.value = agentBaseUrl;
 

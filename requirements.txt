@@ -1,0 +1,6 @@
+# JewAI v5 runtime dependencies
+# Install: pip install -r requirements.txt
+# Installer does this automatically at start (10C BUG-010).
+
+# CDP client (Bridge/cdp.py, Tools/launcher.py push_storage, Tools/kick_cdp.py)
+websocket-client>=1.7.0

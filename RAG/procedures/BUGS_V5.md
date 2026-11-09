@@ -281,3 +281,49 @@ Fix 10C:
 - Полный install на HERETIC (operator, 2026-11-10 утро).
 
 Git: PaaLadin/jewai-v5 (этот коммит).
+
+### BUG-010: на HERETIC нет websocket-client -> launcher FAILED, Bridge A не стартует — FIXED
+
+Симптом (HERETIC, установка 2026-11-09):
+- install.log: "[launcher] push_storage FAILED after 3 targets: ws error: No module named 'websocket'"
+- sidepanel: UNKNOWN, autodetect не находит агента
+- Bridge A не стартует: нет ledger_A.json, нет активатора в чате
+- Mnemo показывает agent=green (агент отвечает /ping), но lastId=-, cmds=-
+
+Корень: installer не проверяет Python-зависимости. launcher.py и Bridge/cdp.py
+импортируют `websocket` (websocket-client). На Monolith случайно стоял, на HERETIC - нет.
+
+Fix 10C (ночь 2026-11-10):
+- `requirements.txt` создан (websocket-client>=1.7.0).
+- `Tools/installer/server.py::run_install`: проверка `import websocket` ДО копирования.
+  Если нет - авто `pip install -r requirements.txt`. Если pip не помог - raise.
+
+### BUG-011: sidepanel autodetect 8666..8675, installer base_port 8680 — FIXED
+
+Симптом: агент на 8680 (новый default v5), а sidepanel ищет в старых 8666..8675.
+Результат: "Поиск агента (autodetect 8666..8675)... Агент не найден. Вводи URL вручную."
+
+Fix 10C:
+- `Templates/extension/app.js`: autodetect 8660..8720 (61 порт).
+- Если найдено ровно 1 - сохраняем agentUrl/channel/name в chrome.storage.local.
+- Fallback: если autodetect пуст - запрос к Mainframe `/api/status` (8670),
+  берём первый канал с живым агентом.
+
+Проверено:
+- get_cft.py --check, --dry-run.
+- py_compile server.py OK.
+- Синхронизировано на HERETIC (source + target) через SMB.
+- Утром: перезагрузка HERETIC -> Startup->_10c_fix.bat -> pip install + install.bat.
+
+### BUG-012: мнемосхема — кнопки работают (НЕ баг)
+
+Проверено аудитом: в `Mainframe/static/index.html` inline-скрипт (16.5 КБ)
+дёргает `/api/boot`, `/api/stop`, `/api/restart` по клику. Кнопки настоящие.
+Не реагируют, потому что Bridge A мёртв (BUG-010). После фикса BUG-010 - работают.
+
+### BUG-013: .agent_token в Profiles/A/extension — НЕ баг
+
+Проверено: `agent.py::_find_token_file` walk-up от HERE находит `C:/JewAI_v5/.agent_token`
+(root, install-wide). Per-channel токен не нужен. Ложная тревога.
+
+Git: PaaLadin/jewai-v5 (этот коммит).

@@ -98,3 +98,24 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 
 Dixi. 10C (Семён), 2026-11-09.
 
+
+## 2026-11-10 ночь (10C) - HERETIC: найденные баги при установке
+
+Установка на HERETIC (`\\HERETIC\JewAI_v5`), оператор ушёл спать. Собрано полным аудитом.
+
+- [x] **BUG-010 (P0):** на HERETIC нет `websocket-client` -> launcher push_storage FAILED, Bridge A не стартует, активатор не постится. Fix 10C: `requirements.txt` + проверка в installer до copy + авто-pip install.
+- [x] **BUG-011 (P1):** FIXED 2026-11-10 (10C): autodetect 8660..8720 + Mainframe fallback + save to storage при 1 агенте.
+- [x] **BUG-012 (P2):** НЕ баг. Кнопки настоящие (inline script дёргает /api/boot, /api/stop, /api/restart). Не работали из-за мёртвого Bridge A (BUG-010).
+- [x] **BUG-013 (P0):** НЕ баг. agent.py::_find_token_file walk-up находит root .agent_token (install-wide). Per-channel не нужен.
+- [ ] **BUG-014 (P0):** Bridge A не работает (следствие BUG-010). Проверить утром после _10c_fix.bat.
+- [ ] **BUG-015 (P0):** Проверить утром после _10c_fix.bat: должен появиться Profiles/A/logs/ledger_A.json.
+
+Установщик на HERETIC: дважды запускался (двойной install.log), CfT скачался с 3-й попытки (~200 MB за 9 сек). CfT OK, extension OK, chrome_path OK.
+
+План:
+1. Исправить BUG-010 (уже в source, надо синхронизировать на HERETIC и проверить).
+2. Исправить BUG-013 (проверить, где agent.py ищет токен).
+3. Исправить BUG-011 (autodetect).
+4. Проверить BUG-012 (mnemo live).
+5. Синхронизировать все фиксы на HERETIC через SMB.
+6. Коммит + push.
