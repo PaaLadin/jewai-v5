@@ -85,6 +85,7 @@
 - `procedures/SMTP.md` - SMTP email: настройка через .secret/smtp.json (оператор + агенты).
 - `procedures/ADAPTERS.md` - адаптеры моделей v5 (deepseek/qwen/alice/google), контракт, переключение (10C, закрывает BUG-004).
 - `onboarding/AGENT_FIRST_RUN.md` - первый запуск агента: Profiles/<L>/, линк-лист чатов, "не логинь Chromium в Google", порядок старта (10C, закрывает B-08).
+- `procedures/ADDONS_CANDIDATES.md` - RAG-реестр внешних проектов для интеграции как аддонов: голос (faster-whisper/Silero/Piper/Porcupine), рисование (ComfyUI/Fooocus/InvokeAI), память (mem0/Chroma/LlamaIndex), агенты (LangGraph/CrewAI), автоматизация (n8n/HA), OCR/Vision (Tesseract/Moondream), локальные LLM (Ollama/LocalAI). С URL, идеологией, лицензией, куда в JewAI (10C, 2026-11-10).
 - `procedures/BUGS_V5.md` - известные баги v5 (svc_api path, watchdog host, google adapter, export_share).
 
 ### architecture/

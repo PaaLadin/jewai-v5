@@ -1905,3 +1905,31 @@ Dixi. 10C (Семён), 2026-11-09.
   v6 LLM, STT, раскатка B-F (оператор).
 
 Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-10, 10C (Семён) - ADDONS_CANDIDATES.md (RAG-реестр аддонов)
+
+**Фаза:** RAG (внешние интеграции).
+
+**Что сделано:**
+- `RAG/procedures/ADDONS_CANDIDATES.md` (13975 б): 7 категорий, 25+ проектов.
+  Формат: GitHub URL, идеология, лицензия, что брать, куда в JewAI.
+  Голос (faster-whisper, Silero, Piper, Porcupine, openWakeWord, RealtimeSTT+TTS),
+  рисование (ComfyUI, Fooocus, InvokeAI, Draw Things, SD.cpp, Krita AI),
+  память (mem0, Chroma, LlamaIndex, Qdrant, LanceDB, Khoj, AnythingLLM, Letta),
+  агенты (LangGraph, CrewAI, AutoGen, OpenHands, Dify, Flowise),
+  автоматизация (n8n, Home Assistant),
+  OCR/Vision (Tesseract, PaddleOCR, Moondream, LLaVA, Qwen-VL),
+  локальные LLM (Ollama, llama.cpp, LocalAI).
+- Приоритеты 10C: Ollama -> faster-whisper+Silero+Piper -> Porcupine/openWakeWord ->
+  ComfyUI+Fooocus -> mem0 -> Tesseract -> Moondream -> n8n.
+- INDEX: добавлена строка.
+- TODO: новый блок "Аддоны и расширения" в P3/v6.
+
+**Чем проверено:**
+- Файл на диске 13975 байт.
+- Все URL вписан вручную, каждая лицензия указана.
+
+**Что дальше:**
+- Ждём решения оператора: какие из аддонов брать первыми.
+
+Dixi. 10C (Семён), 2026-11-10.
