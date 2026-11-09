@@ -726,3 +726,10 @@ Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py i
 6. Пуш: токен из `.secret/github_token`, inline URL, `GIT_TERMINAL_PROMPT=0`.
 7. Rebirth: гейт 850. Не обходить. force только через `force_<CH>.flag`.
 Dixi. 9C, 2026-11-09.
+## Обновление 10C (2026-11-09) - rebirth P0
+
+- [x] **Живой тест rebirth**: фактически прошли при активации 10C (9C -> 10C). Обнаружен баг: двойная отправка промта (кривой + правильный), второй завис в textarea, verify ложно засчитал delivered.
+- [x] **Fix:** PaaLadin/jewai c949386 + PaaLadin/jewai-v5 1a5c2d1. Подробности в RAG/procedures/BUGS_V5.md раздел "Исправлено 10C".
+- [ ] **Подтверждение fix:** на ближайшем rebirth (B или D) смотреть see_chat.py - ожидается ровно одно сообщение в чате, textarea пуста. Если снова два - откат по .bak_10c_20261109.
+- [ ] **BUG-007 (svc_api path)** - остаётся P0, не тронут.
+- [ ] **no_last_id (REBIRTH §11.8)** - остаётся P0, не тронут. Варианты: (а) /status в agent.py; (б) Monitor читает ledger_<L>.json напрямую; (в) probe через CDP. Рекомендация 10C: (б).

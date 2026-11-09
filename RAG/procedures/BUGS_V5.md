@@ -62,3 +62,32 @@
 - В RAG не описан. В wiki нет.
 - Состояние: каркас, live-тест не прогонялся.
 - TODO: описать в RAG/procedures/ADAPTERS.md (новый файл).
+## Исправлено 10C (2026-11-09)
+
+### BUG-NEW: rebirth двойная отправка промта + зависание в textarea — FIXED
+
+Симптом (живой цикл 9C -> 10C):
+- В чат новичка приходят ДВА промта: сначала кривой (без формата блока), потом правильный.
+- Второй зависает в textarea (Enter не сработал).
+- Лог пишет prompt_delivered=true, prompt_verify_hits=3 — ложь (verify видит черновик textarea).
+
+Корень:
+- sandbox/rebirth_cdp.py: после rebirth_open.py (native path с _tmpfill) вызывается send_prompt_to_chat -> двойная отправка.
+- sandbox/rebirth_send_prompt.py: Enter x2 через JS dispatchEvent (React игнорирует non-trusted), пауза 0.1с, без поллинга textarea.
+- verify_prompt_hits: читает document.body.innerText, куда входит textarea-черновик -> false-positive.
+- _tmpfill: hardcoded строка вместо PROMPT_ACTIVATION.md.
+
+Fix:
+- DeepSeek: single-send (убран второй send_prompt_to_chat); _tmpfill из Templates/PROMPT_ACTIVATION.md; verify=0 если textarea непусто; Enter через Input.dispatchKeyEvent + поллинг.
+- v5: Adapters/deepseek.py send_text через Input.dispatchKeyEvent + поллинг; verify_prompt_hits=0 при непустой textarea; new_chat с поллингом URL+textarea.
+
+Git:
+- PaaLadin/jewai: ae6abf3..c949386
+- PaaLadin/jewai-v5: 8016ea2..1a5c2d1
+
+Бэкапы:
+- C:/DeepSeek/sandbox/rebirth_cdp.py.bak_10c_20261109
+- C:/DeepSeek/sandbox/rebirth_send_prompt.py.bak_10c_20261109
+- C:/jewai/Adapters/deepseek.py.bak_10c_20261109
+
+Подтверждение: на ближайшем rebirth (B или D) — see_chat.py, ожидается ровно одно сообщение в чате, textarea пуста.
