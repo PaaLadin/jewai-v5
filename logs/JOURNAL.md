@@ -1819,3 +1819,46 @@ Dixi. 10C (Семён), 2026-11-09.
 **RAG:** RAG/procedures/BUGS_V5.md - BUG3a FIXED.
 
 Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - B-08 onboarding + чистка __pycache__
+
+**Фаза:** RAG/onboarding.
+
+**Что сделано:**
+- B-07 уже был готов (Templates/extension/onboarding.html 4745 б, agent.py GET /onboarding +
+  /onboarding/status, флаг "не показывать"). Проверено, не трогал.
+- B-08: создан RAG/onboarding/AGENT_FIRST_RUN.md (3520 б): что лежит в Profiles/<L>/, линк-лист
+  чатов, "не логинь Chromium в Google", порядок первого старта, что не делать, связанные доки.
+- INDEX: добавлена строка.
+- Удалён __pycache__/ из Templates/extension и Agents/C/extension - .pyc там ломает Chrome
+  (правило 9C). .gitignore уже содержит __pycache__/, в git не попадал.
+
+**Чем проверено:**
+- AGENT_FIRST_RUN.md на диске 3520 байт.
+- agent.py /onboarding + /onboarding/status на месте (read).
+- __pycache__ отсутствует в Agents/C/extension и Templates/extension.
+
+**Что дальше:**
+- P2: B-30 (paused sync) - быстрый, следующим.
+- B-06, B-09...B-12 - по списку.
+
+**RAG:** RAG/onboarding/AGENT_FIRST_RUN.md (новый), INDEX.md.
+
+Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - B-30 (paused sync) проверен
+
+**Фаза:** extension UI.
+
+**Что сделано:**
+- B-30 оказался уже закрыт: app.js load() -> loadPauseState() -> apiGet("/pause_state") ->
+  chrome.storage.local.set({paused}). Рассинхрона нет.
+
+**Чем проверено:**
+- read app.js: loadPauseState() вызывается в load().
+
+**Что дальше:**
+- P2 осталось: B-06, B-09...B-12, checkStuck живьём, TEST OUT paths.
+- P0: подтверждение rebirth fix на B/D.
+
+Dixi. 10C (Семён), 2026-11-09.

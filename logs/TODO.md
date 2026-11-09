@@ -49,12 +49,12 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 
 ## P2 - причёсывание
 
-- [ ] **B-07 / B-08:** onboarding-HTML в каждой вкладке Chrome агента (вместо about:blank) + `RAG/onboarding/AGENT_FIRST_RUN.md`. HIGH.
+- [x] **B-07 / B-08:** B-07 уже был готов (`Templates/extension/onboarding.html` 4745 б, `agent.py` `GET /onboarding` + `/onboarding/status`, флаг «не показывать»). B-08 создан 10C: `RAG/onboarding/AGENT_FIRST_RUN.md` (3520 б) - Profiles/<L>/, линк-лист чатов, «не логинь Chromium в Google», порядок первого старта, связи.
 - [ ] **B-06:** Mainframe 8670 - переписать UI как DeepSeek 8770, не Pip-Boy sidepanel. Масштабируемость по config.letters (1-10). MEDIUM.
 - [ ] **B-09:** автодетект "не авторизован" (редирект чата) -> красный статус в Mainframe + кнопка "Залогиниться". MEDIUM.
 - [ ] **B-10:** автовосстановление вкладки чата через CDP (`Target.createTarget`) при потере. MEDIUM.
 - [ ] **B-11:** rebirth пишет `active_chat_<CH>.json` (chat_url, model, model_index, created_at); Bridge ищет по конкретному URL. MEDIUM.
-- [ ] **B-30:** paused state рассинхрон storage vs paused.json. `app.js load()` -> `GET /pause_state`. LOW.
+- [x] **B-30:** уже закрыт. `app.js load()` вызывает `loadPauseState()`, читает `/pause_state`, пишет в `chrome.storage.local.set({paused})`. Проверено 10C read.
 - [ ] **B-12:** вики в Mainframe - how-to, ключевые механики. LOW (9C частично закрыл: 4 секции добавлены).
 - [ ] **checkStuck живьём:** проверить авто-клик Continue/Retry в `content_deepseek.js` на живом залипании.
 - [ ] **TEST OUT paths:** вынести OUT-пути из хардкода `C:/jewai` в `Path(__file__).resolve().parent.parent.parent` (динамически от расположения теста).
