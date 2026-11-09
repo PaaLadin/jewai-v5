@@ -177,3 +177,26 @@ Fix 10C (2026-11-09):
 - INDEX.md обновлён.
 
 Git: PaaLadin/jewai-v5 (этот коммит).
+
+### BUG-006: export_share через CDP (не Playwright) — FIXED
+
+Симптом: в DeepSeek sandbox/export_share.py работает через Playwright, в v5 не портирован.
+Без него rebirth теряет историю старого чата (сохранение диалога до перерождения).
+
+Fix 10C (2026-11-09):
+- Создан `Tools/export_share.py` (~7000 б) на чистом CDP (websocket-client, без Playwright):
+  - `Target.createBrowserContext` -> `Target.createTarget` -> attach -> `Page.navigate`.
+    Изолированный browser context: cookies не передаются, share публичный.
+  - Scroll-loop: самый большой скроллируемый контейнер, innerText постранично,
+    дедуп по строкам, скролл на --step, до упора или --max_steps.
+  - NDA: блоки [NDA]...[/NDA] -> [NDA-REDACTED].
+  - Header: source, final_url, title, exported, bytes.
+  - Cleanup: Target.closeTarget + Target.disposeBrowserContext.
+- Добавлен в `Tools/run_all_tests.py`: `test_export_share.py` (14/14 pass, без живого CDP).
+
+Usage: `python Tools/export_share.py --url <share_url> --out <path.md> --port 9223`
+
+Живой тест на реальном share: не проведён (CDP A-D сейчас не запущены).
+При следующем rebirth C/D (после see_chat) - проверить на живом share.
+
+Git: PaaLadin/jewai-v5 (этот коммит).

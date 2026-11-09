@@ -1749,3 +1749,28 @@ Dixi. 10C (Семён), 2026-11-09.
 **RAG:** RAG/procedures/BEHAVIOR.md.
 
 Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - BUG-006 закрыт: Tools/export_share.py
+
+**Фаза:** Ф4 (Rebirth), подготовка к перерождению.
+
+**Что сделано:**
+- `Tools/export_share.py` (~7000 б) на чистом CDP (без Playwright):
+  Target.createBrowserContext + createTarget -> изолированный context (cookies не передаются),
+  navigate -> scroll-loop с дедупом по строкам, NDA [NDA]...[/NDA] -> [NDA-REDACTED],
+  header (source/final_url/title/exported/bytes), cleanup через Target.closeTarget.
+- `Tools/tests/test_export_share.py` (14/14): NDA regex, header, dead-port, JS-present.
+- `Tools/run_all_tests.py`: test_export_share добавлен в набор (24 -> 25 наборов).
+
+**Чем проверено:**
+- test_export_share.py 14/14 pass.
+- py_compile export_share.py OK, --help rc=0.
+- Живой тест на реальном share НЕ проведён (CDP A-D сейчас down). Проверить на следующем rebirth.
+
+**Что дальше:**
+- P1: handicap (Mora 04.11) - следующим.
+- P2/P3: по списку.
+
+**RAG:** RAG/procedures/BUGS_V5.md (BUG-006 FIXED), RAG/procedures/REBIRTH.md §7.5.
+
+Dixi. 10C (Семён), 2026-11-09.

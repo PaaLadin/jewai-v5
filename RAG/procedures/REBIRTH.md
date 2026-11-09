@@ -61,6 +61,18 @@
 
 **Порог подготовки:** за 150 id до конца серии (например, `AAAA8850` для `AAAA8000-8999`).
 
+## 7.5. Экспорт старого чата (export_share)
+
+Перед rebirth нужно сохранить текущий диалог. Инструмент: `Tools/export_share.py`.
+
+```
+python Tools/export_share.py --url <share_url> --out logs/<CH>/conversations/<series>_share.md --port <CDP>
+```
+
+Механика: CDP-only (без Playwright), изолированный browser context (cookies не передаются),
+scroll-loop с дедупом, NDA-блоки вырезаются в `[NDA-REDACTED]`. Добавлен 10C (2026-11-09,
+закрывает BUG-006).
+
 ## 8. Проверка через `see_chat` (глазами новичка)
 
 После подъёма преемника - **смотреть скриншотом** через CDP:

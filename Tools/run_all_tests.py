@@ -35,6 +35,7 @@ TESTS = [
     ('test_guard.py', 'guard timeout alert'),
     ('test_rebirth_monitor.py', 'rebirth monitor thresholds'),
     ('test_google_adapter.py', 'google adapter (execCommand+CDP Enter)'),
+    ('test_export_share.py', 'export_share NDA+header'),
 ]
 
 lines = []
