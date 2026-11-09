@@ -142,3 +142,25 @@ Fix 10C (2026-11-09):
 Регрессии: Tools/tests/test_mainframe_ext.py fails=0.
 
 Git: PaaLadin/jewai-v5 (этот коммит).
+
+### BUG-002: watchdog.py::_kick без HOST (ALIVE не доходит) — FIXED
+
+Симптом (по описанию 9C): watchdog._kick вызывает Bridge.cdp.connect(port) без host,
+find_chat ищет deepseek по HOST, не находит, ALIVE не доставляется.
+
+Уточнение 10C:
+- К моменту проверки _kick уже передавал host (видимо починили в 11B/7C).
+- Но _operator_typing(port) в том же файле вызывал connect(port) БЕЗ host ->
+  TypeError -> except: return False. Значит watchdog НЕ ВИДЕЛ, что оператор
+  печатает, и вставлял ALIVE поверх набора.
+- Плюс мусорная строка "from Tools.launcher import _push_storage  # not used here".
+
+Fix 10C:
+- _operator_typing(port, host="chat.deepseek.com"), connect(port, host).
+- main() вычисляет _h (адаптер канала) ДО вызова _operator_typing и передаёт в него.
+- Убрана мусорная строка в _kick.
+
+Проверено: Tools/tests/test_guard.py exit 0 (известный фиктивный ALERT-путь, не регрессия).
+Tools/tests/test_rebirth_monitor.py 12/12 pass.
+
+Git: PaaLadin/jewai-v5 (этот коммит).

@@ -47,10 +47,6 @@ def _state_on(path: Path) -> bool:
 
 def _kick(port: int, text: str, host: str = "chat.deepseek.com") -> bool:
     """Send ALIVE via CDP kick (bridge_kick2 equivalent)."""
-    try:
-        from Tools.launcher import _push_storage  # not used here
-    except Exception:
-        pass
     # use Bridge.cdp if available
     try:
         sys.path.insert(0, str(ROOT))
@@ -83,11 +79,15 @@ def _kick(port: int, text: str, host: str = "chat.deepseek.com") -> bool:
 
 
 
-def _operator_typing(port: int) -> bool:
-    """True if operator has non-empty textarea. Skip ALIVE then."""
+def _operator_typing(port: int, host: str = "chat.deepseek.com") -> bool:
+    """True if operator has non-empty textarea. Skip ALIVE then.
+
+    10C BUG-002 fix: раньше connect(port) без host -> TypeError -> except -> False.
+    Значит watchdog не видел, что оператор печатает, и ALIVE вставлялся во время набора.
+    """
     try:
         from Bridge.cdp import connect
-        cdp = connect(port)
+        cdp = connect(port, host)
         try:
             expr = ("(() => { const ts = document.querySelectorAll('textarea');"
                     "for (const t of ts) { if (t.value && t.value.trim().length > 0"
@@ -142,17 +142,17 @@ def main() -> int:
             else:
                 now = time.time()
                 if (not silence_pinged) and (now - last_alive_at >= a.alive_repeat):
-                    if _operator_typing(ch.cdp_port):
+                    _h = "chat.deepseek.com"
+                    try:
+                        from Bridge.run import _adapter_for
+                        _h = _adapter_for(ch.model).HOST
+                    except Exception:
+                        pass
+                    if _operator_typing(ch.cdp_port, _h):
                         print("[watchdog %s] operator typing, skip ALIVE" % a.channel, flush=True)
                         last_alive_at = now
                         silence_pinged = True
                     else:
-                        _h = "chat.deepseek.com"
-                        try:
-                            from Bridge.run import _adapter_for
-                            _h = _adapter_for(ch.model).HOST
-                        except Exception:
-                            pass
                         ok = _kick(ch.cdp_port, ALIVE_TEXT, _h)
                     print("[watchdog %s] ALIVE sent=%s" % (a.channel, ok), flush=True)
                     if ok:

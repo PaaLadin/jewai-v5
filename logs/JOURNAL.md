@@ -1682,3 +1682,30 @@ Dixi. 10C (Семён), 2026-11-09.
 **RAG:** RAG/procedures/BUGS_V5.md - BUG-007 FIXED (уточнение про 8016ea2).
 
 Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - BUG-002 watchdog host fix + TODO архив/rewrite
+
+**Фаза:** Ф3 (services) + документация.
+
+**Что сделано:**
+- TODO архив: история 13D/11B/12B/install-баги/релизная подготовка Алисы/12B-13B UI
+  уехала в logs/TODO_ARCHIVE_through_12B.md (37 КБ). Живой TODO переписан с нуля:
+  было 173 открытых -> стало 19, из них P0 пуст, все актуальные (BUG-002/004/006, handicap,
+  B-06..B-12, B-30, BUG3a ждёт оператора, v6/STT).
+- BUG-002: реальный баг был в Tools/watchdog.py::_operator_typing (connect(port) без host ->
+  TypeError -> False -> watchdog не видел набор оператора). Фикс: _operator_typing(port, host),
+  main() вычисляет _h ДО вызова. Убрана мусорная строка из _kick.
+
+**Чем проверено:**
+- test_guard.py exit 0 (известный фиктивный ALERT-путь, не регрессия).
+- test_rebirth_monitor.py 12/12 pass.
+- py_compile Tools/watchdog.py OK.
+
+**Что дальше:**
+- P1: BUG-006 (export_share) - самое нужное.
+- P1: BUG-004 (ADAPTERS.md для google).
+- P2/P3: по списку.
+
+**RAG:** RAG/procedures/BUGS_V5.md - BUG-002 FIXED (уточнение).
+
+Dixi. 10C (Семён), 2026-11-09.
