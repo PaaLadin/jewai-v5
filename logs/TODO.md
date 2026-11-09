@@ -50,12 +50,12 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 ## P2 - причёсывание
 
 - [x] **B-07 / B-08:** B-07 уже был готов (`Templates/extension/onboarding.html` 4745 б, `agent.py` `GET /onboarding` + `/onboarding/status`, флаг «не показывать»). B-08 создан 10C: `RAG/onboarding/AGENT_FIRST_RUN.md` (3520 б) - Profiles/<L>/, линк-лист чатов, «не логинь Chromium в Google», порядок первого старта, связи.
-- [ ] **B-06:** Mainframe 8670 - переписать UI как DeepSeek 8770, не Pip-Boy sidepanel. Масштабируемость по config.letters (1-10). MEDIUM.
-- [ ] **B-09:** автодетект "не авторизован" (редирект чата) -> красный статус в Mainframe + кнопка "Залогиниться". MEDIUM.
-- [ ] **B-10:** автовосстановление вкладки чата через CDP (`Target.createTarget`) при потере. MEDIUM.
-- [ ] **B-11:** rebirth пишет `active_chat_<CH>.json` (chat_url, model, model_index, created_at); Bridge ищет по конкретному URL. MEDIUM.
+- [ ] **B-06:** Mainframe 8670 - переписать UI как DeepSeek 8770, не Pip-Boy sidepanel. Масштабируемость по config.letters (1-10). MEDIUM. (Открыт: требует решения оператора - текущий UI CRT/8 табов рабочий, переписывание = дни.)
+- [x] **B-09:** уже закрыт. `health.py::_auth_status` + `Mainframe/static/app.js` (auth-блок + LOGIN-кнопка при != logged_in). Проверено 10C read.
+- [x] **B-10:** уже закрыт. `Bridge/run.py::_try_recreate_chat` (Target.createTarget), B-48 guard не открывает до onboarding ack. Проверено 10C.
+- [x] **B-11:** уже закрыт. `Rebirth/cycle.py` пишет `logs/active_chat_<L>.json`. Проверено 10C.
 - [x] **B-30:** уже закрыт. `app.js load()` вызывает `loadPauseState()`, читает `/pause_state`, пишет в `chrome.storage.local.set({paused})`. Проверено 10C read.
-- [ ] **B-12:** вики в Mainframe - how-to, ключевые механики. LOW (9C частично закрыл: 4 секции добавлены).
+- [x] **B-12:** уже закрыт. Wiki-таб + `/wiki` + 18 файлов в `Mainframe/`. Проверено 10C.
 - [ ] **checkStuck живьём:** проверить авто-клик Continue/Retry в `content_deepseek.js` на живом залипании.
 - [ ] **TEST OUT paths:** вынести OUT-пути из хардкода `C:/jewai` в `Path(__file__).resolve().parent.parent.parent` (динамически от расположения теста).
 

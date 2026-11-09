@@ -1862,3 +1862,23 @@ Dixi. 10C (Семён), 2026-11-09.
 - P0: подтверждение rebirth fix на B/D.
 
 Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - P2 аудит: B-09/B-10/B-11/B-12 закрыты
+
+**Фаза:** audit (документация).
+
+**Что сделано:**
+- read-проверка: B-09 (health._auth_status + app.js auth-блок + LOGIN), B-10
+  (Bridge/run.py _try_recreate_chat Target.createTarget), B-11 (Rebirth/cycle.py
+  active_chat_<L>.json), B-12 (wiki tab + /wiki + 18 файлов) - всё уже реализовано.
+- TODO: B-09/10/11/12 помечены [x], B-06 оставлен открытым (решение оператора).
+
+**Итого P2:** открыто только B-06 (переписать UI = дни, нужен оператор),
+checkStuck живьём (нужен живой Chrome), TEST OUT paths (косметика).
+
+**Что дальше:**
+- P0: подтверждение rebirth fix на B/D (нужен запуск Chrome).
+- P3/v6: LocalAI, STT.
+- Возможно: поднять CDP, живой тест export_share.
+
+Dixi. 10C (Семён), 2026-11-09.
