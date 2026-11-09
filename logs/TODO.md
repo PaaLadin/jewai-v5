@@ -2,747 +2,86 @@
 
 **Версия:** 0.1.0-dev
 **Старт:** 2026-10-28
-**Ответственный:** оператор + 12D (Димон), пилот — канал C (Семён)
+**Ответственный:** оператор + 12D (Димон), пилот - канал C (Семён)
+**Актуализирован:** 2026-11-09, 10C (Семён)
 
 ## Правила
 
-- «Сделано» — только после проверки на диске (файл + размер + тест).
-- Каждый модуль — по протоколу переноса (см. ROADMAP.md).
+- «Сделано» - только после проверки на диске (файл + размер + тест).
+- Каждый модуль - по протоколу переноса (см. ROADMAP.md).
 - Код старого проекта не копируется. Только переписывание.
 - Отметка `[x]` ставится вместе с записью в JOURNAL.
+- Каждый закрытый пункт отмечается `[x]` в этом же коммите, что и правка. Иначе история снова зарастёт.
 
-## Ф0. Скелет проекта
+## История
 
-- [x] Структура C:/JewAI/ (RAG, Sandbox, Profiles, Tools, Projects, Mainframe, Archive, .secret, logs)
-- [x] VERSION 0.1.0-dev
-- [x] README.md
-- [x] ROADMAP.md
-- [x] logs/JOURNAL.md (шаблон + правила)
-- [x] logs/TODO.md (этот файл)
+- Живой список - этот файл.
+- История до 2026-11-02 (13D / 11B / 12B / install-баги 29-30.10 / релизная подготовка Алисы / 12B-13B UI) - в `logs/TODO_ARCHIVE_through_12B.md`.
+- Что было сделано 10C - секции ниже + `logs/JOURNAL.md` (записи 2026-11-09) + `RAG/procedures/BUGS_V5.md` (Исправлено 10C).
 
-## Ф1. Аудит старого JewAI
+## Статус на 2026-11-09 (10C)
 
-Цель: по каждому модулю старого проекта выписать контракт и костыли. Не код — знание.
+P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто только подтверждение rebirth fix на живом цикле.
 
-- [x] Bridge: cdp_client.py — контракт + костыли
-- [x] Bridge: bridge_kick2/3.py — контракт + костыли
-- [x] Bridge: read_panel_state2.py — контракт + костыли
-- [x] Rebirth: rebirth_*.py — контракты + костыли
-- [x] Mainframe: council_chat/server.py — контракт роутов, что нужно, что мусор
-- [x] Services: svc.py, watchdog.py, recovery_loop.py, autorestart.py — контракты
-- [x] Extension: content*.js, background*.js, agent.py — что делает, нужно ли в v5
-- [x] Launchers: start-*.ps1, boot-all.ps1 — контракт запуска
-- [x] Tools: find.py, see_chat.py, say.py, doh_proxy.py — контракты
-- [x] Результат: RAG/architecture/AUDIT.md
+Закрыто 10C (краткая сводка):
 
-## Ф2. Пилот моста на C
+- [x] Rebirth double-send + зависание в textarea + ложный verify. `PaaLadin/jewai` c949386, `PaaLadin/jewai-v5` 1a5c2d1.
+- [x] `no_last_id` (REBIRTH.md §11.8) - вариант (б), Monitor читает `ledger_<L>.json`. `PaaLadin/jewai-v5` 06587a9.
+- [x] BUG-007 (svc_api path mismatch) - единый путь `Profiles/<L>/logs/svc_<kind>_<ch>.json`. `PaaLadin/jewai-v5` db19fc4.
+- [x] BUG-003 - уже был закрыт в 9C (SYSTEM_MESSAGES.md §9), просто висел в BUGS_V5. Убрано при ревизии BUGS_V5.
+- [x] BUG-005 (current_state.md устарел) - переписан 9C. Убрано при ревизии BUGS_V5.
+- [x] PROMPT_10C.md создан 9C.
+- [x] HANDOVER_9C.md создан 9C.
+- [x] SESSION_STATE.md в jewai создан 9C.
+- [x] ROADMAP подрезан 9C (5 дублей -> 2 секции).
 
-- [x] Профиль Chrome C (копия в C:/JewAI/Profiles/C)
-- [x] Core/config.py — порты, каналы
-- [x] Bridge/cdp.py — нативный CDP
-- [x] Bridge/read.py — чтение чата
-- [x] Bridge/exec.py — парсер блоков + read/write/run
-- [x] Bridge/daemon.py — цикл
-- [x] Adapters/deepseek.py — create_chat, send_prompt, verify_prompt_hits
-- [x] Tools/launcher.py — запуск Chrome
-- [~] E2E тест: read OK, live-send требует ОК оператора
+## P0 - подтверждение (ждёт живого rebirth)
 
-## Ф3. Mainframe 8670
+- [ ] **Подтверждение rebirth fix:** на ближайшем rebirth B или D смотреть `Tools/see_chat.py`. Ожидается ровно одно сообщение в чате, textarea пуста. Если снова два - откат по `.bak_10c_20261109`.
 
-- [x] server.py — HTTP-сервер, 7 роутов
-- [x] api.py — status, projects, chat_url, boot/stop/restart
-- [x] static/index.html — панель
-- [x] llm.py — сетевая LLM (заглушка до ip:port)
+## P1 - важное
 
-## Ф4. Rebirth v5
-
-- [x] table.py — серии
-- [x] master.py — create → send → verify → update → onboard (minimal, CDP cycle в Ф5)
-- [x] onboard.py — приветствие
-- [ ] Тест: rebirth C при cmds >= 850
-
-## Ф5. Надстройки
-
-- [x] Почта SMTP (каркас, config.mail)
-- [x] RAG-канал для Алисы (rag_channel.jsonl)
-- [x] Mainframe к сетевой LLM (ip:port, config.llm)
-
-## Ф6. Раскатка
-
-- [ ] A, B, D, E, F по одному
-- [ ] Старый JewAI → Archive после приёмки
-
-## Ф7. GitHub
-
-- [ ] git init C:/JewAI
-- [ ] push в PaaLadin/jewai-v5
-
-Dixi. 12D, 2026-10-28.
-## 13D — Передача 14D готова, сессия НЕ закрыта
-
-**Статус:** Ф1 (аудит) завершён. Ф2-Ф7 НЕ начаты. Передача артефактов готова.
-**Watchdog D: ON** (перезапущен вручную после ошибочного снятия).
-**Приёмка:** требуется оператором/A. Само-приёмка запрещена (behavior_rules §3.5).
-- Ф1: AUDIT.md 43000 б, sha 92503acc7a684c0e.
-- HANDOVER_14D.md: 5925 б, sha a1c0ec5d4426aa79 (артефакт передачи).
-- PROMPT_14D.md: 5289 б, sha ee7a0fa3debb8961 (артефакт передачи).
-- cmds=1186.
-- Инцидент replay write: logs/D/INCIDENT_20261028_replay_write.md.
-- Следующий: 14D (DDAC3000-DDAC3999), старт с Ф2. До перерождения: 13D продолжает.
-
-## 13D - ИТОГИ СЕССИИ 2026-10-28
-
-**Сделано и проверено:**
-- Ф1: AUDIT.md 44467 б, 29 разделов + replay-guard.
-- Ф2-Ф5: 27 модулей, 14 наборов тестов, 207 проверок зелёные.
-- Инфраструктура: README.md 2684б, RAG/procedures/architecture.md 2980б, Tools/diagnose.py, Tools/boot.py, Tools/run_all_tests.py, Tools/tests/ (14 файлов).
-- Chrome C v5 (9124) live, E2E read: textarea, body 5111 симв.
-- HANDOVER_14D 6450б + PROMPT_14D 6513б (обновлены).
-- JOURNAL 25 записей.
-
-**НЕ сделано (требует ОК оператора):**
-- Порт 8670 - процесс предшественника pid 5304. Kill+restart требует ОК.
-- Ф2 live-send: отправка [AGENT REPORT] в живой чат C.
-- Ф6 раскатка A/B/D/E/F: живые агенты.
-- Ф7 GitHub push в PaaLadin/jewai-v5.
-
-**Watchdog D:** ON (pid 17360). Recovery D: ON (pid 7444). Не снимаются до приёмки.
-**Передача 14D:** HANDOVER_14D + PROMPT_14D актуальны.
-
-## 13D FINAL POINT 2026-10-28
-
-Все работы в безопасной зоне (без разрушительных действий и ОК оператора) выполнены.
-Ф0-Ф5 функционально готовы, 14 тестов / 207 проверок зелёные.
-Watchdog D ON до приёмки.
-Блокеры требуют ОК: 8670, Ф2 live-send, Ф6 живые агенты, Ф7 push.
-
-## 13D - HANDOVER REMINDER
-
-При lastId >= DDAB3850 (за 100-150 id до конца серии) - остановиться и обновить:
-- HANDOVER_14D.md (C:/DeepSeek/logs/D/)
-- PROMPT_14D.md (C:/DeepSeek/logs/D/)
-- logs/D/TODO.md (полный статус сессии)
-- logs/JOURNAL.md (итоговая запись)
-
-Актуальные lastId: DDAB3682. До порога ~168 id.
-
-
-## 2026-10-28 11B - Sync docs with facts
-
-**Found by tests run + code read (11B):**
-- **Tests: 9/21 pass, 12 fail** (not 21/325). 11/12 cause: `config.json` old schema - no `name/extension/model`, CDP 9220+i (need 9122+i), agent 8760+i (need 8666+i), n=4 hardcoded.
-- **installer/server.py:** PORT 8671 conflicts with agent E; CDP 9220+i; agent 8760+i; `DETACHED_PROCESS` no stderr; n=4 hardcoded.
-- **Bridge/daemon.py is NOT CLI** (no `__main__`/`argparse`, 180 lines). Installer picks it first -> dead process. Correct entrypoint: `Bridge/run.py --channel X`.
-- **Services missing in v5:** no `svc.py/watchdog.py/recovery_loop.py/autorestart.py` (4 modules from AUDIT). `Mainframe/svc_api.py` manages non-existent services.
-- **3 tests write to `C:/DeepSeek/logs/D/`** (violates "do not touch DeepSeek"): `test_server_subprocess`, `test_run_entrypoint`, `test_boot`.
-- **RAG/knowledge/modules.md stale:** generated before `Mainframe/{controls,council,launchpad,svc_api}.py`; `server.py` size 1377 b (real 3462).
-- **HANDOVER_14D/PROMPT_14D only in `C:/DeepSeek/logs/D/`**, absent in `C:/jewai`.
-- **Extension absent in v5** (rag_agent_layout: open question - needed?).
-
-**Plan:** (1) fix config.json + installer/server.py to v5 schema; (2) rerun tests -> expect 18/18 pass (3 remaining to isolate into tempdir); (3) update ROADMAP/TODO/current_state/modules with facts.
-
-- [x] 11B: 18 test OUT paths DeepSeek->jewai/logs/runtime
-- [x] 11B: test_server_subprocess dynamic channels; test_run_entrypoint E->A; test_launchpad ABCDEF->cfg.letters
-- [ ] 11B: kill orphan installer pid 18276 (port 8671, awaiting operator OK)
-- [ ] 11B: rerun run_all_tests.py after kill -> expect 21/21
-
-- [x] 11B: kill orphan installer pid 18276 (port 8671 freed)
-- [x] 11B: 3 hardcoded tests -> dynamic (server_subprocess/mf_8671/mf_ext/run_entrypoint/launchpad)
-- [x] 11B: index.html title JewAI -> JewAI v5 (backup .bak_11b)
-- [x] 11B: Chrome C (9124) raised via Tools/launcher.py --channel C (pid 14128)
-
-
-## 2026-10-28 22:49 - FINAL before reboot (11B)
-
-Operator reboots PC (kill all Chrome, full restart). 11B persisted state.
-
-### Tests: 20/21 pass (last run 22:30)
-- Was 9/21 at session start.
-- Only fail: test_mainframe_8671: cdp_alive C=False (Chrome C 9124 not running).
-- NEXT after reboot: diagnose Chrome C death (variant 1: read-only check of 23 chrome procs, ports 9122-9127, profile conflicts).
-
-### P0-P2 fixed (all backed up .bak_11b*)
-- install.ps1: 8671->8660 (conflict with agent E).
-- server.py: PORT 8660; doh_proxy_port written; run_launch calls launcher.py --channel L; basePort from UI; health-check after Mainframe spawn; model=deepseek (P1-5 reverted: all channels deepseek, qwen/alice test-only via manual extension swap).
-- app.js: defaults 8760->8666.
-- index.html: title JewAI -> JewAI v5.
-- svc_api.py: _SVC -> local Tools/svc.py.
-- 18 test files OUT path DeepSeek->jewai/logs/runtime.
-- 5 test files: dynamic ports/channels.
-
-### Still NOT done (after reboot, blocked)
-- Chrome C death cause (not tree-kill: launcher.py:100 already DETACHED_PROCESS).
-- Services (svc/watchdog/recovery/autorestart) not in v5.
-- RAG/knowledge/modules.md stale.
-- HANDOVER_14D/PROMPT_14D only in C:/DeepSeek/logs/D/.
-- Installer not yet run/tested. Operator runs install after reboot.
-
-
-## 2026-10-29 00:21 - 11B test stabilization
-
-**Chrome C after clean reboot:** stable 180+ sec via launcher. Pre-reboot death = dirty env (orphans), NOT code.
-**test_boot:** was assuming 8670 busy. Fixed: test occupies 8670 via socket, releases in finally.
-**test_ext_agent:** was fixed sleep(1.5), flaky under load. Fixed: poll /ping up to 10s.
-**test_mf_8671 + test_fs:** dynamic ports (was hardcoded 8671, mutual conflict).
-**Tests status:** 20/21 pass. Tests stabilized; further fails were timing/env flakes, now addressed.
-
-
-## 2026-10-29 01:07:28 - 21/21 tests pass (11B FINAL)
-
-- [x] 21/21 pass, 0 fail (was 9/21 at session start).
-- [x] Installer P0-P2 fixed (all backed up).
-- [x] Chrome C stable post-reboot (root cause: dirty env pre-reboot).
-- [ ] OPERATOR: run installer in NEW test folder.
-- [ ] Services (svc/watchdog/recovery/autorestart) not ported.
-- [ ] RAG/knowledge/modules.md stale.
-- [ ] HANDOVER_14D/PROMPT_14D to copy from DeepSeek if needed.
-
-
-## 2026-10-29 01:14 - LLM: ручной старт из панели
-
-**Правило (оператор):** local_ai/LLM НЕ в автозагрузке. Поднимается только вручную кнопкой "Старт" в панели мейнфрейма.
-- [x] 11B: local_ai/server.py (pid 7676, 840 MB) заглушён.
-- [ ] Реализовать в v5 Mainframe кнопку "LLM start/stop" (api.py + UI).
-- [ ] Убрать local_ai из boot-all.ps1 / gen_launchers (не стартовать при boot).
-- [ ] Тесты: вынести OUT-пути из хардкода C:/jewai в Path(__file__).resolve().parent.parent.parent (динамически от расположения теста).
-
-
-## 2026-10-29 01:38 - Требования оператора (сессия Q&A)
-
-### 1. Очистка C:/jewai от тестового профиля
-- [ ] Снести Profiles/* (в т.ч. Profiles/C - тестовый профиль Семёна) из C:/jewai.
-- [ ] Проверить, что install не копирует Profiles/Agents (уже в ignore, подтвердить).
-
-### 2. Installer: токен и Chrome
-- [ ] .agent_token добавить в ignore при copytree (не тащить токен из C:/jewai).
-- [ ] Chrome: если не найден - ПРЕДЛОЖИТЬ скачать (как Python в install.ps1: Read-Host + Invoke-WebRequest). Сейчас только warning в лог.
-
-### 3. Лаунчеры - в одно место
-- [ ] Собрать все launchers в подпапку (Tools/launchers/ или аналог): boot-all, stop-all, start-<CH>, restart.
-- [ ] Комплектный запуск всего и по каналам, ярлык на рабочий стол.
-- [ ] В C:/jewai сейчас папки launchers нет вообще - только python Tools/boot.py + Tools/launcher.py.
-
-### 4. Chrome: флаги и режим окна
-- [ ] --hide-crash-restore-bubble ОБЯЗАТЕЛЕН во всех запусках Chrome. Внести в документацию (RAG/procedures/architecture.md или отдельный chrome_flags.md).
-- [ ] НЕ открывать как PWA (--app=...). Открывать полноценное окно Chrome с вкладками.
-  Причина: (а) агент работает в своей вкладке с другими вкладками; (б) в PWA не открыть панель расширений.
-- [ ] Проверить, что Tools/launcher.py не передаёт --app (сейчас не передаёт; старый start-B.ps1 в DeepSeek передавал).
-
-### 5. Сервисы v5: переработка, не копия
-- [ ] Перенести svc/watchdog/recovery/autorestart в v5 с чистого листа по контракту AUDIT.
-- [ ] ALIVE не перебивает черновик оператора: проверка userHasTyped перед вставкой; force=false для служебных сообщений (PANEL-STUCK/ALIVE).
-- [ ] Recovery НЕ делает F5/reload, если оператор печатает (проверка активной печати, порог по keystroke).
-- [ ] ALIVE-спам: не сбрасывать silencePinged на каждый ответ агента; ALIVE_REPEAT_MS (30 мин) между повторами.
-- [ ] PANEL-STUCK: не отправлять как сообщение агенту, писать в лог/панель; не force=true.
-- [ ] Авто-пауза при 3 FAIL: пересмотреть - не блокировать канал из-за сетевых флапов.
-- [ ] svc_api.py: Tools/svc.py должен существовать (сейчас ссылка в пустоту).
-
-### 6. LLM (подтверждение)
-- [ ] local_ai/LLM только ручной старт кнопкой из панели мейнфрейма. Не в автозагрузке, не в boot-all.
-- [x] local_ai/server.py (pid 7676, 840 MB) заглушён 2026-10-29.
-
-### 7. Git
-- [ ] C:/jewai - это и есть чистый git-проект (рабочее дерево). Изменения сессии НЕ закоммичены.
-- [ ] Перед установкой - зафиксировать состояние коммитом.
-
-
-## 2026-10-29 01:45 - Мейнфрейм v5: визуал и функционал (требования оператора)
-
-**Контекст:** после установки мейнфрейм (8670) открывается, но "нифига не сделано толком". Привести к уровню текущего DeepSeek-мейнфрейма.
-
-### 1. Визуал
-- [ ] Привести к стилю инсталлятора: CRT/BBS-терминал (зелёный на чёрном, typewriter, Web Audio синт кликов/принтера).
-- [ ] Единый визуальный язык инсталлятор <-> мейнфрейм.
-
-### 2. Динамические блоки по числу агентов
-- [ ] Количество блоков = letters из config.json (после установки 1-10), не хардкод 6.
-- [ ] Источник правды: config.channels / config.letters.
-- [ ] Референс: C:/DeepSeek sandbox/council_chat/server.py (launchpad блоки) + git/jewai (наглядно).
-
-### 3. Функционал блоков (как в DeepSeek-мейнфрейме)
-- [ ] Индикаторы состояния (alive/cdp/content/lastId/cmds) - работающие, не заглушки.
-- [ ] Кнопки СТАРТ / СТОП / РЕБУТ для каждого блока (agent:<CH>, chrome:<CH>, server).
-- [ ] Мнемосхема: связи между блоками, красные/зелёные лампы по cmds_from_start.
-- [ ] Защита server: нельзя stop/reboot себя.
-
-### 4. Чаты
-- [ ] Общий чат (broadcast) - работает.
-- [ ] Персональные чаты по каналам (вкладка "Персональные").
-- [ ] Плейсхолдеры и имена/индексы агентов - из инсталлятора (config.channels.<L>.name), не хардкод "Agent A".
-
-### 5. LLM (Лада)
-- [ ] Пока заглушка: блок "LADA" в мейнфрейме, статус "не настроено".
-- [ ] Кнопка ручного старта/остановки LLM (см. п.6 прошлого блока).
-- [ ] Позже - нормальная интеграция (ip:port из config.llm).
-
-### 6. Роадмапы
-- [ ] Динамическое подтягивание из Projects/*/ROADMAP.html (скан директории, список, просмотр).
-- [ ] API: GET /api/projects, GET /roadmap/<name> (как в DeepSeek).
-
-### 7. Шаблоны в инсталляторе
-- [ ] Шаблон проекта (Project) - структура папки, README, TODO.
-- [ ] Шаблон роадмапа (ROADMAP.html/md) - чтобы модели понимали формат.
-- [ ] Класть шаблоны в Templates/ при установке, доступны новым проектам.
-
-### 8. Конфиги (справка, где что)
-- config.json (корень) - главный: root, bind, chat_port, doh_proxy_port, letters, channels{name,agent,cdp,prefix,extension,model}, thresholds, timeouts, version. Читает Core/config.py.
-- .agent_token (корень) - X-Token для API агентов.
-- Templates/config.llm.example.json, config.mail.example.json - шаблоны, автоматически не грузятся.
-- logs/svc/*.json - state сервисов (в v5 пока не создаются).
-- logs/rebirth/* - таблица серий (в v5 пока нет живого цикла).
-
-
-## 2026-10-29 01:57 - РЕФАКТОР: per-agent profiles (11B)
-
-**Цель:** за 3 часа получить чистую систему, где установка создаёт рабочего агента с нуля.
-
-**Проблема (баг):** все профили грузят один Templates/extension. Extension не знает свой порт/токен/канал. Леger общий. Это ломает мультиагентность.
-
-**Решение (по указанию оператора):**
-- Новая структура: Profiles/<L>/chrome (user-data), Profiles/<L>/config/config.json (per-channel), Profiles/<L>/logs/, Profiles/<L>/docs/ (PERSONAL, TODO), Profiles/<L>/extension/ (per-channel копия).
-- Agents/<L> убрать из схемы (один источник правды).
-- Инсталлятор создаёт структуру, пишет per-channel config, копирует extension.
-- Extension читает свой config через chrome.storage.local (заполняется инсталлятором через CDP при первом запуске Chrome).
-- Ledger per-channel: Profiles/<L>/logs/ledger.json.
-- Launcher: --user-data-dir=Profiles/<L>/chrome --load-extension=Profiles/<L>/extension.
-- Миграция агента: унёс папку Profiles/<L> — унёс всё (config, logs, docs, extension, chrome).
-
-**План по шагам (3 часа):**
-1. [ ] План в TODO/ROADMAP/JOURNAL/HANDOVER.
-2. [ ] Инсталлятор: новая структура Profiles/<L>, per-channel config, копия extension, docs-шаблоны.
-3. [ ] Core/config.py: channel_path(L, *parts) -> Profiles/<L>/...
-4. [ ] Extension: чтение agentUrl/token из chrome.storage, fallback на ручной ввод.
-5. [ ] Bridge/exec.py: ledger в Profiles/<L>/logs/ledger.json.
-6. [ ] Tools/launcher.py: пути из Profiles/<L>/{chrome,extension}.
-7. [ ] Инсталлятор при первом Chrome (CDP): chrome.storage.local.set({agentUrl, token, channel, name}).
-8. [ ] Тесты: обновить под новую схему (dynamic).
-9. [ ] Обновить RAG/procedures/agent_layout.md и current_state.md.
-10. [ ] Обновить HANDOVER_11B.md.
-
-
-## 2026-10-29 02:23:14 - per-agent refactor CODE DONE
-
-- [x] Installer: Profiles/<L>/{chrome,config,logs,docs,extension}, per-channel config, extension copy, .agent_token ignore.
-- [x] Core/config.py: channel_root/channel_path/channel_config.
-- [x] Bridge/daemon.py: ledger in Profiles/<L>/logs/ledger_<L>.json.
-- [x] Tools/launcher.py: chrome dir Profiles/<L>/chrome; push_storage via CDP.
-- [x] Templates/extension: manifest host_permissions 8666-8675; sidepanel autodetect.
-- [x] Tools/diagnose.py: Profiles/C/chrome.
-- [ ] Тесты прогнать после рефактора.
-- [ ] Chrome install offer (как Python).
-- [ ] Launchers .ps1 в Tools/launchers/.
-- [ ] Сервисы (svc/watchdog/recovery/autorestart) переработать.
-- [ ] Мейнфрейм: визуал CRT + динамические блоки + чат + roadmap + шаблоны.
-- [ ] Убрать Profiles/* из C:/jewai (тестовый профиль Семёна).
-
-
-## 2026-10-29 04:16 - overnight work: p1-p9 done
-
-### Готово (эта ночь)
-- [x] P10: Profiles/* из C:/jewai снесены (A,B,C,D,E,F).
-- [x] P13: Agents/ убран из инсталлятора.
-- [x] P14: --load-extension + --hide-crash-restore-bubble при инициализации профиля.
-- [x] P3: Chrome not found -> offer download + pause (install.ps1).
-- [x] P2: Tools/gen_launchers.py + 17 .ps1 в Tools/launchers/; вызов из run_install и run_launch.
-- [x] P7: /roadmap/<name> route отдаёт ROADMAP.html/md из Projects/<name>/; /api/projects уже есть.
-- [x] P8: Templates/project/ + Templates/roadmap/ + Templates/README.md.
-- [x] P1: Tools/svc.py + Tools/watchdog.py + Tools/recovery.py + Tools/autorestart.py.
-  ALIVE: silence_pinged + alive_repeat=1800s; kick fails if busy (operator safe).
-  Recovery: skip if operator typing; CDP-only reload; cooldown.
-  Autorestart: ledger mtime + operator typing guard + restart via Bridge/run.py.
-- [x] P4/P5/P6/P9: mainframe static CRT (green on black, scanlines); dynamic cards by config.letters; START/STOP/REBOOT per block; mnemo tab; chat tab; projects tab; LLM tab (stub "Тут будет ЛЛМ").
-  Chat: placeholder names from config.channels.<L>.name.
-
-### Осталось
-- [ ] Тесты после всех правок.
-- [ ] Git commit.
-- [ ] P12: end-to-end install + run (утром с оператором).
-- [ ] P11: финальный коммит после приёмки.
-
-
-## 2026-10-29 04:21 - FINAL overnight commit a2332ca
-
-- [x] 21/21 тестов зелёные.
-- [x] Коммит a2332ca (70 files).
-- [x] P1-P11, P13, P14.
-- [ ] P12: end-to-end install (оператор).
-- [ ] Приёмка (оператор).
-
-
-## 2026-10-29 04:23 - smoke install PASS
-
-- [x] install run_install end-to-end (tempdir, A/B): structure, config, launchers, templates - all OK.
-- [x] stale Tools/launchers removed before regen.
-- [ ] Operator acceptance test in real folder (P12).
-
-
-## 2026-10-29 18:18 - installer: default agentCount = 1 (было 4)
-
-**Баг (оператор):** при молчаливом Enter в строке "[3/5] Number of agents (1-10)" дефолт = 4. Должен быть 1.
-- [ ] app.js: `config.agentCount = parseInt(val) || 4;` -> `|| 1` (и в i18n подсказке e.g. 1, не 4).
-- [ ] проверить, нет ли 4 ещё где-то (server.py `n = cfg.get("agentCount", 4)`).
-- [ ] после фикса: пустой Enter -> 1 агент.
-
-### Замечено при тесте (не баг, но к сведению)
-- UI спрашивает [1/5]..[6/6], а SUMMARY пишет "Ports: 8666/8670/6699 Agents: 4".
-- Поле [5/6] DoH proxy port подписано "(e.g. 9999)", но SUMMARY пишет 6699 - оператор ввёл 6699, ок.
-- Проверить: SUMMARY должен показывать реально введённые значения (agentCount, dohPort), сейчас агент=4 при пустом вводе.
-
-
-## 2026-10-29 18:23 - install test (1 agent, C:\JewAI_v5): 3 bugs
-
-### BUG 1: installer redirect не сработал - CORS
-Симптом: "Mainframe did not respond after 15s". Вручную 8670 открывается.
-Причина: installer на 8660, fetch("http://127.0.0.1:8670/api/health") - cross-origin.
-        Mainframe/web.py НЕ отдаёт Access-Control-Allow-Origin, нет do_OPTIONS.
-        Браузер блокирует -> catch -> timeout 15s -> fallback.
-- [ ] Fix: Mainframe/web.py: CORS headers (loopback -> "*"), do_OPTIONS preflight.
-- [ ] Verify: health fetch из 8660 работает, redirect срабатывает.
-
-### BUG 2: fallback "Click to open" - не кликается, не гиперссылка
-Симптом: "Click to open: http://127.0.0.1:8670/" - текст, не ссылка; клик не работает.
-Причина: app.js создаёт <a> и appendChild(document.body), но CRT-терминал имеет
-        overlay (::after, scanlines, pointer-events: none) + <a> не в потоке терминала.
-- [ ] Fix: убрать <a>; fallback = window.location.href = mfUrl (прямой редирект).
-        Если сервер не готов - браузер сам покажет connection refused, оператор F5.
-
-### BUG 3: agent :8666 DOWN, cdp :9122 UP
-Симптом: Chrome поднялся (CDP отвечает), Bridge/run.py --channel A не подключился к вкладке.
-        Панель: lastId (empty), cmds ?.
-Гипотезы (проверить):
-  a) вкладка ещё грузилась (deepseek медленный), find_chat timeout мал.
-  b) URL вкладки не chat.deepseek.com (about:blank / restore-last-session восстановил старую).
-  c) Adapter.HOST != фактический URL.
-- [ ] Проверить: CDP /json/list -> URL вкладки A.
-- [ ] Проверить: Bridge/cdp.py find_chat timeout/retry.
-- [ ] Проверить: Bridge/run.py continuous loop - backoff растёт до 10с, tick не происходит.
-- [ ] Возможно: Chrome стартует быстрее, чем deepseek готов; нужен wait-for-chat в launcher.
-
-### Что работает
-- Installer: 1 агент (Lola), ports 8666/8670/9999 - правильно.
-- Installation complete, Launch complete.
-- Mainframe 8670: панель открылась, CRT работает, 1 карточка A (Lola).
-- Chrome поднялся (CDP 9122 UP).
-- Кнопки START/STOP/REBOOT/CHROME на карточке есть.
-
-
-## 2026-10-29 18:23 - install test (1 agent, C:\JewAI_v5): 3 bugs
-
-### BUG 1: installer redirect не сработал - CORS
-Симптом: "Mainframe did not respond after 15s". Вручную 8670 открывается.
-Причина: installer на 8660, fetch("http://127.0.0.1:8670/api/health") - cross-origin.
-        Mainframe/web.py НЕ отдаёт Access-Control-Allow-Origin, нет do_OPTIONS.
-        Браузер блокирует -> catch -> timeout 15s -> fallback.
-- [ ] Fix: Mainframe/web.py: CORS headers (loopback -> "*"), do_OPTIONS preflight.
-- [ ] Verify: health fetch из 8660 работает, redirect срабатывает.
-
-### BUG 2: fallback "Click to open" - не кликается, не гиперссылка
-Симптом: "Click to open: http://127.0.0.1:8670/" - текст, не ссылка; клик не работает.
-Причина: app.js создаёт <a> и appendChild(document.body), но CRT-терминал имеет
-        overlay (::after, scanlines, pointer-events: none) + <a> не в потоке терминала.
-- [ ] Fix: убрать <a>; fallback = window.location.href = mfUrl (прямой редирект).
-        Если сервер не готов - браузер сам покажет connection refused, оператор F5.
-
-### BUG 3: agent :8666 DOWN, cdp :9122 UP
-Симптом: Chrome поднялся (CDP отвечает), Bridge/run.py --channel A не подключился к вкладке.
-        Панель: lastId (empty), cmds ?.
-Гипотезы (проверить):
-  a) вкладка ещё грузилась (deepseek медленный), find_chat timeout мал.
-  b) URL вкладки не chat.deepseek.com (about:blank / restore-last-session восстановил старую).
-  c) Adapter.HOST != фактический URL.
-- [ ] Проверить: CDP /json/list -> URL вкладки A.
-- [ ] Проверить: Bridge/cdp.py find_chat timeout/retry.
-- [ ] Проверить: Bridge/run.py continuous loop - backoff растёт до 10с, tick не происходит.
-- [ ] Возможно: Chrome стартует быстрее, чем deepseek готов; нужен wait-for-chat в launcher.
-
-### Что работает
-- Installer: 1 агент (Lola), ports 8666/8670/9999 - правильно.
-- Installation complete, Launch complete.
-- Mainframe 8670: панель открылась, CRT работает, 1 карточка A (Lola).
-- Chrome поднялся (CDP 9122 UP).
-- Кнопки START/STOP/REBOOT/CHROME на карточке есть.
-
-
-## 2026-10-29 19:27 - installer proxyPort default рассинхрон
-
-**Проблема (оператор):** тестовая установка поднимает doh_proxy на 9999. Source config.json = 9899.
-Плохо: installer не наследует значение из source, а берёт свой дефолт.
-
-- [ ] app.js: `config.proxyPort = parseInt(val) || 9999` -> `|| 9899` (совпасть с source).
-- [ ] server.py: `proxy_port = cfg.get("proxyPort", 9999)` -> `9899`.
-- [ ] Или лучше: installer при открытии подгружает source config.json и подставляет proxyPort/dohProxyPort оттуда (без угадывания).
-- [ ] Проверить, что в target config.json пишутся одинаковые `proxy_port` и `doh_proxy_port`.
-- [ ] В SUMMARY installer показывать именно те порты, что уйдут в конфиг (не хардкод из формы).
-
-### Отдельно: agent.py в новом тесте
-- Старая установка (18:19) поднимает только Bridge/run.py. FIX3/FIX7 (agent.py) применены позже.
-- [ ] На новой установке проверить: agent.py в процессах, agent :8666 UP.
-
-
-## 2026-10-29 19:43 - installer self-kill + proxy port fix
-
-**Из теста: chatPort=8660 -> installer убил сам себя (Failed to fetch).**
-- [x] server.py run_install: preflight port validation (chat != installer, proxy != installer/chat, agent/cdp != conflicts).
-- [x] server.py run_launch: skip kill if chat_port == PORT, getpid self-protect.
-- [x] app.js: validate chatPort 8660 -> error до запуска.
-- [x] proxyPort default 9999 -> 9899 (app.js + server.py line 50 + line 204).
-- [x] hint text [5/6] 9999 -> 9899 (en + ru).
-- [x] 21/21 tests pass.
-- [ ] Оператор: перезапустить installer, повторить тест.
-
-
-## 2026-10-30 00:11 - install 23:36 (C:\JewAI_v5): 3 bugs
-
-### 1. Agents DOWN
-Root: launched C:\JewAI_v5\install.bat (test copy), process held OLD server.py in memory (no FIX3). install.log has no "Chrome for Testing copied", no "Bridge A started".
-- [ ] Operator: delete C:\JewAI_v5, install STRICTLY from C:\jewai\install.bat into NEW folder.
-- [ ] install.bat guard: detect if run from target copy, warn.
-
-### 2. Chrome opens www.deepseek.com/en instead of chat.deepseek.com
-- [ ] Check: DeepSeek redirect or proxy 9899 issue.
-- [ ] launcher.py DEFAULT_START_URL["deepseek"] = chat.deepseek.com (already). Verify actual URL after load.
-- [ ] If DeepSeek redirects - open direct /a/chat/s/<id>.
-
-### 3. storage: False (extension loaded, sidepanel not connected)
-- [ ] push_storage in launcher.py returned False. Add retry (3x, 2s).
-- [ ] Log reason False (target not found / ws error).
-- [ ] Fallback: sidepanel autodetect 8666-8675 (already in code).
-
-### 4. Panel (v5 Mainframe) - TODO (after operator agreement)
-- [ ] Top button to open sidepanel.
-- [ ] Ideal: sidepanel auto-open right on chat load.
-- [ ] Missing key functions (agree list with operator).
-- [ ] Mnemo: verify all blocks and links.
-
-
-## 2026-10-30 00:22 - 11B close: session summary
-
-**Operator: off for 30 min. 11B finalizing for possible rebirth.**
-
-### Fixed tonight (v5, 25 commits ahead of origin)
-- CfT 158.0.8127.2: downloaded, --load-extension verified (extension loads).
-- launcher: _chrome_exe(cfg) priority = chrome_path > CfT > regular Chrome.
-- installer: copies CfT to target, sets chrome_path in config.json.
-- launcher: push_storage 3-retry (was 1 shot).
-- install.bat: guard (detect test copy, warn).
-- launchpad: agent START per-channel extension (Profiles/<L>, not Templates).
-- 21/21 tests pass, tree clean.
-
-### Open (for 12B)
-- Install STRICTLY from C:\jewai\install.bat into NEW folder. C:\JewAI_v5 is stale.
-- storage=False: extension loads but sidepanel "not connected" — retry may not help if extension target not ready in 4s. Possible: wait for target up to 10s.
-- DeepSeek redirect chat.deepseek.com -> www.deepseek.com/en — behavior for unauth, login manually.
-- Panel v5 Mainframe: TODO list (agree with operator).
-- Git push: 25 commits ahead of PaaLadin/jewai-v5.
-
-
-## Релизная подготовка v0.1.0 (от Алисы)
-
-### R1. Легальность
-- [ ] 1.1. Создать LICENSE (MIT/Apache 2.0).
-- [ ] 1.2. Проверить, что правообладатель — Оператор.
-
-### R2. Сборка чужим человеком
-- [ ] 2.1. Собрать requirements.txt (по импортам).
-- [ ] 2.2. README: Quick start (venv -> pip -> install.bat).
-- [ ] 2.3. README: заменить C:/JewAI/ на config.root().
-- [ ] 2.4. Создать config.example.json, а реальный — в .gitignore.
-
-### R3. Версионирование
-- [ ] 3.1. CHANGELOG.md (Keep a Changelog).
-- [ ] 3.2. git tag v0.1.0-dev + GitHub Release.
-
-### R4. Пуш
-- [ ] 4.1. git pull --rebase + push.
-- [ ] 4.2. Скан секретов по git log -p.
-
-### R5. Техдолг
-- [ ] 5.1. Аутентичность источника блока (консилиум).
-- [ ] 5.2. Живой CDP-цикл Rebirth (тест).
-- [ ] 5.3. Тест Watchdog-guard на залипание.
-
-### Правила голосового вызова (добавлено по указанию Оператора)
-
-- [ ] Перед вызовом проверять системную громкость.
-- [ ] Если громкость на минимуме:
-  - Проверить локальное время.
-  - Если время с 22:00 до 08:00 — ОТМЕНИТЬ голосовой вызов (не будить).
-  - Если время с 08:00 до 22:00 — поднять громкость до 15 и ВЫЗВАТЬ.
-
-## 12B: Extension UI (TODO)
-- [ ] Добавить индикатор "content no answer" в боковую панель (сейчас есть только CDP и health.py).
-- [ ] Портировать `checkStuck` (авто-клик Continue/Retry/Regenerate) из v4 в `content_deepseek.js`.
-\n- [ ] Вывод версии и порта агента при инициализации панели (BIOS-like check).
-- [x] Портирован checkStuck в content_deepseek.js (авто-клик Continue/Retry).
-- [x] Добавлен BIOS-лог при старте панели (вывод версии и порта).
-- [x] Исправлено отображение имени агента (читается из chrome.storage.local).
-- [x] Кнопка PING теперь выводит результат в лог.
-
-## TODO 13B (принял от 12B, 2026-11-01)
-- [ ] Принять UI панели расширения от оператора.
-- [ ] Проверить `checkStuck` (авто-клик Continue/Retry) живьём.
-- [ ] Фазы R1-R5 (Алиса): LICENSE, requirements.txt, CHANGELOG, push, техдолг.
-- [ ] Каналы B-F: настройка и тестирование.
-- [ ] Мелкие баги: Agent v из манифеста, agentName из storage.
-
-## TODO 13B (принял от 12B, 2026-11-01)
-- [ ] Принять UI панели расширения от оператора.
-- [ ] Проверить `checkStuck` (авто-клик Continue/Retry) живьём.
-- [ ] Фазы R1-R5 (Алиса): LICENSE, requirements.txt, CHANGELOG, push, техдолг.
-- [ ] Каналы B-F: настройка и тестирование.
-- [ ] Мелкие баги: Agent v из манифеста, agentName из storage.
-
-
-## 2026-11-02 (7C, Семён) - актуализация + план раскатки
-
-- [x] Подхват хвостов Бориса 12B, разбор HANDOVER/TODO/SESSION_STATE/PROMPT_13B.
-- [x] Правки Бориса 31.10-02.11: в rag/ и algorithms/ DeepSeek правок НЕТ. Реальные правки (RAG-доки, Pip-Boy UI, voice_call, installer fixes) уже в jewai, коммиты 89db413..7fe994c.
-- [x] Push jewai 7fe994c (fix UI silent ping) -> origin/main == HEAD.
-- [x] ROADMAP актуализирован (02.11): Ф2 in progress, Ф3/Ф4/Ф5 partial (приёмки не было), Ф7 = релизный пуш после закрытия фаз.
-- [x] LICENSE перед релизным пушем - отдельное напоминание logs/LICENSE_REMINDER.md.
-- [x] CORS в Mainframe/web.py реализован (_cors + do_OPTIONS) - проверить живьём.
-- [ ] Инсталлер-баги: BUG2 fallback Click to open, BUG3 agent:8666 DOWN при CDP UP, storage=False, DeepSeek redirect, agentCount default.
-- [ ] Раскатка B-F с оператором (после Ф2).
-- [ ] Проверить checkStuck в content_deepseek.js живьём.
-- [ ] Прогнать rebirth-цикл в рантайме.
-
-
-## 2026-11-02 (7C) - PUSH ОТЛОЖЕН
-
-- Коммит b8b0c2f (docs: 7C actualize ROADMAP+TODO 02.11) НЕ запушен.
-- Причина: GCM (credential.helper=manager) требует интерактивного окна; из фона (detached) висит, с interactive=never отдаёт rc=128.
-- Credentials в Windows Credential Manager есть (git:https://github.com -> PaaLadin), но GCM их не отдаёт неинтерактивно.
-- Что сделать при возвращении оператора:
-  1. cd C:/jewai; git push origin main
-  2. В окне GCM выбрать PaaLadin -> Continue.
-  3. Проверить: git ls-remote origin refs/heads/main -> должен быть b8b0c2f.
-- Push 7fe994c (fix UI silent ping) - прошёл 02.11.2026, HEAD==origin был на 7fe994c.
-
-- [x] BUG3b (agent :8666 DOWN): фикс Templates/extension/agent.py (exit(1) при busy) + installer /ping health-check. Проверено: p1 up, p2 rc=1 [guard] port busy. Коммит 5dd4117.
-- [x] Status schema merge (Mainframe/api.py): name/prefix/model/cdp/agent/agent_port/cdp_port в matrix. test_mainframe_8671 + test_mainframe_ext PASS. 21/21 green.
-- [ ] Push jewai: ahead 3 (b8b0c2f, 5dd4117, a3de8d7). Ждёт GCM-клика оператора.
-- [ ] BUG3a (Bridge/DeepSeek redirect chat->www): решение оператора.
-
-- [ ] BUG3a (Bridge redirect chat->www): НЕ патчу. Причина: fallback на base-domain может прицепить Bridge к неверному табу (DeepSeek + Qwen/Alice на одном CDP). Нужно решение оператора: (а) --no-proxy при первом запуске + ручной логин, (б) фиксированный URL чата /a/chat/s/<id>, (в) fallback только если на порту ровно один page-таб. Файл Bridge/cdp.py не тронут, бэкап .bak_7c_bug3a есть.
-
-- [ ] B-06: Mainframe 8670 — переписать UI с панели Mainframe (как DeepSeek 8770), не Pip-Boy sidepanel. Масштабируемость по config.letters (1-10). Образец: C:/DeepSeek/sandbox/council_chat/ + git/jewai. После B-04 и раскатки B-F. Приоритет MEDIUM.
-
-- [ ] B-07: Onboarding-HTML в каждой вкладке Chrome агента (вместо about:blank): шаги (панель расширения -> логин в чат -> pin tab). Отдаётся agent.py GET /onboarding?channel=L. Приоритет HIGH.
-- [ ] B-08: RAG/onboarding/AGENT_FIRST_RUN.md — линк-лист чатов, инструкция "не логинь Chromium в Google, логинь только в чаты", описание что лежит в Profiles/<L>/chrome. Приоритет HIGH (вместе с B-07).
-- [ ] B-09: автодетект "не авторизован" (редирект чата) -> красный статус в Mainframe + кнопка "Залогиниться". Приоритет MEDIUM.
-- [ ] B-10: автовосстановление вкладки чата через CDP (Target.createTarget) при потере. Приоритет MEDIUM.
-
-- [ ] B-07 upd: onboarding HTML + краткая инструкция по проекту + чекбокс «не показывать» (флаг в config). HIGH.
-- [ ] B-11: rebirth пишет active_chat_<CH>.json (chat_url, model, model_index, created_at); Bridge ищет по конкретному URL. Mainframe показывает активную модель. MEDIUM.
-- [ ] B-12: вики в Mainframe — how-to, ключевые механики, без тех. деталей. LOW, хвост.
-
-- [ ] РЕДЕПЛОЙ: установить jewai_5 с новыми фиксами (после возвращения оператора). Проверить: панель показывает канал/имя, PAUSE работает, WATCHDOG/RECOVERY тумблеры, SELF-TEST проходит, REBOOT перезапускает мост, LED'ы корректны.
-- [ ] B-18: масштабируемость 1-10 проверить на редеплое.
-
-- [x] B-28: installer CfT copy locked (WinError 32). Kill chrome по target+ROOT + retry 5x. КОД ГОТОВ.
-- [x] B-29: agent.py _logs_dir() = HERE.parent вместо HERE.parent.parent. Лампы/пауза/ledger теперь работают. КОД ГОТОВ.
-- [ ] B-30: paused state рассинхрон storage vs paused.json. app.js load() -> GET /pause_state. LOW.
-## 2026-11-04 (Mora, B) — RAG-зона, новые пункты
-
-**Роли (актуализация):**
-- **Dora (A)** — roadmap + architecture (jewai).
-- **Mora (B)** — RAG (Jeho, копия в jewai по готовности).
-- **Оператор** — приёмка, стратегия, порты сборки.
-- Остальные каналы (C/D/E/F) — по назначению оператора.
-
-### Мост: handicap при отправке (HIGH)
-
-- [ ] `Bridge/daemon.py` — после отправки `[AGENT REPORT]` в чат ставить паузу **7–10 с**, в течение которой мост не пишет в textarea (копит в outbox, как при `paused`). Причина: сейчас мост шлёт подтверждения быстрее, чем агент успевает обдумать ответ, ответы возвращаются пачкой и перебивают размышление. Цикл должен быть однопоточным: команда → мост → скрипт → результат → мост → ответ → размышление → команда.
-- [ ] Handicap действует **для любого источника** текста в textarea (мой блок, кик коллеги, системное сообщение).
-- [ ] Настройка в `config.json` → `timeouts.handicap_ms` (default 7000), не хардкод.
-- [ ] Исполнитель: **Dora** (архитектура моста) или **Mora** (если Dora занята roadmap). Согласовать.
-
-### Правило «один блок — одно сообщение» (HIGH)
-
-- [x] `RAG/procedures/BEHAVIOR.md` §9 — дисциплина отправки (сделано Mora 04.11).
-- [x] `RAG/procedures/BEHAVIOR.md` §10 — не переиспользовать id (сделано Mora 04.11).
-- [ ] Продублировать в jewai `RAG/procedures/BEHAVIOR.md` при копировании RAG.
-
-### Таймер (инструмент, MEDIUM)
-
-- [ ] `Tools/timer.py` — запуск detached (`DETACHED_PROCESS`), через N секунд кикает в свой канал: `python Tools/timer.py --channel B --after 600 --text "[B>B] напоминание"`. Нужен, потому что чаты DeepSeek без пинка в окне не активируют дальнейшие действия.
-- [ ] Исполнитель: **Mora**.
-
-### Watchdog — тест живьём (MEDIUM)
-
-- [ ] Проверить, что watchdog B (interval 300, threshold 3) реально шлёт `[ALIVE?]` при молчании. Пассивно: `Profiles/B/logs/svc_watchdog_B.json` (state, pid, at), `logs/svc/`. Активно: остановить, включить с `--interval 60 --threshold 1`, помолчать 2–3 мин, проверить приход `[ALIVE?]`. Потом вернуть 300/3.
-- [ ] Исполнитель: **Mora** (после таймера — таймер страхует, если watchdog не сработает).
-
-### Доступ к C:\jewai (DONE)
-
-- [x] `Core/config.py` + `Bridge/exec.py` + `Bridge/daemon.py` — поле `extra_roots`, `safe_path` принимает доп. корни. `config.json` → `"extra_roots": ["C:\\jewai"]`. Мост B перезапущен. Проверено: `op:read C:\jewai\logs\HANDOVER_11B.md` → OK. Бэкапы `.bak_20261104*`. Сделано Mora 04.11.
-- [ ] При переносе в jewai: `extra_roots` = `["C:\\Jeho"]` (обратное направление) или `[]` — по потребности сборки.
-
-### RAG — что сделано Mora 04.11 (к переносу в jewai по готовности)
-
-- [x] `RAG/TREE.md` — карта дерева (10408 б).
-- [x] `RAG/procedures/TOKEN_COUNTER.md` — F5b (5043 б).
-- [x] `RAG/procedures/SESSION_HANDOVER.md` — F5d (4763 б).
-- [x] `RAG/procedures/REBIRTH.md` §11 — 500/700/850, TTL, pending, hold, lock.
-- [x] `RAG/procedures/ALIVE_AND_SERVICES.md` §10 — guard/rescue F6b.
-- [x] `Templates/PROMPT_ACTIVATION.md` v2 — тонкий корень (11175 б), §11 paused.
-- [x] `RAG/INDEX.md` — обновлён.
-- [ ] Перенос в jewai — после приёмки оператора.
-- [x] B-45: Fix launcher.py for Chrome 156+ (get real Ext ID via chrome://extensions, force sidepanel, fix push_storage). Verified in test.
-## TODO после 9C (2026-11-09)
-
-9C закрыл: TTS+stop, rebirth (DeepSeek и v5), doc audit, SMTP secure, settings gear, wiki.
-
-### P0 — блокирует
-
-- [ ] **Живой тест rebirth в v5.** Гейт 850 работает (dry-run проверен). CDP cycle не прогонялся на живом агенте.
-- [ ] **BUG-007:** `svc_api.py` читает `logs/svc/<kind>_<ch>.json`, `svc.py` пишет `Profiles/<L>/logs/svc_<kind>_<L>.json`. Панель показывает watchdog=false при живом сервисе. Фикс: svc_api читает из Profiles.
-
-### P1 — важное
-
-- [ ] **BUG-002:** `watchdog.py::_kick` вызывает `Bridge.cdp.connect(port)` без `HOST`. find_chat ищет deepseek по HOST, не находит. ALIVE может не дойти.
-- [ ] **BUG-006:** `export_share` через CDP (не Playwright). Нужен перед rebirth: сохранить старый диалог. Аналог `Tools/export_share.py` на `Bridge/cdp.py`.
+- [ ] **BUG-002:** `Tools/watchdog.py::_kick` вызывает `Bridge.cdp.connect(port)` без `HOST`. `find_chat` ищет deepseek по `HOST`, не находит. ALIVE может не дойти. Фикс: передать HOST из адаптера.
+- [ ] **BUG-006:** `export_share` через CDP (не Playwright). Нужен перед rebirth: сохранить старый диалог. Аналог `Tools/export_share.py` на `Bridge/cdp.py` (изолированный контекст, scroll-loop, дедуп). DeepSeek-версия: `C:/DeepSeek/sandbox/export_share.py` (Playwright, не переносим).
 - [ ] **BUG-004:** `Adapters/google.py` есть (5607 б), но не описан. Нужен `RAG/procedures/ADAPTERS.md`.
+- [ ] **Handicap при отправке (Mora 04.11):** `Bridge/daemon.py` после отправки `[AGENT REPORT]` в чат ставит паузу 7-10 с (outbox как при paused). Настройка `config.json -> timeouts.handicap_ms` (default 7000). Действует для любого источника текста. Исполнитель: Dora или Mora.
+- [ ] **BEHAVIOR.md §9/§10 в jewai:** Mora 04.11 сделала в Jeho, в jewai не перенесено. §9 дисциплина отправки, §10 не переиспользовать id. Живой файл `C:/jewai/RAG/procedures/BEHAVIOR.md` секций 9-10 НЕ содержит (проверено 10C).
 
-### P2 — причёсывание
+## P2 - причёсывание
 
-- [ ] **ROADMAP.md** (14217 б) — 5 секций «Status after 14D» (дубли). Подрезать, оставить 1 актуальную.
-- [ ] **HANDOVER_9C.md** — создать (для 10C).
-- [ ] **PROMPT_10C.md** — создать (диапазон CCAB0000-CCAB0999).
-- [ ] **SESSION_STATE.md** в jewai — нет файла. Создать (сейчас только блок в SESSION_STATE DeepSeek).
+- [ ] **B-07 / B-08:** onboarding-HTML в каждой вкладке Chrome агента (вместо about:blank) + `RAG/onboarding/AGENT_FIRST_RUN.md`. HIGH.
+- [ ] **B-06:** Mainframe 8670 - переписать UI как DeepSeek 8770, не Pip-Boy sidepanel. Масштабируемость по config.letters (1-10). MEDIUM.
+- [ ] **B-09:** автодетект "не авторизован" (редирект чата) -> красный статус в Mainframe + кнопка "Залогиниться". MEDIUM.
+- [ ] **B-10:** автовосстановление вкладки чата через CDP (`Target.createTarget`) при потере. MEDIUM.
+- [ ] **B-11:** rebirth пишет `active_chat_<CH>.json` (chat_url, model, model_index, created_at); Bridge ищет по конкретному URL. MEDIUM.
+- [ ] **B-30:** paused state рассинхрон storage vs paused.json. `app.js load()` -> `GET /pause_state`. LOW.
+- [ ] **B-12:** вики в Mainframe - how-to, ключевые механики. LOW (9C частично закрыл: 4 секции добавлены).
+- [ ] **checkStuck живьём:** проверить авто-клик Continue/Retry в `content_deepseek.js` на живом залипании.
+- [ ] **TEST OUT paths:** вынести OUT-пути из хардкода `C:/jewai` в `Path(__file__).resolve().parent.parent.parent` (динамически от расположения теста).
 
-### P3 — внешнее
+## P3 / v6 - внешнее
 
-- [ ] **v6 — LLM в v5.** LocalAI (Qwen 3B :8090) в v5 не портирован. Оператор: план на v6.
-- [ ] **STT + wake-word «Джошуа»** — в долгий ящик. На Хабре кто-то выкладывал, изучить.
+- [ ] **v6 - LLM в v5.** LocalAI (Qwen 3B :8090) в v5 не портирован. Оператор: план на v6.
+- [ ] **STT + wake-word «Джошуа».** В долгий ящик. На Хабре кто-то выкладывал, изучить.
 
-### Правила 9C (передать 10C)
+## Ждёт решения оператора
+
+- [ ] **BUG3a (Bridge/DeepSeek redirect chat -> www).** Три варианта, файл `Bridge/cdp.py` не тронут, бэкап `.bak_7c_bug3a` есть:
+    - (а) `--no-proxy` при первом запуске + ручной логин.
+    - (б) фиксированный URL чата `/a/chat/s/<id>`.
+    - (в) fallback только если на CDP ровно один page-таб.
+- [ ] **Раскатка B-F:** каналы, живые агенты, приёмка. Организационное, за оператором.
+
+## Правила 9C (наследие, действует)
 
 1. `config.json` в `.gitignore`. SMTP-пароли только в `.secret/smtp.json`.
-2. `op=write` перезаписывает целиком. Для append — `open(...,'a')` через `run`.
-3. Литеральные `###` и бэктики в теле write — `chr(35)*3` / `chr(96)*3`.
-4. Write race — read-back после каждого write.
+2. `op=write` перезаписывает целиком. Для append - `open(...,'a')` через `run`.
+3. Литеральные `###` и бэктики в теле write - `chr(35)*3` / `chr(96)*3`.
+4. Write race - read-back после каждого write.
 5. `__pycache__` в extension ломает Chrome. `sys.dont_write_bytecode = True`.
 6. Пуш: токен из `.secret/github_token`, inline URL, `GIT_TERMINAL_PROMPT=0`.
 7. Rebirth: гейт 850. Не обходить. force только через `force_<CH>.flag`.
-Dixi. 9C, 2026-11-09.
-## Обновление 10C (2026-11-09) - rebirth P0
+8. Многострочный `python -c` через мост - SyntaxError. Только файлом.
 
-- [x] **Живой тест rebirth**: фактически прошли при активации 10C (9C -> 10C). Обнаружен баг: двойная отправка промта (кривой + правильный), второй завис в textarea, verify ложно засчитал delivered.
-- [x] **Fix:** PaaLadin/jewai c949386 + PaaLadin/jewai-v5 1a5c2d1. Подробности в RAG/procedures/BUGS_V5.md раздел "Исправлено 10C".
-- [ ] **Подтверждение fix:** на ближайшем rebirth (B или D) смотреть see_chat.py - ожидается ровно одно сообщение в чате, textarea пуста. Если снова два - откат по .bak_10c_20261109.
-- [ ] **BUG-007 (svc_api path)** - остаётся P0, не тронут.
-- [ ] **no_last_id (REBIRTH §11.8)** - остаётся P0, не тронут. Варианты: (а) /status в agent.py; (б) Monitor читает ledger_<L>.json напрямую; (в) probe через CDP. Рекомендация 10C: (б).
+Dixi. 10C (Семён), 2026-11-09.
 
-## Обновление 10C - no_last_id FIXED (2026-11-09)
-
-- [x] **no_last_id (REBIRTH §11.8)** - FIXED вариантом (б): Monitor.last_id_of читает ledger_<L>.json
-  (watermark). Песочница 5/5, test_rebirth_monitor 12/12, test_cycle fails=0.
-- Остаётся P0: BUG-007 (svc_api path mismatch).
-
-## Обновление 10C - BUG-007 FIXED (2026-11-09)
-
-- [x] **BUG-007 (svc_api path mismatch)** - FIXED: убран fallback в svc_api._read_state,
-  единый путь Profiles/<L>/logs/svc_<kind>_<ch>.json. Песочница 5/5, test_mainframe_ext fails=0.
-- P0 очищен: rebirth double-send, no_last_id, BUG-001/007 - закрыты.
-- Открыто: подтверждение rebirth fix на живом rebirth (see_chat).
