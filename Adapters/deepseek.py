@@ -97,28 +97,45 @@ class DeepSeek:
             cdp.eval_expr(setter_js)
 
         time.sleep(0.5)
-        # 2) Enter x2
-        for _ in range(2):
-            for t in ("keydown", "keypress", "keyup"):
-                cdp.eval_expr(
-                    "(() => { const t = document.querySelector(%r); if (!t) return;"
-                    " t.dispatchEvent(new KeyboardEvent(%r, {key:'Enter', code:'Enter',"
-                    " keyCode:13, which:13, bubbles:true, cancelable:true})); })()"
-                    % (sel, t)
-                )
-                time.sleep(0.05)
-            time.sleep(1.5)
-        # 3) проверить опустела ли textarea
-        v = cdp.eval_expr(
-            "(() => { const t = document.querySelector(%r); return t ? t.value : ''; })()" % sel
-        ) or ""
-        return not v.strip()
+        # 2) Enter - 3 попытки CDP Input.dispatchKeyEvent (trusted) + poll textarea
+        _sel_v = "(() => { const t = document.querySelector(%r); return t ? t.value : ''; })()" % sel
+        for _attempt in range(3):
+            try:
+                cdp.call("Input.dispatchKeyEvent", {"type": "keyDown", "key": "Enter", "code": "Enter", "windowsVirtualKeyCode": 13, "nativeVirtualKeyCode": 13})
+                time.sleep(0.1)
+                cdp.call("Input.dispatchKeyEvent", {"type": "keyUp", "key": "Enter", "code": "Enter", "windowsVirtualKeyCode": 13, "nativeVirtualKeyCode": 13})
+            except Exception:
+                pass
+            _emptied = False
+            for _ in range(16):
+                time.sleep(0.5)
+                _v = cdp.eval_expr(_sel_v) or ""
+                if not _v.strip():
+                    _emptied = True
+                    break
+            if _emptied:
+                return True
+            time.sleep(1)
+        return False
 
     def verify_prompt_hits(self, cdp: CDP, markers: list[str]) -> int:
+        # 10C: textarea-draft входит в body.innerText -> false 'delivered'
+        ta = cdp.eval_expr("(()=>{const t=document.querySelector('textarea');return t?t.value:'';})()") or ""
+        if ta.strip():
+            return 0
         body = cdp.eval_expr("document.body ? document.body.innerText : ''") or ""
         return sum(1 for m in markers if m in body)
 
     def new_chat(self, cdp: CDP) -> bool:
         cdp.eval_expr("location.href = 'https://chat.deepseek.com/'")
-        time.sleep(2)
-        return True
+        # 10C: poll - ждём, пока SPA перезагрузится (textarea + URL)
+        for _ in range(20):
+            time.sleep(0.5)
+            try:
+                _u = cdp.eval_expr("location.href") or ""
+                _t = cdp.eval_expr("(()=>{const t=document.querySelector('textarea');return !!(t&&t.getBoundingClientRect().width>0);})()")
+            except Exception:
+                continue
+            if "chat.deepseek.com" in _u and _t:
+                return True
+        return False
