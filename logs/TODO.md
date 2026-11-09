@@ -739,3 +739,10 @@ Dixi. 9C, 2026-11-09.
 - [x] **no_last_id (REBIRTH §11.8)** - FIXED вариантом (б): Monitor.last_id_of читает ledger_<L>.json
   (watermark). Песочница 5/5, test_rebirth_monitor 12/12, test_cycle fails=0.
 - Остаётся P0: BUG-007 (svc_api path mismatch).
+
+## Обновление 10C - BUG-007 FIXED (2026-11-09)
+
+- [x] **BUG-007 (svc_api path mismatch)** - FIXED: убран fallback в svc_api._read_state,
+  единый путь Profiles/<L>/logs/svc_<kind>_<ch>.json. Песочница 5/5, test_mainframe_ext fails=0.
+- P0 очищен: rebirth double-send, no_last_id, BUG-001/007 - закрыты.
+- Открыто: подтверждение rebirth fix на живом rebirth (see_chat).

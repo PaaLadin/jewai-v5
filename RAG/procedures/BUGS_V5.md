@@ -115,3 +115,30 @@ Git:
 - PaaLadin/jewai-v5: (этот коммит)
 
 RAG: RAG/procedures/REBIRTH.md §11.8 переписан.
+
+### BUG-007: svc_api.py path mismatch (watchdog=false при живом) — FIXED
+
+Симптом: панель показывает watchdog=false/recovery=false, хотя процесс жив.
+
+Уточнение истории:
+- Коммит 8016ea2 (9C) уже частично закрыл баг - svc_api читал сначала Profiles/<L>/.
+- Но остался тернарный fallback на legacy logs/svc/<kind>_<ch>.json, если в Profiles
+  файла нет. Значит при "legacy-only" состоянии svc_api -> True, health.py -> False.
+  То есть рассинхрон возможен в граничном случае.
+
+Fix 10C (2026-11-09):
+- Mainframe/svc_api.py::_read_state - убран fallback, единый путь
+  cfg.channel_path(ch, "logs", "svc_<kind>_<ch>.json").
+- Теперь svc.py (write), svc_api.py (read) и health.py (read) смотрят в одно место -
+  Profiles/<L>/logs/. Рассинхрон невозможен по построению.
+
+Проверено (logs/runtime/sandbox_test_svc_10c.py, 5/5):
+- Profiles only -> health=True, svc_api=True
+- legacy only -> health=False, svc_api=False (было True - баг)
+- state=off -> обе False
+- файл отсутствует -> обе False
+- svc._state_path == Profiles/<L>/logs/svc_<kind>_<ch>.json
+
+Регрессии: Tools/tests/test_mainframe_ext.py fails=0.
+
+Git: PaaLadin/jewai-v5 (этот коммит).

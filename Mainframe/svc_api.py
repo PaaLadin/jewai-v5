@@ -29,7 +29,14 @@ def _nw() -> int:
 
 
 def _read_state(cfg: Config, ch: str, kind: str) -> bool:
-    p = cfg.channel_path(ch.upper(), "logs", ("svc_%s_%s.json" % (kind, ch.upper()))) if cfg.channel_path(ch.upper(), "logs", ("svc_%s_%s.json" % (kind, ch.upper()))).exists() else cfg.path("logs", "svc", ("%s_%s.json" % (kind, ch)))
+    """10C BUG-007: единый источник - Profiles/<L>/logs/svc_<kind>_<ch>.json.
+
+    Раньше тернарник с fallback на legacy logs/svc/<kind>_<ch>.json приводил к
+    рассинхрону: если Profiles-файла нет, а legacy есть (остался от старого скрипта),
+    svc_api показывал "жив", а health.py (только Profiles) - "мёртв". Убран fallback,
+    чтобы svc_api и health смотрели в одно место.
+    """
+    p = cfg.channel_path(ch.upper(), "logs", "svc_%s_%s.json" % (kind, ch.upper()))
     if not p.exists():
         return False
     try:

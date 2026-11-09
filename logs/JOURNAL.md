@@ -1658,3 +1658,27 @@ Dixi. 9C (Семён), 2026-11-09.
 **RAG:** RAG/procedures/REBIRTH.md §11.8 переписан, BUGS_V5.md - BUG-NEW no_last_id FIXED.
 
 Dixi. 10C (Семён), 2026-11-09.
+
+## 2026-11-09, 10C (Семён) - BUG-007 svc_api fallback устранён
+
+**Фаза:** Ф3 (Mainframe), сервисы.
+
+**Что сделано:**
+- Mainframe/svc_api.py::_read_state - убран fallback на legacy logs/svc/<kind>_<ch>.json.
+  Единый источник: cfg.channel_path(ch, "logs", "svc_<kind>_<ch>.json") = Profiles/<L>/logs/.
+  Совпадает с тем, что пишет Tools/svc.py и что читает Mainframe/health.py.
+- До фикса: если Profiles-файла не было, а legacy - был (остаток старого скрипта),
+  svc_api показывал "жив", а health.py - "мёртв". Возможный граничный рассинхрон.
+
+**Чем проверено:**
+- Песочница C:/jewai/logs/runtime/sandbox_test_svc_10c.py: 5/5 (Profiles only,
+  legacy only, state=off, файл отсутствует, svc._state_path == Profiles).
+- Tools/tests/test_mainframe_ext.py: fails=0.
+
+**Что дальше:**
+- P0 закрыт (BUG-007, BUG-001, no_last_id, rebirth double-send).
+- Ждём подтверждения rebirth fix на ближайшем перерождении (B или D).
+
+**RAG:** RAG/procedures/BUGS_V5.md - BUG-007 FIXED (уточнение про 8016ea2).
+
+Dixi. 10C (Семён), 2026-11-09.
