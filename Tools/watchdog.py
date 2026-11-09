@@ -45,7 +45,7 @@ def _state_on(path: Path) -> bool:
         return True
 
 
-def _kick(port: int, text: str) -> bool:
+def _kick(port: int, text: str, host: str = "chat.deepseek.com") -> bool:
     """Send ALIVE via CDP kick (bridge_kick2 equivalent)."""
     try:
         from Tools.launcher import _push_storage  # not used here
@@ -55,7 +55,7 @@ def _kick(port: int, text: str) -> bool:
     try:
         sys.path.insert(0, str(ROOT))
         from Bridge.cdp import connect
-        cdp = connect(port)
+        cdp = connect(port, host)
         try:
             ta = None
             # find textarea in active tab
@@ -147,7 +147,13 @@ def main() -> int:
                         last_alive_at = now
                         silence_pinged = True
                     else:
-                        ok = _kick(ch.cdp_port, ALIVE_TEXT)
+                        _h = "chat.deepseek.com"
+                        try:
+                            from Bridge.run import _adapter_for
+                            _h = _adapter_for(ch.model).HOST
+                        except Exception:
+                            pass
+                        ok = _kick(ch.cdp_port, ALIVE_TEXT, _h)
                     print("[watchdog %s] ALIVE sent=%s" % (a.channel, ok), flush=True)
                     if ok:
                         silence_pinged = True
