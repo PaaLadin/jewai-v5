@@ -1933,3 +1933,31 @@ Dixi. 10C (Семён), 2026-11-09.
 - Ждём решения оператора: какие из аддонов брать первыми.
 
 Dixi. 10C (Семён), 2026-11-10.
+
+## 2026-11-10, 10C (Семён) - installer CfT: авто-скачивание + до init профилей
+
+**Фаза:** Ф0 (установка).
+
+**Что сделано:**
+- `Tools/get_cft.py`: качает CfT с googlechromelabs.github.io, распаковывает в
+  tools/chrome-for-testing/. Опции: --check, --version, --dest, --force, --dry-run, --url.
+- `Tools/installer/server.py`:
+  - _find_cft() ищет в ROOT/tools, target/tools, config.chrome_path.
+  - Если нет - авто-вызов get_cft.py (1-3 мин).
+  - Только после провала - raise с инструкцией.
+  - CfT ищется ДО init профилей (было - после, BUG-009).
+  - chrome_path пишется в config сразу.
+  - В chrome_paths CfT первый, системный fallback.
+
+**Чем проверено:**
+- get_cft.py --check: OK (CfT present at C:/jewai/tools/...).
+- get_cft.py --dry-run: version 157.0.8103.50, URL https://storage.googleapis.com/...
+- py_compile server.py OK.
+- Полный install на HERETIC - утром (operator).
+
+**Что дальше:**
+- Ждём: оператор раскатает на HERETIC из свежего git clone.
+
+**RAG:** RAG/procedures/BUGS_V5.md - BUG-008/009 FIXED.
+
+Dixi. 10C (Семён), 2026-11-10.

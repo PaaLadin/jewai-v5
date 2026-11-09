@@ -61,6 +61,9 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 
 ## P3 / v6 - внешнее
 
+### Установка (installer)
+
+- [x] **BUG-008/009:** installer авто-скачивает CfT (`Tools/get_cft.py`), требует его до init профилей. Без CfT Chrome 137+ не грузит расширение. FIXED 2026-11-10 (10C).
 ### Аддоны и расширения (по RAG/procedures/ADDONS_CANDIDATES.md)
 
 - [ ] **Голосовой цикл:** wake-word (Porcupine/openWakeWord) -> STT (faster-whisper) -> VAD (Silero) -> агент -> TTS (Piper).

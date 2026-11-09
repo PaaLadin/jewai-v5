@@ -241,3 +241,43 @@ Fix 10C (2026-11-09):
 zero, exact wins over fallback).
 
 Git: PaaLadin/jewai-v5 (этот коммит).
+
+### BUG-008: installer не ставит CfT, молча падает на системный Chrome — FIXED
+
+Симптом (оператор, HERETIC): после install.bat в chrome://extensions пусто,
+тост "Extension loaded" мелькает и исчезает. Profiles/<L>/extension при этом
+содержит файлы (копирование работает), но Chrome 137+ их не грузит.
+
+Корень:
+- CfT (Chrome for Testing) весит 448 МБ и НЕ лежит в git (.gitignore).
+- Installer искал его только в `<source>/tools/chrome-for-testing/`.
+- При git clone этого пути нет. Installer писал "CfT not found, using regular
+  Chrome" и продолжал с системным Chrome.
+- Системный Chrome 137+ игнорирует --load-extension для unpacked ext (B-44).
+
+Fix 10C:
+- Новый `Tools/get_cft.py`: качает официальный chrome-win64.zip с
+  googlechromelabs.github.io/chrome-for-testing/, распаковывает в
+  tools/chrome-for-testing/. Поддерживает --check, --version, --dest, --force,
+  --dry-run. Exit codes: 0 ok/present, 1 miss, 2 fail.
+- Installer ищет CfT в ROOT/tools, target/tools, config.chrome_path.
+  Если не нашёл - АВТОМАТИЧЕСКИ вызывает get_cft.py (1-3 мин, ~448 МБ).
+  Только после провала скачивания - raise с понятным сообщением.
+
+### BUG-009: CfT копировался ПОСЛЕ init профилей — FIXED
+
+Симптом: тот же (Chrome не грузит расширение). Плюс системный Chrome
+запускался для init профиля до того, как CfT оказывался в target.
+
+Fix 10C:
+- Поиск + автоскачивание CfT перенесены ДО `for L in letters: init profile`.
+- `chrome_path` пишется в target config.json сразу, до init профилей.
+- В `chrome_paths` CfT теперь ПЕРВЫЙ кандидат, системный - fallback.
+
+Проверено:
+- get_cft.py --check: OK при наличии, exit 1 при отсутствии.
+- get_cft.py --dry-run: metadata fetch + URL (157.0.8103.50, win64).
+- py_compile server.py OK.
+- Полный install на HERETIC (operator, 2026-11-10 утро).
+
+Git: PaaLadin/jewai-v5 (этот коммит).

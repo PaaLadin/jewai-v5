@@ -231,13 +231,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return None, None
             cft_exe, cft_src_name = _find_cft()
             if cft_exe is None:
+                # 10C BUG-008 (полный фикс): CfT не найден - пробуем скачать.
+                # Скрипт Tools/get_cft.py тянет официальный chrome-win64.zip
+                # с googlechromelabs.github.io и кладёт в target/tools/chrome-for-testing.
+                _gcft = os.path.join(target, "Tools", "get_cft.py")
+                if not os.path.exists(_gcft):
+                    _gcft = os.path.join(ROOT, "Tools", "get_cft.py")
+                if os.path.exists(_gcft):
+                    log("10C: CfT не найден, скачиваю через get_cft.py (~448 MB, 1-3 мин)...")
+                    try:
+                        _dst_cft = os.path.join(target, "tools", "chrome-for-testing")
+                        _r = subprocess.run(
+                            [sys.executable, _gcft, "--dest", _dst_cft],
+                            capture_output=True, text=True, timeout=900,
+                            encoding="utf-8", errors="replace")
+                        for _line in (_r.stdout or "").splitlines()[-6:]:
+                            log("  gcft: " + _line[:200])
+                        if _r.returncode != 0:
+                            log("10C: get_cft.py rc=%d; stderr=%s" % (_r.returncode, (_r.stderr or "")[:300]))
+                    except Exception as _e:
+                        log("10C: get_cft.py ERR: %r" % _e)
+                    cft_exe, cft_src_name = _find_cft()
+            if cft_exe is None:
                 raise RuntimeError(
                     "10C BUG-008: Chrome for Testing (CfT) не найден.\n"
                     "  Проверены: ROOT/tools, target/tools, config.chrome_path.\n"
                     "  Без CfT Chrome 137+ НЕ загрузит unpacked extension (B-44).\n"
-                    "  Скачай: https://googlechromelabs.github.io/chrome-for-testing/\n"
-                    "  Положи chrome.exe + DLL в <source>/tools/chrome-for-testing/.\n"
-                    "  Или задай config.chrome_path перед запуском installer."
+                    "  Автоскачивание через Tools/get_cft.py провалилось (см. лог выше).\n"
+                    "  Проверь интернет / прокси, или скачай вручную:\n"
+                    "  https://googlechromelabs.github.io/chrome-for-testing/\n"
+                    "  chrome-win64.zip -> распаковать в <target>/tools/chrome-for-testing/.\n"
+                    "  Или задай config.chrome_path на существующий chrome.exe."
                 )
             log(f"10C CfT: {cft_exe} (from {cft_src_name})")
             _tc = os.path.join(target, "config.json")
