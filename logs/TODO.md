@@ -3,7 +3,9 @@
 **Версия:** 0.1.0-dev
 **Старт:** 2026-10-28
 **Ответственный:** оператор + 12D (Димон), пилот - канал C (Семён)
-**Актуализирован:** 2026-11-09, 10C (Семён)
+**Актуализирован:** 2026-11-10 (10C)
+
+**Структура:** 2 раздела - **Установка (installer)** (всё, что про `install.bat`, `Tools/installer/server.py`, CfT, зависимости, копирование) и **Остальное** (всё про runtime, каналы, rebirth, addons, v6).
 
 ## Правила
 
@@ -17,23 +19,67 @@
 
 - Живой список - этот файл.
 - История до 2026-11-02 (13D / 11B / 12B / install-баги 29-30.10 / релизная подготовка Алисы / 12B-13B UI) - в `logs/TODO_ARCHIVE_through_12B.md`.
-- Что было сделано 10C - секции ниже + `logs/JOURNAL.md` (записи 2026-11-09) + `RAG/procedures/BUGS_V5.md` (Исправлено 10C).
+- Что сделано 10C: `RAG/procedures/BUGS_V5.md` секции «Исправлено 10C» (BUG-001..018) + `logs/JOURNAL.md` (записи 2026-11-09/10).
 
-## Статус на 2026-11-09 (10C)
+---
 
-P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто только подтверждение rebirth fix на живом цикле.
+# РАЗДЕЛ 1: УСТАНОВКА (installer)
+
+Цель раздела: довести `install.bat` + `Tools/installer/server.py` до идеала. Одна команда на чистой машине: `git clone` → `install.bat` → работает.
+
+## Installer: закрыто 10C
+
+- [x] **BUG-008/009:** CfT обязателен. `Tools/get_cft.py` качает с googlechromelabs, распаковывает. Installer ищет в ROOT/target/config, если нет - автоскачивание. `raise` если после этого CfT не найден. CfT до init профилей. `chrome_path` в config. `PaaLadin/jewai-v5` 3f1f819.
+- [x] **BUG-010:** проверка Python-зависимостей (`import websocket`) до копирования. Авто `pip install -r requirements.txt`. `raise` если pip не помог. `requirements.txt` создан. 5b1e8f7.
+- [x] **BUG-017:** `emergency/` создан в source (36 файлов), installer копирует. `Rebirth/cycle.py::load_prompt` ищет в 4 местах. 7d02396.
+- [x] **BUG-018:** `sandbox/rebirth.py::check_ready` (DeepSeek) - multi-path к PROMPT. Патч на DeepSeek. (Не в git v5, это DeepSeek-only.)
+- [x] **BUG-011:** autodetect 8660..8720 + Mainframe fallback. 5b1e8f7.
+- [x] **BUG-013:** .agent_token в root - agent.py walk-up находит. Не баг.
+
+## Installer: к доделке 10C (аудит source)
+
+- [ ] **Идемпотентность:** повторный запуск `install.bat` поверх существующей установки. Сейчас копирует без сноса, но старые Profiles/A/logs/ledger не трогает -> может быть mix from old and new. Продумать: (а) сохранять старые данные через .bak, (б) всегда clean Profiles/logs при --force, (в) проверять VERSION в config.
+- [ ] **Валидация после install:** сейчас только check «Mainframe health OK» и «Agent A /ping OK». Добавить:
+  - `Tools/get_cft.py --check` -> если fail, warn+raise.
+  - Расширение грузится? CDP `/json/list` ищет `chrome-extension://` target - если нет, warn.
+  - config.json: chrome_path, letters, channels[] заполнены корректно.
+  - Все `requirements.txt` пакеты import-ятся.
+  - `Profiles/A/logs/` создана.
+- [ ] **source == target guard в installer**, не только в `install.bat`. Если `os.path.abspath(ROOT) == os.path.abspath(target)` -> ошибка в installer (сейчас warning).
+- [ ] **Python отсутствует в PATH:** `install.ps1` предлагает скачать, но если откажут - сейчас продолжает. Проверить, что installer не стартует без Python (сейчас try/except).
+- [ ] **pip отсутствует:** если `python -m pip` недоступен (Microsoft Store Python - ограничение), installer даёт понятную ошибку и exit-code != 0. Сейчас raise RuntimeError с текстом, но родительский процесс (install.ps1) может не показать его. Добавить `exit 2` в bat.
+- [ ] **Chrome выбран не CfT:** launcher WARN (B-44) - оставить, но добавить в installer провepку: если chrome_path не CfT -> warn «системный Chrome 137+ не грузит unpacked ext» и НЕ ставить chrome_path, чтобы launcher сам искал CfT.
+- [ ] **Копирование HANDOVER / SESSION_STATE:** сейчас в copytree берётся из source, но `HANDOVER_9C.md`, `SESSION_STATE.md` - персональные (не должны переезжать). Проверить ignore.
+- [ ] **TEMP-артефакты:** `logs/runtime/`, `_lada_*`, `_cft_*` - не должны попадать в target. Проверить ignore (сейчас `logs` в ignore, `runtime` тоже).
+- [ ] **Gen launchers:** `Tools/gen_launchers.py` использует `os.environ.JEWAI_CONFIG`. Проверить, что launcher-scripts правильно работают после install (сейчас создаются 8 bat).
+- [ ] **Setup hostname/identity:** если запускается на новой машине (`HERETIC`, `Monolith`), installer пишет hostname в config для diagnostics. Сейчас нет.
+- [ ] **Uninstall:** `uninstall.bat` - удаляет Profiles/, config, logs. Опционально.
+
+## Installer: тесты
+
+- [ ] **Smoke test в tempdir:** `Tools/installer/smoke_test.py` - ставит в `%TEMP%/jewai_test/`, проверяет 8 пунктов выше, удаляет. Запускается в CI (GitHub Actions).
+- [ ] **Test загрузки CfT:** mock HTTP server -> get_cft.py качает, extract, проверяет chrome.exe.
+- [ ] **Test deps check:** venv без websocket-client -> installer ставит, повторный check OK.
+
+---
+
+# РАЗДЕЛ 2: ОСТАЛЬНОЕ
+
+## Статус на 2026-11-10 (10C)
+
+P0 - все закрыты. Открыто: подтверждение rebirth fix на живом цикле (B или D).
 
 Закрыто 10C (краткая сводка):
 
 - [x] Rebirth double-send + зависание в textarea + ложный verify. `PaaLadin/jewai` c949386, `PaaLadin/jewai-v5` 1a5c2d1.
-- [x] `no_last_id` (REBIRTH.md §11.8) - вариант (б), Monitor читает `ledger_<L>.json`. `PaaLadin/jewai-v5` 06587a9.
-- [x] BUG-007 (svc_api path mismatch) - единый путь `Profiles/<L>/logs/svc_<kind>_<ch>.json`. `PaaLadin/jewai-v5` db19fc4.
-- [x] BUG-003 - уже был закрыт в 9C (SYSTEM_MESSAGES.md §9), просто висел в BUGS_V5. Убрано при ревизии BUGS_V5.
-- [x] BUG-005 (current_state.md устарел) - переписан 9C. Убрано при ревизии BUGS_V5.
-- [x] PROMPT_10C.md создан 9C.
-- [x] HANDOVER_9C.md создан 9C.
-- [x] SESSION_STATE.md в jewai создан 9C.
-- [x] ROADMAP подрезан 9C (5 дублей -> 2 секции).
+- [x] `no_last_id` (REBIRTH.md §11.8) - вариант (б). 06587a9.
+- [x] BUG-007 (svc_api path mismatch). db19fc4.
+- [x] BUG-003, BUG-005 - уже закрыты 9C. Убрано при ревизии.
+- [x] BUG-001/002/004/006/010/011/012/013/014/015/017/018 - см. BUGS_V5.md.
+- [x] PROMPT_10C, HANDOVER_9C, SESSION_STATE - созданы 9C.
+- [x] ROADMAP подрезан 9C.
+- [x] TODO архив: 173 -> 19, потом переписан. 38e0205.
+- [x] Lada на HERETIC: llama.cpp b4720 не знает qwen3vl. Отложено (см. P3/v6).
 
 ## P0 - подтверждение (ждёт живого rebirth)
 
@@ -41,53 +87,39 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 
 ## P1 - важное
 
-- [x] **BUG-002:** FIXED 2026-11-09 (10C). Реально баг был в `_operator_typing` (connect без host -> TypeError -> False). Теперь watchdog видит набор оператора. `_kick` уже был с host.
-- [x] **BUG-006:** FIXED 2026-11-09 (10C). `Tools/export_share.py` на чистом CDP (без Playwright): изолированный context, scroll-loop, дедуп, NDA-redact, header. `test_export_share.py` 14/14. Живой тест на share - при следующем rebirth.
-- [x] **BUG-004:** FIXED 2026-11-09 (10C). `RAG/procedures/ADAPTERS.md` создан (4880 б), INDEX обновлён.
-- [x] **Handicap при отправке (Mora 04.11):** FIXED 2026-11-09 (10C). Базовая пауза была; добавлен `_note_send()` helper и вызовы в `_send_or_buffer`/`_drain_outbox`/`_drain_kick_buffer`. Теперь любой send_text продлевает handicap_ms (default 7000). test_daemon + test_daemon_timing зелёные.
-- [x] **BEHAVIOR.md §9/§10 в jewai:** FIXED 2026-11-09 (10C). Перенесено из `C:/Jeho/RAG/procedures/BEHAVIOR.md` (2550 б). §9 дисциплина отправки, §10 не переиспользовать id. Файл 6652 б, секции 9-10 на месте.
+- [ ] **BUG-014/015 (HERETIC):** после утреннего `_10c_fix.bat` - проверить `Profiles/A/logs/ledger_A.json` и `Bridge A` живой. Смотреть `install.log` строки `10C CfT:`, `10C deps:`.
+- [ ] **BUG-016 (DeepSeek v4):** `Bridge/daemon.py` в v5 уже с fix (не шлёт [AGENT REPORT] если все SKIP). В DeepSeek старый daemon без fix - там Борис в цикле stale: duplicate. Патч в DeepSeek: `Bridge/daemon.py::_tick` - `_has_real` проверка. Не в git v5 (DeepSeek-only).
 
-## P1.5 - installer gaps (обнаружено при раскатке на HERETIC)
-
-- [x] **BUG-017:** PROMPT не находится из emergency/. emergency/ создан в source, load_prompt расширен, installer копирует. FIXED 2026-11-10 (10C).
-- [ ] **installer: не копирует emergency/, HANDOVER, TEMP-артефакты.** Проверить, что все важные корневые папки копируются. Частично закрыто BUG-017.
 ## P2 - причёсывание
 
-- [x] **B-07 / B-08:** B-07 уже был готов (`Templates/extension/onboarding.html` 4745 б, `agent.py` `GET /onboarding` + `/onboarding/status`, флаг «не показывать»). B-08 создан 10C: `RAG/onboarding/AGENT_FIRST_RUN.md` (3520 б) - Profiles/<L>/, линк-лист чатов, «не логинь Chromium в Google», порядок первого старта, связи.
-- [ ] **B-06:** Mainframe 8670 - переписать UI как DeepSeek 8770, не Pip-Boy sidepanel. Масштабируемость по config.letters (1-10). MEDIUM. (Открыт: требует решения оператора - текущий UI CRT/8 табов рабочий, переписывание = дни.)
-- [x] **B-09:** уже закрыт. `health.py::_auth_status` + `Mainframe/static/app.js` (auth-блок + LOGIN-кнопка при != logged_in). Проверено 10C read.
-- [x] **B-10:** уже закрыт. `Bridge/run.py::_try_recreate_chat` (Target.createTarget), B-48 guard не открывает до onboarding ack. Проверено 10C.
-- [x] **B-11:** уже закрыт. `Rebirth/cycle.py` пишет `logs/active_chat_<L>.json`. Проверено 10C.
-- [x] **B-30:** уже закрыт. `app.js load()` вызывает `loadPauseState()`, читает `/pause_state`, пишет в `chrome.storage.local.set({paused})`. Проверено 10C read.
-- [x] **B-12:** уже закрыт. Wiki-таб + `/wiki` + 18 файлов в `Mainframe/`. Проверено 10C.
+- [ ] **B-06:** Mainframe 8670 - переписать UI. MEDIUM. (Открыт: текущий CRT/8 табов рабочий, переписывание = дни.)
 - [ ] **checkStuck живьём:** проверить авто-клик Continue/Retry в `content_deepseek.js` на живом залипании.
-- [x] **TEST OUT paths:** FIXED 2026-11-09 (10C). 21 тест-файл переведён на `ROOT = Path(__file__).resolve().parent.parent.parent`. Тесты вскрыли старый баг `test_imports` (ждал 6 каналов A-F, реально 4 A-D) - тоже исправлен. 25/25 наборов зелёные.
 
 ## P3 / v6 - внешнее
 
-### Установка (installer)
+### Аддоны и расширения (см. RAG/procedures/ADDONS_CANDIDATES.md)
 
-- [x] **BUG-008/009:** installer авто-скачивает CfT (`Tools/get_cft.py`), требует его до init профилей. Без CfT Chrome 137+ не грузит расширение. FIXED 2026-11-10 (10C).
-### Аддоны и расширения (по RAG/procedures/ADDONS_CANDIDATES.md)
-
-- [ ] **Голосовой цикл:** wake-word (Porcupine/openWakeWord) -> STT (faster-whisper) -> VAD (Silero) -> агент -> TTS (Piper).
-- [ ] **Рисование:** ComfyUI (API) + Fooocus (простой режим).
-- [ ] **Память:** mem0 (запоминание между сессиями).
-- [ ] **OCR:** Tesseract (быстро, бесплатно).
-- [ ] **Vision:** Moondream (лёгкая VLM).
+- [ ] **Голосовой цикл:** wake-word + STT + VAD + агент + TTS.
+- [ ] **Рисование:** ComfyUI + Fooocus.
+- [ ] **Память:** mem0.
+- [ ] **OCR:** Tesseract.
+- [ ] **Vision:** Moondream.
 - [ ] **Локальная LLM:** Ollama (замена LocalAI в v6).
 - [ ] **Автоматизация:** n8n (по необходимости).
 
+### LLM на HERETIC (отдельный блок)
+
+- [ ] **Lada на HERETIC:** llama.cpp не знает `qwen3vl` (GGUF Qwen-3-VL-8B). Варианты: (а) найти более новый llama.cpp с qwen3vl (сейчас 404 на win-zip), (б) взять Qwen2.5-VL или обычный Qwen2.5, (в) LM Studio GUI-режим (сейчас падает "daemon not running").
+
 ### Прочее
 
-
-- [ ] **v6 - LLM в v5.** LocalAI (Qwen 3B :8090) в v5 не портирован. Оператор: план на v6.
-- [ ] **STT + wake-word «Джошуа».** В долгий ящик. На Хабре кто-то выкладывал, изучить.
+- [ ] **v6 - LLM в v5.** LocalAI (Qwen 3B :8090) не портирован.
+- [ ] **STT + wake-word «Джошуа».** В долгий ящик.
 
 ## Ждёт решения оператора
 
-- [x] **BUG3a (Bridge/DeepSeek redirect chat -> www).** FIXED 2026-11-09 (10C) вариантом (в): `find_chat` fallback только при ровно одном page-табе с host. `test_cdp_find_chat.py` 5/5.
-- [ ] **Раскатка B-F:** каналы, живые агенты, приёмка. Организационное, за оператором.
+- [ ] **Раскатка B-F:** каналы, живые агенты, приёмка. Организационное.
+- [ ] **Борис (14B fake-rebirth):** _manual_rebirth_14B.py, series_table 14B/BBAB4000, last_id BBAB3990, в старом чате. Реальный rebirth 14B->15B при cmds=850 через чеклист (уже с фиксом BUG-018). Решение: оставить / откатить / гибрид.
 
 ## Правила 9C (наследие, действует)
 
@@ -100,26 +132,4 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 7. Rebirth: гейт 850. Не обходить. force только через `force_<CH>.flag`.
 8. Многострочный `python -c` через мост - SyntaxError. Только файлом.
 
-Dixi. 10C (Семён), 2026-11-09.
-
-
-## 2026-11-10 ночь (10C) - HERETIC: найденные баги при установке
-
-Установка на HERETIC (`\\HERETIC\JewAI_v5`), оператор ушёл спать. Собрано полным аудитом.
-
-- [x] **BUG-010 (P0):** на HERETIC нет `websocket-client` -> launcher push_storage FAILED, Bridge A не стартует, активатор не постится. Fix 10C: `requirements.txt` + проверка в installer до copy + авто-pip install.
-- [x] **BUG-011 (P1):** FIXED 2026-11-10 (10C): autodetect 8660..8720 + Mainframe fallback + save to storage при 1 агенте.
-- [x] **BUG-012 (P2):** НЕ баг. Кнопки настоящие (inline script дёргает /api/boot, /api/stop, /api/restart). Не работали из-за мёртвого Bridge A (BUG-010).
-- [x] **BUG-013 (P0):** НЕ баг. agent.py::_find_token_file walk-up находит root .agent_token (install-wide). Per-channel не нужен.
-- [ ] **BUG-014 (P0):** Bridge A не работает (следствие BUG-010). Проверить утром после _10c_fix.bat.
-- [ ] **BUG-015 (P0):** Проверить утром после _10c_fix.bat: должен появиться Profiles/A/logs/ledger_A.json.
-
-Установщик на HERETIC: дважды запускался (двойной install.log), CfT скачался с 3-й попытки (~200 MB за 9 сек). CfT OK, extension OK, chrome_path OK.
-
-План:
-1. Исправить BUG-010 (уже в source, надо синхронизировать на HERETIC и проверить).
-2. Исправить BUG-013 (проверить, где agent.py ищет токен).
-3. Исправить BUG-011 (autodetect).
-4. Проверить BUG-012 (mnemo live).
-5. Синхронизировать все фиксы на HERETIC через SMB.
-6. Коммит + push.
+Dixi. 10C (Семён), 2026-11-10.

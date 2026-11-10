@@ -356,3 +356,34 @@ Fix 10C:
 - installer core dirs содержит emergency.
 
 Git: PaaLadin/jewai-v5 (этот коммит).
+
+### BUG-018: rebirth.py (DeepSeek чеклист) искал PROMPT только в emergency/ — FIXED
+
+Симптом (Борис, 2026-11-10):
+- rebirth_master --channel B --live падает rc=4.
+- В чеклисте: "PROMPT_14B.md: MISSING", хотя файл есть в logs/B/PROMPT_14B.md (2680 б).
+- 13B применил обход: _manual_rebirth_14B.py - series_table 13B->14B вручную,
+  тот же чат, last_id=BBAB3990, без отправки PROMPT в новый чат.
+
+Корень:
+- sandbox/rebirth.py::check_ready, строка 62:
+  "PROMPT_%s.md" % ns: os.path.join(ROOT, "emergency", "PROMPT_%s.md" % ns)
+- Чеклист видел PROMPT ТОЛЬКО в emergency/, а не в logs/B/ (где реально лежит
+  per-channel PROMPT и где канон v5).
+
+Fix 10C (патч DeepSeek/sandbox/rebirth.py):
+- Добавлен _find_prompt(ns) - multi-path как в v5 Rebirth/cycle.py::load_prompt:
+  1. logs/<CH>/PROMPT_<s>.md
+  2. emergency/PROMPT_<s>.md
+  3. logs/rebirth/PROMPT_<s>.md
+  4. RAG/procedures/PROMPT_<s>.md
+- Бэкап: C:/DeepSeek/sandbox/rebirth.py.bak_10c_20261110_promptpath.
+
+Проверено:
+- rebirth.py --channel B --dry-run rc=0 с временным ready_B.json.
+- Чеклист: PROMPT_15B.md OK (было MISSING).
+- v5 Rebirth/cycle.py уже имел emergency/ (BUG-017, тот же паттерн).
+
+Осталось:
+- 13B->14B Бориса - manual bypass, в том же чате. Реальный переход = 14B->15B
+  (по 850 cmds), уже с починенным чеклистом.
