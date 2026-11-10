@@ -9,7 +9,7 @@ ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
 
 from Core.config import load as load_config
-from Mainframe import web, api, llm, mail, rag_channel, council, health, svc_api, launchpad, controls, settings
+from Mainframe import web, api, llm, mail, lada_chats, telemetry, rag_channel, council, health, svc_api, launchpad, controls, settings, diagnose
 
 
 def _qs(path):
@@ -40,15 +40,26 @@ def build_routes():
         ("GET", "/api/pause_all"): lambda c, p, b: controls.pause_all_get(c),
         ("POST", "/api/pause"): lambda c, p, b: controls.pause_set(c, (b or {}).get("channel", ""), (b or {}).get("on", True)),
         ("POST", "/api/resume"): lambda c, p, b: controls.pause_set(c, (b or {}).get("channel", ""), False),
-        ("POST", "/api/diagnose"): lambda c, p, b: {"ok": True, "detail": "Diagnose stub. Run Tools/diagnose.py manually for now."},
+        ("POST", "/api/diagnose"): lambda c, p, b: diagnose.collect(c),
         ("POST", "/api/pause_all"): lambda c, p, b: controls.pause_all_set(c, b),
         ("GET", "/api/logs"): lambda c, p, b: controls.logs_tail(c, _qs(p).get("name", "chat")),
         ("GET", "/api/roadmap"): lambda c, p, b: controls.roadmap_get(c, _qs(p).get("name", "game")),
         ("POST", "/api/roadmap"): lambda c, p, b: controls.roadmap_set(c, b),
         ("GET", "/api/projects"): api.projects,
         ("GET", "/api/chat_url/"): api.chat_url,
-        ("GET", "/api/llm"): lambda c, p, b: llm.status(c),
-        ("POST", "/api/llm/query"): lambda c, p, b: llm.query(c, (b or {}).get("text", "")),
+        ("GET", "/api/chats"): lambda c, p, b: {"ok": True, "chats": lada_chats.list_chats()},
+            ("POST", "/api/chats"): lambda c, p, b: {"ok": True, "chat_id": lada_chats.create_chat((b or {}).get("title", "New Chat"))},
+            ("POST", "/api/chats/delete"): lambda c, p, b: {"ok": lada_chats.delete_chat((b or {}).get("chat_id", ""))},
+            ("GET", "/api/chats/"): lambda c, p, b: {"ok": True, "messages": lada_chats.get_chat(p.rstrip("/").split("/")[-1])},
+            ("GET", "/api/sys_telemetry"): lambda c, p, b: telemetry.collect(c),
+            ("GET", "/api/llm"): lambda c, p, b: llm.status(c),
+        ("GET", "/api/llm/params"): lambda c, p, b: llm.get_params(c),
+        ("POST", "/api/llm/params"): lambda c, p, b: llm.set_params(c, b or {}),
+        ("GET", "/api/llm/tools"): lambda c, p, b: llm.get_tools(c),
+        ("POST", "/api/llm/tools"): lambda c, p, b: llm.set_tool(c, (b or {}).get("name",""), bool((b or {}).get("on", False))),
+        ("GET", "/api/llm/history"): lambda c, p, b: llm.history(c, int(_qs(p).get("n", 50))),
+        ("POST", "/api/llm/clear"): lambda c, p, b: llm.clear_history(c),
+        ("POST", "/api/llm/query"): lambda c, p, b: llm.query(c, (b or {}).get("text", ""), (b or {}).get("chat_id", "")),
         ("GET", "/api/mail"): lambda c, p, b: mail.status(c),
         ("POST", "/api/mail/send"): lambda c, p, b: mail.send(c, (b or {}).get("subject", ""), (b or {}).get("body", "")),
         ("POST", "/api/rag/push"): lambda c, p, b: rag_channel.push(c, (b or {}).get("from", "?"), (b or {}).get("to", "ALL"), (b or {}).get("text", "")),

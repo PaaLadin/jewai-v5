@@ -1163,3 +1163,31 @@ body { height: 100vh !important; margin: 0 !important; padding: 0 !important; }
 .wiki-page-meta{margin:0 0 14px;padding:4px 0 8px;border-bottom:1px dashed var(--green-dim);font-size:11px;color:var(--green-dim)}
 .wiki-tag{display:inline-block;padding:1px 6px;margin-left:4px;border:1px solid var(--green-dim);border-radius:2px;color:var(--green-dim);font-size:10px}
 .wiki-404{padding:32px;color:var(--red);text-align:center;letter-spacing:1px}
+
+
+/* ===== LADA (Local AI) UI — 11C ===== */
+.lada-layout { display: grid; grid-template-columns: 1fr 340px; gap: 14px; height: calc(100% - 20px); }
+.lada-main { display: flex; flex-direction: column; background: rgba(0,0,0,0.25); border: 1px solid #0a3a0a; padding: 10px; }
+.lada-title { font-family: 'Consolas', monospace; color: #9bff9b; font-size: 11px; letter-spacing: 1px; margin-bottom: 6px; }
+.lada-status-line { font-size: 11px; color: #7a7a7a; margin-bottom: 8px; }
+.lada-feed { flex: 1; overflow-y: auto; background: rgba(0,20,0,0.5); border: 1px solid #0a3a0a; padding: 8px; margin-bottom: 8px; font-family: 'Consolas', monospace; font-size: 12px; min-height: 200px; }
+.lada-msg { margin: 3px 0; white-space: pre-wrap; word-wrap: break-word; }
+.lada-msg-user { color: #c573ff; }
+.lada-msg-assistant { color: #33ff33; }
+.lada-input { width: 100%; min-height: 60px; background: #001a00; color: #b0ffb0; border: 1px solid #0a3a0a; padding: 6px; font-family: 'Consolas', monospace; font-size: 12px; resize: vertical; }
+.lada-toolbar { display: flex; gap: 6px; margin-top: 6px; }
+.lada-btn, .lada-btn-primary { padding: 6px 12px; background: #002a00; color: #9bff9b; border: 1px solid #0a3a0a; font-family: 'Consolas', monospace; font-size: 11px; cursor: pointer; letter-spacing: 1px; }
+.lada-btn:hover, .lada-btn-primary:hover { background: #004a00; }
+.lada-btn-primary { background: #005500; }
+.lada-side { overflow-y: auto; background: rgba(0,0,0,0.25); border: 1px solid #0a3a0a; padding: 10px; font-family: 'Consolas', monospace; font-size: 11px; }
+.lada-side-section { margin-bottom: 14px; }
+.lada-side-title { color: #9bff9b; font-size: 10px; letter-spacing: 2px; margin-bottom: 6px; border-bottom: 1px dashed #0a3a0a; padding-bottom: 3px; }
+.lada-ind-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; color: #7a7a7a; font-size: 10px; }
+.lada-lamp { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #444; }
+.lada-lamp.on { background: #33ff33; box-shadow: 0 0 6px #33ff33; }
+.lada-lamp.off { background: #661111; }
+.lada-param { display: block; margin: 6px 0; color: #7a7a7a; font-size: 10px; }
+.lada-param input[type=range] { width: 100%; margin-top: 2px; }
+.lada-tool { display: block; margin: 3px 0; color: #b0ffb0; font-size: 10px; }
+.lada-tool input[type=checkbox] { margin-right: 4px; }
+.lada-hint { color: #4a8a4a; font-size: 9px; margin-top: 6px; font-style: italic; }

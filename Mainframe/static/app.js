@@ -128,7 +128,7 @@ async function bulkResume() {
   for (let i = 0; i < ks.length; i++) { try { await jpost('/api/pause', { channel: ks[i], on: false }); } catch (e) {} }
   log('RESUME ALL'); refreshStatus();
 }
-async function selftest() { try { await jpost('/api/diagnose', {}); log('SELF-TEST done'); } catch (e) { log('diag err: ' + e.message); } }async function populateChatChannels() {
+async function selftest() { try { var r = await jpost('/api/diagnose', {}); log('SELF-TEST ' + JSON.stringify(r)); } catch (e) { log('diag err: ' + e.message); } }async function populateChatChannels() {
   const sel = $('chat-ch'); if (!sel) return;
   const ks = Object.keys(state.channels).sort();
   const cur = sel.value || 'A';
@@ -237,12 +237,12 @@ function bindGlobal() {
   const bp = $('btn-pause-all'); if (bp) bp.addEventListener('click', bulkPause);
   const br = $('btn-resume-all'); if (br) br.addEventListener('click', bulkResume);
   const st = $('btn-selftest'); if (st) st.addEventListener('click', selftest);
-  const cs = $('chat-send'); if (cs) cs.addEventListener('click', sendChat);
+  const cs = $('btnSend'); if (cs) cs.addEventListener('click', sendChat);
   const ct = $('chat-text'); if (ct) ct.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } });
   const chs = $('chat-ch'); if (chs) chs.addEventListener('change', loadChat);
-  const bm = $('btn-meeting'); if (bm) bm.addEventListener('click', doMeeting);
-  const bpa = $('btn-pauseall'); if (bpa) bpa.addEventListener('click', doPauseAll);
-  const bra = $('btn-resumeall'); if (bra) bra.addEventListener('click', doResumeAll);
+  const bm = $('btnMeeting'); if (bm) bm.addEventListener('click', doMeeting);
+  const bpa = $('btnPauseAll'); if (bpa) bpa.addEventListener('click', doPauseAll);
+  const bra = $('btnResumeAll'); if (bra) bra.addEventListener('click', doResumeAll);
   const rl = $('rm-load'); if (rl) rl.addEventListener('click', fetchRoadmap);
 }
 
@@ -292,3 +292,149 @@ function bindGear() {
   if (c) c.addEventListener("click", () => { m.style.display = "none"; });
 }
 document.addEventListener("DOMContentLoaded", bindGear);
+
+
+// =================== LADA (Local AI) UI ===================
+function ladaLamp(id, on) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'lada-lamp ' + (on ? 'on' : 'off');
+}
+function ladaSetParamLabel(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function ladaBindParam(sliderId, labelId, paramName) {
+  const sl = document.getElementById(sliderId);
+  if (!sl) return;
+  sl.addEventListener('input', function(){
+    ladaSetParamLabel(labelId, sl.value);
+  });
+}
+async function ladaLoadStatus() {
+  try {
+    const j = await jget('/api/llm');
+    const s = document.getElementById('lada-status');
+    if (s) s.textContent = j.ok ? (j.configured ? 'OK' : 'не настроено') : 'ERR';
+    const mn = document.getElementById('lada-model-name');
+    if (mn) mn.textContent = (j.model || 'model');
+    const pn = document.getElementById('lada-port-name');
+    if (pn) pn.textContent = (j.port || '?');
+    ladaLamp('lamp-llama', !!j.configured);
+    ladaLamp('lamp-model', !!j.configured);
+    ladaLamp('lamp-orch', false);
+    ladaLamp('lamp-rag', false);
+    // параметры
+    const P = j.params || {};
+    for (const [k, v] of Object.entries(P)) {
+      const sl = document.getElementById('lada-' + k);
+      const lb = document.getElementById('p' + k.replace('_','-') + '-val');
+      if (sl) sl.value = v;
+      if (lb) lb.textContent = v;
+    }
+    // tools
+    const T = j.tools || {};
+    for (const [k, v] of Object.entries(T)) {
+      const cb = document.getElementById('tool-' + k);
+      if (cb) cb.checked = !!v;
+    }
+  } catch (e) {
+    const s = document.getElementById('lada-status');
+    if (s) s.textContent = 'ERR: ' + e.message;
+  }
+}
+async function ladaLoadHistory() {
+  try {
+    const j = await jget('/api/llm/history?n=80');
+    const feed = document.getElementById('lada-chat-feed');
+    if (!feed) return;
+    feed.innerHTML = '';
+    (j.messages || []).forEach(function(m){
+      ladaAppendMessage(m.role, m.text);
+    });
+    feed.scrollTop = feed.scrollHeight;
+  } catch (e) {}
+}
+function ladaAppendMessage(role, text) {
+  const feed = document.getElementById('lada-chat-feed');
+  if (!feed) return;
+  const d = document.createElement('div');
+  d.className = 'lada-msg lada-msg-' + role;
+  d.textContent = (role === 'user' ? '> ' : '< ') + text;
+  feed.appendChild(d);
+  feed.scrollTop = feed.scrollHeight;
+}
+async function ladaSend() {
+  const input = document.getElementById('lada-input');
+  if (!input) return;
+  const t = input.value.trim();
+  if (!t) return;
+  input.value = '';
+  ladaAppendMessage('user', t);
+  try {
+    const j = await jpost('/api/llm/query', { text: t });
+    if (j.ok) {
+      const reply = j.reply || (j.response && j.response.choices && j.response.choices[0] && j.response.choices[0].message && j.response.choices[0].message.content) || JSON.stringify(j.response || j);
+      ladaAppendMessage('assistant', reply);
+    } else {
+      ladaAppendMessage('assistant', '[ERR] ' + (j.error || '?') + (j.reason ? ' — ' + j.reason : ''));
+    }
+  } catch (e) {
+    ladaAppendMessage('assistant', '[ERR] ' + e.message);
+  }
+}
+async function ladaClear() {
+  try { await jpost('/api/llm/clear', {}); } catch (e) {}
+  const feed = document.getElementById('lada-chat-feed');
+  if (feed) feed.innerHTML = '';
+}
+async function ladaSaveParams() {
+  const body = {};
+  ['temperature','top_p','top_k','max_tokens','repeat_penalty','seed'].forEach(function(k){
+    const el = document.getElementById('lada-' + k);
+    if (el) body[k] = el.value;
+  });
+  try {
+    const j = await jpost('/api/llm/params', body);
+    const stat = document.getElementById('lada-tools-status');
+    if (stat) stat.textContent = j.ok ? 'сохранено ' + new Date().toLocaleTimeString('ru-RU') : 'ERR';
+  } catch (e) {}
+}
+async function ladaSaveTool(name, on) {
+  try {
+    await jpost('/api/llm/tools', { name: name, on: on });
+  } catch (e) {}
+}
+
+// init при загрузке
+document.addEventListener('DOMContentLoaded', function(){
+  ladaBindParam('lada-temp', 'ptemp-val', 'temperature');
+  ladaBindParam('lada-top_p', 'ptop-p-val', 'top_p');
+  ladaBindParam('lada-top_k', 'ptop-k-val', 'top_k');
+  ladaBindParam('lada-max_tokens', 'pmax-val', 'max_tokens');
+  ladaBindParam('lada-repeat_penalty', 'prp-val', 'repeat_penalty');
+  const seedEl = document.getElementById('lada-seed');
+  if (seedEl) seedEl.addEventListener('input', function(){ ladaSetParamLabel('pseed-val', seedEl.value); });
+
+  const sendBtn = document.getElementById('lada-send');
+  if (sendBtn) sendBtn.onclick = ladaSend;
+  const clearBtn = document.getElementById('lada-clear');
+  if (clearBtn) clearBtn.onclick = ladaClear;
+  const saveBtn = document.getElementById('lada-save-params');
+  if (saveBtn) saveBtn.onclick = ladaSaveParams;
+
+  ['get_time','get_weather','check_email','ask_agent','query_rag','generate_image','generate_audio'].forEach(function(name){
+    const cb = document.getElementById('tool-' + name);
+    if (cb) cb.addEventListener('change', function(){ ladaSaveTool(name, cb.checked); });
+  });
+
+  // авто-загрузка при первом клике по вкладке LADA
+  document.querySelectorAll('.tab').forEach(function(tb){
+    if (tb.dataset && tb.dataset.tab === 'lada') {
+      tb.addEventListener('click', function(){ ladaLoadStatus(); ladaLoadHistory(); });
+    }
+  });
+
+  // если открыта LADA по умолчанию — загрузить
+  if (window.location.hash === '#lada') { ladaLoadStatus(); ladaLoadHistory(); }
+});

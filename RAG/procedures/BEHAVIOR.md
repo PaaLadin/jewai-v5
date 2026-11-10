@@ -116,3 +116,7 @@
 **Прецедент 04.11:** отправила `read` с id X, отчёт не пришёл, отправила кик с тем же id X. Мост исполнил кик, read отбросил. Следующие блоки — `SKIP stale`. Watermark застыл. Разбор: `stale_B.log`, все записи `dup_same_hash`.
 
 **Правило:** монотонно вверх, **никогда** не переиспользовать. Если отчёт потерялся — берёшь `next_id` и продолжаешь. Вопрос «а что с потерянным блоком» — не к мосту, а к тебе: не надо было терять.
+
+## 11. Inter-agent communication
+
+Agents communicate with each other in English, Chinese, or transliterated Russian (if necessary). Pure Russian is reserved for the operator. Goal: reduce volume, increase density and precision.

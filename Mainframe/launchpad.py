@@ -135,6 +135,8 @@ def _kill(cfg: Config, key: str) -> dict:
 def _block(cfg: Config, key: str) -> dict:
     if key == "server":
         return {"on": True, "self": True, "port": cfg.chat_port}
+    if key == "llm":
+        return {"on": _tcp(1234)}
     if key.startswith("agent:"):
         L = key.split(":", 1)[1]
         ch = cfg.channels.get(L)
@@ -150,6 +152,14 @@ def _block(cfg: Config, key: str) -> dict:
         return {"on": _tcp(ch.cdp_port), "port": ch.cdp_port, "cdp_ok": _cdp_up(ch.cdp_port)}
     if key == "doh":
         return {"on": _tcp(cfg.doh_proxy_port), "port": cfg.doh_proxy_port}
+    if key.startswith("bridge:"):
+        L = key.split(":", 1)[1]
+        if L not in cfg.channels:
+            return {"on": False, "error": "bad channel"}
+        info = _sp_load(cfg).get(key) or {}
+        pid = info.get("pid")
+        alive = _pid_alive(pid) if pid else False
+        return {"on": alive, "pid": pid, "byfile": bool(info.get("pid"))}
     if key in ("mailbot", "rebirth"):
         info = _sp_load(cfg).get(key) or {}
         pid = info.get("pid")
@@ -159,7 +169,7 @@ def _block(cfg: Config, key: str) -> dict:
 
 def status(cfg: Config) -> dict:
     from concurrent.futures import ThreadPoolExecutor
-    keys = ["server"] + ["agent:" + L for L in cfg.channels] + ["chrome:" + L for L in cfg.channels] + ["doh", "mailbot", "rebirth"]
+    keys = ["server", "llm"] + ["agent:" + L for L in cfg.channels] + ["chrome:" + L for L in cfg.channels] + ["bridge:" + L for L in cfg.channels] + ["doh", "mailbot", "rebirth"]
     blocks: dict[str, Any] = {}
     with ThreadPoolExecutor(max_workers=12) as ex:
         futs = {k: ex.submit(_block, cfg, k) for k in keys}
@@ -174,6 +184,11 @@ def status(cfg: Config) -> dict:
 def boot(cfg: Config, target: str) -> dict:
     if target == "server":
         return {"ok": False, "error": "self, cannot boot"}
+    if target == "llm":
+        if _tcp(1234): return {"ok": True, "target": target, "already": True}
+        script = cfg.path("Tools", "lada_setup.py")
+        if not script.exists(): return {"ok": False, "error": "lada_setup.py not found"}
+        return _spawn(cfg, [_pythonw(), str(script)], cfg.root, target)
     if target == "all":
         out = []
         for t in ["agent:" + L for L in cfg.channels] + ["chrome:" + L for L in cfg.channels]:
@@ -208,6 +223,17 @@ def boot(cfg: Config, target: str) -> dict:
             return {"ok": bool(r.get("ok")), "target": target, "pid": r.get("pid")}
         except Exception as e:
             return {"ok": False, "error": str(e)[:200]}
+    if target.startswith("bridge:"):
+        L = target.split(":", 1)[1]
+        if L not in cfg.channels:
+            return {"ok": False, "error": "bad channel"}
+        st = _block(cfg, target)
+        if st.get("on"):
+            return {"ok": True, "target": target, "already": True, "pid": st.get("pid")}
+        script = cfg.path("Bridge", "run.py")
+        if not script.exists():
+            return {"ok": False, "error": "Bridge/run.py not found", "path": str(script)}
+        return _spawn(cfg, [_pythonw(), str(script), "--channel", L], cfg.root, target)
     if target == "doh":
         return {"ok": False, "error": "doh not implemented in v5 (Ф5)"}
     if target in ("mailbot", "rebirth"):
@@ -218,12 +244,18 @@ def boot(cfg: Config, target: str) -> dict:
 def stop(cfg: Config, target: str) -> dict:
     if target == "server":
         return {"ok": False, "error": "self, cannot stop"}
+    if target == "llm":
+        try:
+            subprocess.run(["taskkill", "/F", "/IM", "llama-server.exe"], capture_output=True, creationflags=_nw())
+            return {"ok": True, "stopped": "llama-server.exe"}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
     if target == "all":
         out = []
         for t in ["chrome:" + L for L in cfg.channels] + ["agent:" + L for L in cfg.channels]:
             out.append({"target": t, "result": stop(cfg, t)})
         return {"ok": True, "target": "all", "results": out}
-    if target.startswith(("agent:", "chrome:", "doh", "mailbot", "rebirth")):
+    if target.startswith(("agent:", "chrome:", "bridge:", "doh", "mailbot", "rebirth")):
         return _kill(cfg, target)
     return {"ok": False, "error": "unknown target", "target": target}
 

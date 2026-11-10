@@ -74,3 +74,10 @@ config.json.bak_*
 AUDIT_*.md
 PROMPT_*.md
 SESSION_STATE.md
+
+# 14B sync artifacts (не пушим бэкапы синка)
+_bak_14b_sync/
+*.recovered
+# Lada history (runtime data)
+logs/lada_history.jsonl
+logs/A/

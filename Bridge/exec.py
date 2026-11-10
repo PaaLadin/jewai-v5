@@ -218,7 +218,10 @@ def _sha256(p: Path) -> str:
 def _nw_flags() -> int:
     if sys.platform != "win32":
         return 0
-    return subprocess.CREATE_NO_WINDOW
+    # BUG-017 fix (11C): DETACHED_PROCESS isolates child stdio from our pipes.
+    # Background children (\`start /B python foo.py\`) otherwise inherit our
+    # stdout/stderr PIPE ends and keep them open forever -> communicate() blocks.
+    return subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS
 
 
 def op_read(root: Path, b: Block, extra_roots: tuple = ()) -> dict[str, Any]:
@@ -269,23 +272,77 @@ def op_hash(root: Path, b: Block, extra_roots: tuple = ()) -> dict[str, Any]:
     return {"ok": True, "sha256": _sha256(p), "bytes": p.stat().st_size}
 
 
+def _kill_tree(pid: int) -> None:
+    """Kill process and descendants (BUG-017 fix: shell=True spawns cmd.exe -> python)."""
+    if sys.platform == "win32":
+        try:
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)],
+                           capture_output=True, timeout=10,
+                           creationflags=subprocess.CREATE_NO_WINDOW)
+        except Exception:
+            pass
+    else:
+        import signal as _sig
+        try:
+            os.killpg(os.getpgid(pid), _sig.SIGKILL)
+        except Exception:
+            pass
+
+
 def op_run(root: Path, b: Block, extra_roots: tuple = ()) -> dict[str, Any]:
     if not b.cmd:
         return {"ok": False, "error": "no cmd"}
     cwd = safe_path(root, b.cwd, extra_roots) if b.cwd else root
     t0 = time.time()
+    # BUG-017 fix (11C): write stdout/stderr to tempfiles instead of PIPE.
+    # Background children inherit these file handles (harmless — they're files,
+    # not pipes), so \`communicate()\` never blocks waiting for EOF from a daemon.
+    import tempfile
+    out_f = tempfile.NamedTemporaryFile(delete=False, suffix=".out", prefix="bridge_run_")
+    err_f = tempfile.NamedTemporaryFile(delete=False, suffix=".err", prefix="bridge_run_")
+    out_path, err_path = out_f.name, err_f.name
     try:
-        r = subprocess.run(b.cmd, shell=True, cwd=str(cwd),
-                           capture_output=True, text=True,
-                           encoding="utf-8", errors="replace",
-                           timeout=max(1, b.timeout),
-                           creationflags=_nw_flags())
-        return {"ok": r.returncode == 0, "code": r.returncode,
-                "stdout": r.stdout or "", "stderr": r.stderr or "",
+        proc = subprocess.Popen(
+            b.cmd, shell=True, cwd=str(cwd),
+            stdin=subprocess.DEVNULL,
+            stdout=out_f, stderr=err_f,
+            creationflags=_nw_flags(),
+        )
+        out_f.close(); err_f.close()
+        timed_out = False
+        try:
+            proc.wait(timeout=max(1, b.timeout))
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            try:
+                _kill_tree(proc.pid)
+            except Exception:
+                pass
+            try:
+                proc.wait(timeout=5)
+            except Exception:
+                pass
+        try:
+            stdout = open(out_path, "r", encoding="utf-8", errors="replace").read()
+        except Exception:
+            stdout = ""
+        try:
+            stderr = open(err_path, "r", encoding="utf-8", errors="replace").read()
+        except Exception:
+            stderr = ""
+        if timed_out:
+            return {"ok": False, "code": -1, "stdout": stdout,
+                    "stderr": (stderr + "\nTIMEOUT (killed tree)").strip(),
+                    "elapsed": round(time.time() - t0, 2)}
+        return {"ok": proc.returncode == 0, "code": proc.returncode,
+                "stdout": stdout, "stderr": stderr,
                 "elapsed": round(time.time() - t0, 2)}
-    except subprocess.TimeoutExpired:
-        return {"ok": False, "code": -1, "stdout": "", "stderr": "TIMEOUT",
-                "elapsed": round(time.time() - t0, 2)}
+    finally:
+        for p_ in (out_path, err_path):
+            try:
+                os.unlink(p_)
+            except Exception:
+                pass
 
 
 OPS = {

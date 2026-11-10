@@ -36,7 +36,8 @@
   <button class="tab" data-tab="projects">ПРОЕКТЫ</button>
   <button class="tab" data-tab="logs">ЛОГИ</button>
   <button class="tab" data-tab="roadmap">ROADMAP</button>
-  <button class="tab" data-tab="wiki">СПРАВКА</button>
+  <button class="tab" data-tab="lada">LADA</button>
+<button class="tab" data-tab="wiki">СПРАВКА</button>
 </div><main>
 <section class="tab-body active" id="tab-agents">
   <div class="bulk">
@@ -144,6 +145,57 @@
   </div>
 </section>
 </main>
+<section class="tab-body" id="tab-lada">
+<div class="lada-layout">
+  <div class="lada-main">
+    <div class="lada-title">LOCAL AI // <span id="lada-model-name">model</span> // llama.cpp :<span id="lada-port-name">?</span></div>
+    <div id="lada-status" class="lada-status-line">checking...</div>
+    <div id="lada-chat-feed" class="lada-feed"></div>
+    <textarea id="lada-input" class="lada-input" placeholder="Запрос к LLM..."></textarea>
+    <div class="lada-toolbar">
+      <button id="lada-send" class="lada-btn-primary">Отправить</button>
+      <button id="lada-clear" class="lada-btn">Очистить</button>
+    </div>
+    <div id="lada-output" style="display:none"></div>
+  </div>
+  <div class="lada-side">
+    <div class="lada-side-section">
+      <div class="lada-side-title">ИНДИКАТОРЫ</div>
+      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-llama"></span><span>llama-server</span></div>
+      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-orch"></span><span>оркестратор</span></div>
+      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-model"></span><span>модель загружена</span></div>
+      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-rag"></span><span>RAG индекс</span></div>
+    </div>
+    <div class="lada-side-section">
+      <div class="lada-side-title">ПАРАМЕТРЫ</div>
+      <label class="lada-param">temperature <span id="ptemp-val">0.7</span>
+        <input type="range" id="lada-temp" min="0" max="2" step="0.05" value="0.7"></label>
+      <label class="lada-param">top_p <span id="ptop-p-val">0.9</span>
+        <input type="range" id="lada-top_p" min="0" max="1" step="0.05" value="0.9"></label>
+      <label class="lada-param">top_k <span id="ptop-k-val">40</span>
+        <input type="range" id="lada-top_k" min="0" max="100" step="1" value="40"></label>
+      <label class="lada-param">max_tokens <span id="pmax-val">1024</span>
+        <input type="range" id="lada-max_tokens" min="64" max="4096" step="64" value="1024"></label>
+      <label class="lada-param">repeat_penalty <span id="prp-val">1.1</span>
+        <input type="range" id="lada-repeat_penalty" min="0.8" max="2" step="0.05" value="1.1"></label>
+      <label class="lada-param">seed <span id="pseed-val">-1</span>
+        <input type="number" id="lada-seed" value="-1" style="width:100%"></label>
+      <button id="lada-save-params" class="lada-btn">Сохранить</button>
+    </div>
+    <div class="lada-side-section">
+      <div class="lada-side-title">TOOLS</div>
+      <label class="lada-tool"><input type="checkbox" id="tool-get_time" checked>get_time</label>
+      <label class="lada-tool"><input type="checkbox" id="tool-get_weather" checked>get_weather</label>
+      <label class="lada-tool"><input type="checkbox" id="tool-check_email">check_email</label>
+      <label class="lada-tool"><input type="checkbox" id="tool-ask_agent">ask_agent</label>
+      <label class="lada-tool"><input type="checkbox" id="tool-query_rag" checked>query_rag</label>
+      <label class="lada-tool"><input type="checkbox" id="tool-generate_image">generate_image</label>
+      <label class="lada-tool"><input type="checkbox" id="tool-generate_audio">generate_audio</label>
+      <div id="lada-tools-status" class="lada-hint">сохранение авто</div>
+    </div>
+  </div>
+</div>
+</section>
 <section class="tab-body" id="tab-wiki">
   <div class="wiki-layout">
     <aside class="wiki-side">

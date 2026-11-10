@@ -339,9 +339,33 @@ document.addEventListener('click', function(e){
   if(!btn) return;
   e.preventDefault();
   var act = btn.dataset.act, target = btn.dataset.target;
-  var ep = act==='boot'?'/api/boot':act==='stop'?'/api/stop':act==='restart'?'/api/restart':null;
-  if(!ep) return;
-  fetch(ep, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({target:target})}).catch(function(){});
+  // 11C: reboot-agent/bridge/chrome route to /api/restart with correct target prefix
+  var ep = act==='boot'?'/api/boot':act==='stop'?'/api/stop':act==='restart'?'/api/restart':
+           (act==='reboot-agent'||act==='reboot-bridge'||act==='reboot-chrome')?'/api/restart':null;
+  if(!ep) { mnemoToast(act + ' ' + target + ': нет обработчика', 'fail'); return; }
+  var tgt = target;
+  if (act==='reboot-agent') tgt = 'agent:' + target;
+  else if (act==='reboot-bridge') tgt = 'bridge:' + target;
+  else if (act==='reboot-chrome') tgt = 'chrome:' + target;
+  // 11C feedback: disable btn, in-flight indicator, then OK/FAIL toast + refresh
+  btn.disabled = true; btn.classList.add('busy');
+  mnemoToast(act + ' ' + tgt + ' ...', 'pending');
+  fetch(ep, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({target:tgt})})
+    .then(function(r){ return r.json().then(function(j){ return {status: r.status, body: j}; }); })
+    .then(function(res){
+      var ok = res.body && (res.body.ok === true);
+      var detail = '';
+      if (res.body) {
+        if (res.body.already) detail = ' (already)';
+        else if (res.body.pid) detail = ' pid=' + res.body.pid;
+        else if (res.body.stopped) detail = ' stopped=' + res.body.stopped;
+        else if (res.body.error) detail = ' ' + res.body.error;
+      }
+      mnemoToast(act + ' ' + tgt + ': ' + (ok ? 'OK' : 'FAIL') + detail, ok ? 'ok' : 'fail');
+      setTimeout(function(){ try { if (typeof init === 'function') init(); } catch(e){} }, 800);
+    })
+    .catch(function(err){ mnemoToast(act + ' ' + tgt + ': ERR ' + err.message, 'fail'); })
+    .finally(function(){ btn.disabled = false; btn.classList.remove('busy'); });
 });
 
 function init(){
@@ -413,3 +437,34 @@ function init(){
 window.__mnemo = { particles: particles, BLOCKS: BLOCKS, agentOrder: agentOrder };
 init();
 })();
+
+
+// ==== 11C: toast для feedback действий кнопок ====
+function mnemoToast(msg, kind) {
+  var id = 'mnemo-toast';
+  var el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = id;
+    el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);'
+      + 'padding:8px 16px;background:#001a00;border:1px solid #0a3a0a;'
+      + 'color:#9bff9b;font-family:Consolas,monospace;font-size:12px;'
+      + 'z-index:99999;letter-spacing:1px;max-width:80%;box-shadow:0 0 12px rgba(51,255,51,0.3);'
+      + 'transition:opacity 0.3s;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.opacity = '1';
+  if (kind === 'ok') { el.style.borderColor = '#33ff33'; el.style.color = '#33ff33'; }
+  else if (kind === 'fail') { el.style.borderColor = '#ff3333'; el.style.color = '#ff5555'; }
+  else if (kind === 'pending') { el.style.borderColor = '#ffaa00'; el.style.color = '#ffcc44'; }
+  else { el.style.borderColor = '#0a3a0a'; el.style.color = '#9bff9b'; }
+  if (el._timer) clearTimeout(el._timer);
+  if (kind !== 'pending') {
+    el._timer = setTimeout(function(){
+      el.style.opacity = '0';
+      setTimeout(function(){ el.style.display = 'none'; }, 300);
+    }, 3000);
+  }
+}
