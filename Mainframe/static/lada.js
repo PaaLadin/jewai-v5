@@ -80,7 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   btnNew.onclick = async () => {
-    const r = await fetch('/api/chats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Новый чат' }) });
+    const title = prompt("Название нового чата:", "Новый чат");
+    if (!title) return;
+    const r = await fetch('/api/chats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: title }) });
     const j = await r.json();
     if (j.ok) loadChat(j.chat_id);
   };
