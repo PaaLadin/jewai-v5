@@ -99,8 +99,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         return;
       }
       if (msg.type === 'notify-stop') {
-        // 9C: create runtime/notify.stop. Fire-and-forget so onMessage never blocks.
+        // 10C BUG-019: voice не активен -> нечего стопать, тихо выходим.
         const st = await getState();
+        if (!st.voiceActive) {
+          sendResponse({ ok: true, skipped: 'VOICE_NOT_ACTIVE' });
+          return;
+        }
+        // 9C: create runtime/notify.stop. Fire-and-forget so onMessage never blocks.
         if (!st.agentUrl || !st.token) {
           sendResponse({ ok: true, skipped: 'NO_STATE' });
           return;

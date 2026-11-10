@@ -230,8 +230,15 @@ function _voiceStopCheck() {
   if (!v || v === lastInsertedText) { voiceStopSent = false; return; }
   if (voiceStopSent) return;
   voiceStopSent = true;
+  // 10C BUG-019: не шлём notify-stop, если voice не активен.
+  // Раньше любой ввод оператора дёргал /notify-stop -> файл-мусор.
   try {
-    chrome.runtime.sendMessage({ type: 'notify-stop' }).catch(() => {});
+    chrome.storage.local.get({voiceActive: false}, function(st) {
+      if (!st.voiceActive) return;
+      try {
+        chrome.runtime.sendMessage({ type: 'notify-stop' }).catch(() => {});
+      } catch (e) {}
+    });
   } catch (e) {}
 }
 
