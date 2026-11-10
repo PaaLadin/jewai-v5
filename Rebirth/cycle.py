@@ -42,10 +42,20 @@ def extract_markers(prompt_text: str) -> list[str]:
 
 
 def load_prompt(cfg: Config, letter: str, next_series: str) -> Path | None:
-    """Look for PROMPT_<next_series>.md in cfg.root/logs/<CH>/, else rebirth/, else RAG/."""
+    """Look for PROMPT_<next_series>.md in four locations (10C BUG-017).
+
+    Порядок приоритета (10C fix):
+      1. logs/<CH>/PROMPT_<s>.md       - v5 канон (per-channel)
+      2. emergency/PROMPT_<s>.md        - DeepSeek канон (совместимость)
+      3. logs/rebirth/PROMPT_<s>.md    - v5 rebirth backup
+      4. RAG/procedures/PROMPT_<s>.md  - v5 RAG backup
+
+    Раньше emergency/ не проверялась -> оператор кладёт PROMPT туда, v5 не находит.
+    """
     fn = "PROMPT_%s.md" % next_series
     cands = [
         cfg.path("logs", letter.upper(), fn),
+        cfg.path("emergency", fn),
         cfg.path("logs", "rebirth", fn),
         cfg.path("RAG", "procedures", fn),
     ]

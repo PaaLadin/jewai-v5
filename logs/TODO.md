@@ -47,6 +47,10 @@ P0 в v5 - ПУСТ. Всё, что было, закрыто. Открыто т�
 - [x] **Handicap при отправке (Mora 04.11):** FIXED 2026-11-09 (10C). Базовая пауза была; добавлен `_note_send()` helper и вызовы в `_send_or_buffer`/`_drain_outbox`/`_drain_kick_buffer`. Теперь любой send_text продлевает handicap_ms (default 7000). test_daemon + test_daemon_timing зелёные.
 - [x] **BEHAVIOR.md §9/§10 в jewai:** FIXED 2026-11-09 (10C). Перенесено из `C:/Jeho/RAG/procedures/BEHAVIOR.md` (2550 б). §9 дисциплина отправки, §10 не переиспользовать id. Файл 6652 б, секции 9-10 на месте.
 
+## P1.5 - installer gaps (обнаружено при раскатке на HERETIC)
+
+- [x] **BUG-017:** PROMPT не находится из emergency/. emergency/ создан в source, load_prompt расширен, installer копирует. FIXED 2026-11-10 (10C).
+- [ ] **installer: не копирует emergency/, HANDOVER, TEMP-артефакты.** Проверить, что все важные корневые папки копируются. Частично закрыто BUG-017.
 ## P2 - причёсывание
 
 - [x] **B-07 / B-08:** B-07 уже был готов (`Templates/extension/onboarding.html` 4745 б, `agent.py` `GET /onboarding` + `/onboarding/status`, флаг «не показывать»). B-08 создан 10C: `RAG/onboarding/AGENT_FIRST_RUN.md` (3520 б) - Profiles/<L>/, линк-лист чатов, «не логинь Chromium в Google», порядок первого старта, связи.

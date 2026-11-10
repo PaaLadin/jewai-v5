@@ -425,12 +425,20 @@ class Daemon:
                     processed += 1
                 else:
                     errors += 1
-            if results:
+            # 10C BUG-016: если ВСЕ результаты - SKIP, не шлём [AGENT REPORT].
+            # Иначе мост подтверждает stale-блоки, агент видит отчёт, повторяет
+            # блок с тем же телом, и цикл не останавливается. См. stale_A.log
+            # на HERETIC 2026-11-10 (13 дупов подряд).
+            _has_real = any(r.get("status") != "SKIP" for r in results)
+            if results and _has_real:
                 next_id = self._next_id(max_id)
                 report = self._fmt_report(results, next_id)
                 self._set_status("Отправка [AGENT REPORT]")
                 # 10C: _send_or_buffer уже вызывает _note_send
                 self._send_or_buffer(cdp, report)
+            elif results:
+                # все SKIP - просто фиксируем в статусе, отчёт не шлём
+                self._set_status("Все блоки stale (SKIP), отчёт не отправлен")
         finally:
             self._inflight_since = 0.0
             try:

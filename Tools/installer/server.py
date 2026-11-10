@@ -257,7 +257,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     raise ValueError("agent port %d STILL conflicts after auto-shift" % _ap)
                 if _cp in reserved:
                     raise ValueError("cdp port %d STILL conflicts after auto-shift" % _cp)
-            for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Templates', 'logs', 'Projects', 'Archive', 'Profiles']:
+            for d in ['Core', 'Bridge', 'Adapters', 'Mainframe', 'Rebirth', 'Tools', 'Templates', 'logs', 'Projects', 'Archive', 'Profiles', 'emergency']:
                 os.makedirs(os.path.join(target, d), exist_ok=True)
                 # 12B: ensure logs/JOURNAL.md and logs/TODO.md
                 os.makedirs(os.path.join(target, 'logs'), exist_ok=True)

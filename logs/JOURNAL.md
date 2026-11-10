@@ -1999,3 +1999,24 @@ CfT скачался (10C fix работает), extension скопирован,
 **RAG:** RAG/procedures/BUGS_V5.md - BUG-010/011 FIXED, BUG-012/013 verified non-bugs.
 
 Dixi. 10C (Семён), 2026-11-10 ~02:15.
+
+## 2026-11-10, 10C (Семён) - BUG-017: emergency/ в v5
+
+**Фаза:** Ф0 (установка) + Ф4 (rebirth).
+
+**Что сделано:**
+- Создан C:/jewai/emergency/ (README + 36 файлов из DeepSeek/emergency:
+  0_ACTIVATION, HANDOVER, OPERATOR_GUIDE, PROMPT_* по всем каналам).
+- Rebirth/cycle.py::load_prompt расширен - добавлен emergency/ как 2-я попытка
+  после logs/<CH>/ но до logs/rebirth/ и RAG/procedures/.
+- installer: emergency добавлен в core dirs loop.
+
+**Чем проверено:**
+- py_compile cycle.py OK, server.py OK.
+- emergency/ создан, 36 файлов (скопировано из DeepSeek).
+
+**Контекст:**
+- Обнаружено при раскатке v5 на HERETIC - оператор не мог понять, где v5 ищет PROMPT.
+- В DeepSeek канон emergency/, в v5 его не было.
+
+Dixi. 10C (Семён), 2026-11-10 ~04:10.

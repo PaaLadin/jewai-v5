@@ -327,3 +327,32 @@ Fix 10C:
 (root, install-wide). Per-channel токен не нужен. Ложная тревога.
 
 Git: PaaLadin/jewai-v5 (этот коммит).
+
+### BUG-017: PROMPT не находится из emergency/ (v5 vs DeepSeek) — FIXED
+
+Симптом: оператор кладёт PROMPT_<series>.md в emergency/ (как в DeepSeek),
+v5 его не находит. Rebirth/cycle.py::load_prompt искал только:
+  logs/<CH>/, logs/rebirth/, RAG/procedures/
+
+Корень:
+- В DeepSeek канон - emergency/PROMPT_<s>.md + emergency/0_ACTIVATION.md.
+- В v5 папки emergency/ вообще не было (ни в source, ни в target).
+- load_prompt её не проверял.
+- installer ignore_patterns содержал "emergency" в старых версиях (неявно через копию)
+  - но так как папки не было, copytree её не создавал.
+
+Fix 10C:
+- Создана `C:/jewai/emergency/` в source (README + 36 файлов из DeepSeek/emergency).
+- installer добавил emergency/ в core dirs loop.
+- Rebirth/cycle.py::load_prompt расширен:
+  1. logs/<CH>/PROMPT_<s>.md (v5 канон)
+  2. emergency/PROMPT_<s>.md (DeepSeek канон, NEW)
+  3. logs/rebirth/PROMPT_<s>.md (v5 backup)
+  4. RAG/procedures/PROMPT_<s>.md (v5 backup)
+
+Проверено:
+- py_compile cycle.py OK, server.py OK.
+- emergency/ создан, 36 файлов (0_ACTIVATION, HANDOVER, OPERATOR_GUIDE, PROMPT_*).
+- installer core dirs содержит emergency.
+
+Git: PaaLadin/jewai-v5 (этот коммит).
