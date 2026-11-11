@@ -1,0 +1,45 @@
+
+  <div class="chat-wrap">
+    <div class="chat-side">
+      <div class="panel-block">
+        <div class="panel-title">КАНАЛЫ</div>
+        <div class="chan-list" id="chanList"></div>
+      </div>
+      <div class="panel-block">
+        <div class="panel-title">МЕТРИКИ</div>
+        <div class="metrics">
+          <div class="metric"><span>сессия</span><b id="mSession">0с</b></div>
+          <div class="metric"><span>сообщений</span><b id="mMsgs">0</b></div>
+          <div class="metric"><span>адресат</span><b id="mTo">ВСЕ</b></div>
+        </div>
+      </div>
+      <div class="panel-block">
+        <div class="panel-title">ПУЛЬТ</div>
+        <div class="pult">
+          <button class="pbtn meeting" id="btnMeeting">СОВЕЩАНИЕ</button>
+          <button class="pbtn" id="btnPauseAll">ПАУЗА ВСЕМ</button>
+          <button class="pbtn" id="btnResumeAll">ПРОДОЛЖИТЬ</button>
+          <button class="pbtn" id="btnClearView">ОЧИСТИТЬ</button>
+        </div>
+      </div>
+      <div class="panel-block grow">
+        <div class="panel-title">УЧАСТНИКИ</div>
+        <div class="roster" id="roster"></div>
+      </div>
+    </div>
+    <div class="chat-main">
+      <div class="chat-title">
+        <span>КАНАЛ СВЯЗИ</span>
+        <span id="targetBadge">→ ВСЕ</span>
+      </div>
+      <div id="feed" class="feed"></div>
+      <div id="typing"></div>
+      <div id="voiceHint"></div>
+      <div class="composer">
+        <span class="prompt">&gt;</span>
+        <textarea id="input" placeholder="введите сообщение..."></textarea>
+        <button id="btnVoice" title="голосовой ввод">🎤</button>
+        <button id="btnSend" title="отправить">&gt;_</button>
+      </div>
+    </div>
+  </div>

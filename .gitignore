@@ -81,3 +81,4 @@ _bak_14b_sync/
 # Lada history (runtime data)
 logs/lada_history.jsonl
 logs/A/
+_bak_heretic_sync*

@@ -6,6 +6,35 @@
 <meta name="theme-color" content="#0a0a0a">
 <title>JewAI v5 // ПУЛЬТ</title>
 <link rel="stylesheet" href="/style.css?v=f2">
+
+<style id="border-removal-fix">
+  /* Убираем рамки и тени у контейнера контента */
+  main, #tab-mnemo, .mnemo-wrap {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+</style>
+
+
+<style id="flex-width-fix">
+  /* Отключаем вертикальное растягивание по умолчанию и центрируем */
+  .m-mid { align-items: center !important; }
+  
+  /* Жестко фиксируем ширину и высоту, игнорируя flex: 1 */
+  
+  .m-center-grid { 
+    flex: 0 0 24% !important; 
+    width: 24% !important; 
+    height: 66.6% !important; 
+  }
+  .m-right-col { 
+    flex: 0 0 15% !important; 
+    width: 15% !important; 
+    height: 80% !important; 
+  }
+</style>
+
 </head>
 <body>
 
@@ -26,7 +55,7 @@
 <div class="topbar">
   <div class="top-left">JewAI v5 // ПУЛЬТ</div>
   <div class="top-center" id="clock">--:--:--</div>
-  <button id="btn-settings" class="top-gear" title="Настройки">G</button><div class="top-right" id="netstat">СЕТЬ: ---</div>
+  <div class="top-right" id="netstat">СЕТЬ: ---</div>
 </div>
 <div class="tabs">
   <button class="tab active" data-tab="agents">АГЕНТЫ</button>
@@ -39,173 +68,15 @@
   <button class="tab" data-tab="lada">LADA</button>
 <button class="tab" data-tab="wiki">СПРАВКА</button>
 </div><main>
-<section class="tab-body active" id="tab-agents">
-  <div class="bulk">
-    <button class="bulk-btn" id="btn-pause-all">ПАУЗА ВСЕМ</button>
-    <button class="bulk-btn" id="btn-resume-all">ПРОДОЛЖИТЬ ВСЕМ</button>
-    <button class="bulk-btn" id="btn-selftest">SELF-TEST</button>
-    <span class="bulk-meta" id="bulk-meta"></span>
-  </div>
-  <div class="grid" id="agents-grid"></div>
-</section>
-<section class="tab-body" id="tab-mnemo">
-  <div class="mnemo-wrap" id="mnemo-wrap">
-    <canvas id="mnemo-fx" width="1600" height="900"></canvas>
-    <div id="mnemo-blocks"></div>
-  </div>
-  <div class="mnemo-legend">
-    <span><span class="lamp on"></span> online</span>
-    <span><span class="lamp off"></span> offline</span>
-    <span style="color:#666;">— — resource (passive)</span>
-    <span style="color:#33ff33;">═══ mainframe</span>
-  </div>
-</section>
-<section class="tab-body" id="tab-chat">
-  <div class="chat-wrap">
-    <div class="chat-side">
-      <div class="panel-block">
-        <div class="panel-title">КАНАЛЫ</div>
-        <div class="chan-list" id="chanList"></div>
-      </div>
-      <div class="panel-block">
-        <div class="panel-title">МЕТРИКИ</div>
-        <div class="metrics">
-          <div class="metric"><span>сессия</span><b id="mSession">0с</b></div>
-          <div class="metric"><span>сообщений</span><b id="mMsgs">0</b></div>
-          <div class="metric"><span>адресат</span><b id="mTo">ВСЕ</b></div>
-        </div>
-      </div>
-      <div class="panel-block">
-        <div class="panel-title">ПУЛЬТ</div>
-        <div class="pult">
-          <button class="pbtn meeting" id="btnMeeting">СОВЕЩАНИЕ</button>
-          <button class="pbtn" id="btnPauseAll">ПАУЗА ВСЕМ</button>
-          <button class="pbtn" id="btnResumeAll">ПРОДОЛЖИТЬ</button>
-          <button class="pbtn" id="btnClearView">ОЧИСТИТЬ</button>
-        </div>
-      </div>
-      <div class="panel-block grow">
-        <div class="panel-title">УЧАСТНИКИ</div>
-        <div class="roster" id="roster"></div>
-      </div>
-    </div>
-    <div class="chat-main">
-      <div class="chat-title">
-        <span>КАНАЛ СВЯЗИ</span>
-        <span id="targetBadge">→ ВСЕ</span>
-      </div>
-      <div id="feed" class="feed"></div>
-      <div id="typing"></div>
-      <div id="voiceHint"></div>
-      <div class="composer">
-        <span class="prompt">&gt;</span>
-        <textarea id="input" placeholder="введите сообщение..."></textarea>
-        <button id="btnVoice" title="голосовой ввод">🎤</button>
-        <button id="btnSend" title="отправить">&gt;_</button>
-      </div>
-    </div>
-  </div>
-</section>
+<section class="tab-body active" id="tab-agents"></section>
+<section class="tab-body" id="tab-mnemo" style="height: 100%; box-sizing: border-box; background: #000;"></section>
+<section class="tab-body" id="tab-chat"></section>
 
-<section class="tab-body" id="tab-pers">
-  <div class="pers-wrap">
-    <div class="pers-list" id="persList"></div>
-    <div class="pers-chat">
-      <div class="pers-title" id="persTitle">выберите агента</div>
-      <div id="persFeed" class="pers-feed"></div>
-      <div class="pers-composer">
-        <textarea id="persInput" placeholder="сообщение агенту..."></textarea>
-        <button id="persSend">&gt;_</button>
-      </div>
-    </div>
-  </div>
-</section><section class="tab-body" id="tab-projects">
-  <div class="list-wrap">
-    <div class="panel-title">ПРОЕКТЫ (ROADMAP.html)</div>
-    <div id="projects-list" class="list"></div>
-  </div>
-</section>
-<section class="tab-body" id="tab-logs">
-  <div class="logs-wrap">
-    <div class="log-tabs" id="log-tabs">
-      <button class="log-tab active" data-log="chat">CHAT</button>
-      <button class="log-tab" data-log="server">SERVER</button>
-      <button class="log-tab" data-log="agent">AGENT</button>
-      <button class="log-tab" data-log="svc">SVC</button>
-    </div>
-    <pre class="log-body" id="log-body">выберите лог...</pre>
-  </div>
-</section><section class="tab-body" id="tab-roadmap">
-  <div class="rm-wrap">
-    <div class="rm-bar">
-      <select id="rm-name"></select>
-      <button class="bulk-btn" id="rm-load">LOAD</button>
-    </div>
-    <pre class="rm-content" id="rm-content">выберите проект...</pre>
-  </div>
-</section>
+<section class="tab-body" id="tab-pers"></section><section class="tab-body" id="tab-projects"></section>
+<section class="tab-body" id="tab-logs"></section><section class="tab-body" id="tab-roadmap"></section>
 </main>
-<section class="tab-body" id="tab-lada">
-<div class="lada-layout">
-  <div class="lada-main">
-    <div class="lada-title">LOCAL AI // <span id="lada-model-name">model</span> // llama.cpp :<span id="lada-port-name">?</span></div>
-    <div id="lada-status" class="lada-status-line">checking...</div>
-    <div id="lada-chat-feed" class="lada-feed"></div>
-    <textarea id="lada-input" class="lada-input" placeholder="Запрос к LLM..."></textarea>
-    <div class="lada-toolbar">
-      <button id="lada-send" class="lada-btn-primary">Отправить</button>
-      <button id="lada-clear" class="lada-btn">Очистить</button>
-    </div>
-    <div id="lada-output" style="display:none"></div>
-  </div>
-  <div class="lada-side">
-    <div class="lada-side-section">
-      <div class="lada-side-title">ИНДИКАТОРЫ</div>
-      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-llama"></span><span>llama-server</span></div>
-      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-orch"></span><span>оркестратор</span></div>
-      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-model"></span><span>модель загружена</span></div>
-      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-rag"></span><span>RAG индекс</span></div>
-    </div>
-    <div class="lada-side-section">
-      <div class="lada-side-title">ПАРАМЕТРЫ</div>
-      <label class="lada-param">temperature <span id="ptemp-val">0.7</span>
-        <input type="range" id="lada-temp" min="0" max="2" step="0.05" value="0.7"></label>
-      <label class="lada-param">top_p <span id="ptop-p-val">0.9</span>
-        <input type="range" id="lada-top_p" min="0" max="1" step="0.05" value="0.9"></label>
-      <label class="lada-param">top_k <span id="ptop-k-val">40</span>
-        <input type="range" id="lada-top_k" min="0" max="100" step="1" value="40"></label>
-      <label class="lada-param">max_tokens <span id="pmax-val">1024</span>
-        <input type="range" id="lada-max_tokens" min="64" max="4096" step="64" value="1024"></label>
-      <label class="lada-param">repeat_penalty <span id="prp-val">1.1</span>
-        <input type="range" id="lada-repeat_penalty" min="0.8" max="2" step="0.05" value="1.1"></label>
-      <label class="lada-param">seed <span id="pseed-val">-1</span>
-        <input type="number" id="lada-seed" value="-1" style="width:100%"></label>
-      <button id="lada-save-params" class="lada-btn">Сохранить</button>
-    </div>
-    <div class="lada-side-section">
-      <div class="lada-side-title">TOOLS</div>
-      <label class="lada-tool"><input type="checkbox" id="tool-get_time" checked>get_time</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-get_weather" checked>get_weather</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-check_email">check_email</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-ask_agent">ask_agent</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-query_rag" checked>query_rag</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-generate_image">generate_image</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-generate_audio">generate_audio</label>
-      <div id="lada-tools-status" class="lada-hint">сохранение авто</div>
-    </div>
-  </div>
-</div>
-</section>
-<section class="tab-body" id="tab-wiki">
-  <div class="wiki-layout">
-    <aside class="wiki-side">
-      <div class="wiki-search"><input id="wikiSearch" type="search" placeholder="поиск..." autocomplete="off"></div>
-      <div class="wiki-tree" id="wikiTree"></div>
-      <div class="wiki-search-results" id="wikiSearchResults"></div>
-    </aside>
-    <section class="wiki-main">
-      <article class="wiki-content" id="wikiContent">загрузка...</article>
-    </section>
+<section class="tab-body" id="tab-lada" style="height: 100%;"></section>
+<section class="tab-body" id="tab-wiki"></section>
   </div>
 </section>
 
@@ -240,35 +111,7 @@ var BASE_W = 1400, BASE_H = 700;
 var canvasScale = 1.0;
 var obstacleMap = new Uint8Array(0);
 
-function plan(_N){
-  var b = {}, EDGE = 30, i;
-  var SLOT = ['A','B','C','D','E','F','J','H','K','L'];
-  for (i=0; i<5; i++) b['slot-'+SLOT[i]] = {x:EDGE + i*(AW+HG), y:EDGE, w:AW, h:AH};
-  var blockH = Math.max(MH, 2*CH+20, 4*RH+3*20);
-  var centerY = EDGE + AH + 60 + blockH/2;
-  var mfY = centerY - MH/2;
-  b.mainframe = {x:EDGE, y:mfY, w:MW, h:MH};
-  var ctrl = ['rebirth','mailbot','llm','proxy'];
-  var cx0 = EDGE + MW + 40;
-  var cy0 = centerY - (2*CH+20)/2;
-  for (i=0; i<4; i++) {
-    var col = i%2, row = (i/2)|0;
-    b[ctrl[i]] = {x:cx0 + col*(CW+20), y:cy0 + row*(CH+20), w:CW, h:CH};
-  }
-  var res = ['sandbox','projects','rag','profiles'];
-  var rtotal = 4*RH + 3*20;
-  var rx = cx0 + 2*CW + 60;
-  var ry = centerY - rtotal/2;
-  for (i=0; i<4; i++) b[res[i]] = {x:rx, y:ry + i*(RH+20), w:RW, h:RH};
-  var by = mfY + MH + 80;
-  for (i=0; i<5; i++) b['slot-'+SLOT[5+i]] = {x:EDGE + i*(AW+HG), y:by, w:AW, h:AH};
-  var minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity, id, bb;
-  for (id in b) { bb=b[id]; if(bb.x<minX)minX=bb.x; if(bb.y<minY)minY=bb.y; if(bb.x+bb.w>maxX)maxX=bb.x+bb.w; if(bb.y+bb.h>maxY)maxY=bb.y+bb.h; }
-  for (id in b) { b[id].x -= minX - EDGE; b[id].y -= minY - EDGE; }
-  BASE_W = (maxX - minX) + 2*EDGE;
-  BASE_H = (maxY - minY) + 2*EDGE;
-  return b;
-}
+
 
 function build(id, b, def){
   var el = document.createElement('div');
@@ -638,6 +481,7 @@ init();
 
 </script>
 
-<div id="settings-modal" class="modal" style="display:none"><div class="modal-box"><h3>Настройки адаптеров</h3><div id="settings-body"></div><div class="modal-btns"><button id="settings-close">Закрыть</button></div></div></div>
+
+<script src="/lada.js"></script>
 </body>
 </html>

@@ -150,6 +150,8 @@ def _block(cfg: Config, key: str) -> dict:
         if not ch:
             return {"on": False, "error": "bad channel"}
         return {"on": _tcp(ch.cdp_port), "port": ch.cdp_port, "cdp_ok": _cdp_up(ch.cdp_port)}
+    if key == "proxy":
+        return {"on": _tcp(1235), "port": 1235}
     if key == "doh":
         return {"on": _tcp(cfg.doh_proxy_port), "port": cfg.doh_proxy_port}
     if key.startswith("bridge:"):
@@ -194,6 +196,13 @@ def boot(cfg: Config, target: str) -> dict:
         for t in ["agent:" + L for L in cfg.channels] + ["chrome:" + L for L in cfg.channels]:
             out.append({"target": t, "result": boot(cfg, t)})
         return {"ok": True, "target": "all", "results": out}
+    if target == "proxy":
+        if _tcp(1235):
+            return {"ok": True, "target": target, "already": True}
+        script = cfg.path("Tools", "lada_proxy.py")
+        if not script.exists():
+            return {"ok": False, "error": "lada_proxy.py not found"}
+        return _spawn(cfg, [_pythonw(), str(script), "--listen", "1235"], cfg.root, target)
     if target.startswith("agent:"):
         L = target.split(":", 1)[1]
         ch = cfg.channels.get(L)
@@ -242,6 +251,9 @@ def boot(cfg: Config, target: str) -> dict:
 
 
 def stop(cfg: Config, target: str) -> dict:
+    if target == "proxy":
+        return _kill(cfg, target)
+
     if target == "server":
         return {"ok": False, "error": "self, cannot stop"}
     if target == "llm":

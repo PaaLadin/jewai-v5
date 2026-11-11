@@ -23,6 +23,15 @@ def _qs(path):
     return out
 
 
+
+def _run_diagnose(cfg):
+    from Mainframe import health
+    r = health.collect(cfg)
+    alerts = r.get("alerts", [])
+    if alerts:
+        return {"ok": False, "detail": "Alerts: " + str(alerts)}
+    return {"ok": True, "detail": "All channels OK"}
+
 def build_routes():
     return {
         ("GET", "/api/status"): api.status,

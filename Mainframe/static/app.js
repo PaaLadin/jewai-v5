@@ -285,7 +285,7 @@ async function openSettings() {
   } catch (e) { b.innerHTML = "err: " + e.message; }
 }
 function bindGear() {
-  const g = document.getElementById("btn-settings");
+  const g = document.getElementById("btn-settings"); if(!g) return;
   const c = document.getElementById("settings-close");
   const m = document.getElementById("settings-modal");
   if (g) g.addEventListener("click", openSettings);
@@ -437,4 +437,33 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // если открыта LADA по умолчанию — загрузить
   if (window.location.hash === '#lada') { ladaLoadStatus(); ladaLoadHistory(); }
+});
+
+document.addEventListener('click', async function(e) {
+    var btn = e.target.closest('.mnemo-btn');
+    if (!btn) return;
+    e.preventDefault();
+    var act = btn.dataset.act, target = btn.dataset.target;
+    var ep = act === 'boot' ? '/api/boot' : act === 'stop' ? '/api/stop' : act === 'restart' ? '/api/restart' : null;
+    if (!ep) return;
+    var tab = document.getElementById('tab-mnemo');
+    if (!tab) return;
+    var logDiv = document.getElementById('mnemo-action-log');
+    if (!logDiv) {
+        logDiv = document.createElement('div');
+        logDiv.id = 'mnemo-action-log';
+        logDiv.style = "position:absolute; right:10px; bottom:10px; background:#000; border:1px solid #333; color:#0f0; padding:10px; font-family:monospace; font-size:12px; max-height:150px; overflow-y:auto; z-index:100; width:300px;";
+        tab.appendChild(logDiv);
+    }
+    var ts = new Date().toLocaleTimeString();
+    logDiv.innerHTML += '[' + ts + '] ' + act + ' ' + target + ' ...<br>';
+    logDiv.scrollTop = logDiv.scrollHeight;
+    try {
+        var r = await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target: target }) });
+        var j = await r.json();
+        logDiv.innerHTML += '[' + new Date().toLocaleTimeString() + '] ' + act + ' ' + target + ': OK ' + (j.ok ? 'SUCCESS' : 'FAILED: ' + (j.error || 'unknown')) + '<br>';
+    } catch (err) {
+        logDiv.innerHTML += '[' + new Date().toLocaleTimeString() + '] ' + act + ' ' + target + ': FAIL ' + err + '<br>';
+    }
+    logDiv.scrollTop = logDit.scrollHeight;
 });

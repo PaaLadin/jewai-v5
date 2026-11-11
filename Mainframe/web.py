@@ -24,6 +24,28 @@ from typing import Any, Callable
 from Core.config import Config
 
 
+
+
+
+
+
+def inject_tabs(html: str, static_dir: Path) -> str:
+    tabs_dir = static_dir / "tabs"
+    if tabs_dir.exists():
+        for tab_file in tabs_dir.glob("*.html"):
+            tab_id = tab_file.stem
+            content = tab_file.read_text(encoding="utf-8")
+            start_str = f'id="tab-{tab_id}"'
+            if start_str in html:
+                start_idx = html.find(start_str)
+                section_start = html.rfind('<section', 0, start_idx)
+                section_end = html.find('</section>', start_idx) + len('</section>')
+                if section_start != -1 and section_end != -1:
+                    old_section = html[section_start:section_end]
+                    new_section = old_section.replace('</section>', content + '</section>')
+                    html = html.replace(old_section, new_section)
+    return html
+
 def _json_bytes(obj: Any) -> bytes:
     return json.dumps(obj, ensure_ascii=False).encode("utf-8")
 
@@ -95,7 +117,9 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             f = static_dir / "index.html"
             if f.exists():
-                return self._send(200, f.read_bytes(), "text/html; charset=utf-8")
+                html = f.read_text(encoding="utf-8")
+                html = inject_tabs(html, static_dir)
+                return self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
             return self._send(404, b"index.html missing", "text/plain")
         # Static assets: any file in Mainframe/static/ with known extension
         import os as _os

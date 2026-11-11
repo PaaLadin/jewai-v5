@@ -1,0 +1,327 @@
+
+<style id="mnemo-flash-css">
+  .m-block { transition: box-shadow 1.5s ease-out, border-color 1.5s ease-out; }
+  .m-block.flashing { border-color: #ff0 !important; box-shadow: 0 0 20px #ff0, inset 0 0 15px rgba(255,255,0,0.3) !important; }
+  .m-block.source-active { border-color: #0ff !important; }
+</style>
+<style>
+.m-mainframe { flex: 0 0 16.8%; width: 16.8%; height: 41.625%; align-self: center; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr; padding: 0; }
+</style>
+<style>
+  #mnemo-wrap { display: flex; flex-direction: column; width: 100%; height: 100%; padding: 1.5vh 1.5vw; box-sizing: border-box; gap: 1.5vh; position: relative; font-family: monospace; overflow: hidden; }
+  #mnemo-fx { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+  .m-top-row, .m-bot-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.16vw; width: 100%; height: 21.6%; box-sizing: border-box; z-index: 2; }
+  .m-top-row > *, .m-bot-row > * { width: 100%; min-width: 0; box-sizing: border-box; }
+  .m-mid { display: flex; justify-content: space-between; align-items: center; flex: 1; gap: 1.5vw; z-index: 2; }
+  
+  .m-center-grid { flex: 0 0 24%; width: 24%; height: 66.6%; align-self: center; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1.5vw; }
+  .m-right-col { flex: 0 0 15%; width: 15%; height: 80%; align-self: center; display: flex; flex-direction: column; gap: 0.16vh; }
+  .m-right-col > .m-block { flex: 1 1 0; min-height: 0; }
+  .m-block { border: 1px solid #0f0; background: rgba(0,20,0,0.9); color: #0f0; padding: 1.5vh 1.5vw; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; position: relative; }
+  .m-title { font-size: min(2.5vh, 2.5vw); font-weight: bold; margin-bottom: 1vh; line-height: 1; }
+  .m-info { font-size: min(2vh, 2vw); font-weight: bold; margin-bottom: 1vh; line-height: 1; white-space: nowrap; }
+  .m-btns { display: flex; gap: 0.5vw; margin-top: auto; }
+  .m-btn { background: #000; border: 1px solid #0f0; color: #0f0; padding: 0.5vh 0.5vw; cursor: pointer; font-size: min(2vh, 2vw); font-weight: bold; line-height: 1; }
+  .m-btn:hover { background: #0f0; color: #000; }
+  .m-slot { border: 1px dashed #333; color: #555; display: flex; align-items: center; justify-content: center; font-size: min(1.5vh, 1.5vw); }
+  .m-btn-sm { background: #000; border: 1px solid #0f0; color: #0f0; padding: 0 2px; cursor: pointer; font-size: min(1.5vh, 1.2vw); font-weight: bold; line-height: 1; border-radius: 2px; margin-left: 5px; }
+  .m-btn-sm:hover { background: #0f0; color: #000; }
+  .m-lamp-sm { display: inline-block; width: min(1vh, 0.8vw); height: min(1vh, 0.8vw); border-radius: 50%; background: #0f0; margin-right: 5px; }
+  .m-lamp-sm.off { background: #f00; }
+
+.m-mainframe > .mf-inner {
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 1.5vh 1.5vw; min-height: 0; height: 100%; box-sizing: border-box;
+}
+</style>
+
+<div id="mnemo-wrap">
+  <canvas id="mnemo-fx"></canvas>
+
+  <div class="m-top-row">
+    <div class="m-block m-agent" id="mnemo-agent-A" style="padding: 8px; text-align: left;">
+      <div style="position: absolute; top: 8px; left: 8px; display: flex; align-items: center; font-size: min(1.5vh, 1.2vw); font-weight: bold; z-index: 2;">
+        <span class="m-lamp-sm" id="lamp-A-status"></span><span id="text-A-status">ONLINE</span>
+      </div>
+      <div style="position: absolute; top: 28px; left: 8px; display: flex; flex-direction: column; line-height: 1.1;">
+        <span style="font-size: min(4vh, 3vw); font-weight: bold;">A</span>
+        <span style="font-size: min(1.8vh, 1.5vw); font-weight: bold;">АРКАДИЙ</span>
+      </div>
+      <div style="position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 4px; font-size: min(1.5vh, 1.2vw); font-weight: bold; z-index: 2;">
+        <div style="display: flex; align-items: center; justify-content: flex-end;"><span class="m-lamp-sm" id="lamp-A-agent"></span><span style="width: 52px; text-align: left;">AGENT</span><button class="m-btn-sm" data-act="restart" data-target="chrome:A">&#8635;</button></div>
+        <div style="display: flex; align-items: center; justify-content: flex-end;"><span class="m-lamp-sm" id="lamp-A-bridge"></span><span style="width: 52px; text-align: left;">BRIDGE</span><button class="m-btn-sm" data-act="restart" data-target="chrome:A">&#8635;</button></div>
+        <div style="display: flex; align-items: center; justify-content: flex-end;"><span class="m-lamp-sm" id="lamp-A-chrome"></span><span style="width: 52px; text-align: left;">CHROME</span><button class="m-btn-sm" data-act="restart" data-target="chrome:A">&#8635;</button></div>
+      </div>
+      <div style="position: absolute; bottom: 8px; left: 8px; display: flex; gap: 5px;">
+        <button class="m-btn" style="padding: 2px 6px; font-size: min(2.5vh, 2vw);" data-act="boot" data-target="agent:A">&#9654;</button>
+        <button class="m-btn" style="padding: 2px 6px; font-size: min(2.5vh, 2vw);" data-act="stop" data-target="agent:A">&#9632;</button>
+        <button class="m-btn" style="padding: 2px 6px; font-size: min(2.5vh, 2vw);" data-act="restart" data-target="agent:A">&#8635;</button>
+      </div>
+      <div style="position: absolute; bottom: 8px; right: 8px; font-size: min(1.5vh, 1.2vw); font-weight: bold;">port 8680</div>
+    </div>
+    <div class="m-block m-slot" id="mnemo-slot-B">SLOT B</div>
+    <div class="m-block m-slot" id="mnemo-slot-C">SLOT C</div>
+    <div class="m-block m-slot" id="mnemo-slot-D">SLOT D</div>
+    <div class="m-block m-slot" id="mnemo-slot-E">SLOT E</div>
+  </div>
+
+  <div class="m-mid">
+    <div class="m-block m-mainframe" id="mnemo-mainframe">
+<div class="mf-inner">
+      <div class="m-title">MAINFRAME</div>
+      <div class="m-info">&#9679; ONLINE</div>
+      <div class="m-btns"><button class="m-btn" data-act="boot" data-target="mainframe">&#9654;</button><button class="m-btn" data-act="stop" data-target="mainframe">&#9632;</button><button class="m-btn" data-act="restart" data-target="mainframe">&#8635;</button></div>
+    </div>
+</div>
+    
+  <div class="m-block" id="mnemo-log-panel" style="flex: 0 0 28.8%; width: 28.8%; height: 62.4375%; align-self: center; display: flex; flex-direction: column;">
+    <div class="m-title">ACTION LOG</div>
+    <div id="action-log-content" style="flex: 1; overflow-y: auto; font-size: min(1.5vh, 1.2vw); color: #0f0; line-height: 1.2;"></div>
+  </div>
+
+  <div class="m-center-grid">
+      <div class="m-block" id="mnemo-rebirth"><div class="m-title">REBIRTH</div><div class="m-info" id="info-rebirth">&#9675; OFFLINE</div><div class="m-btns"><button class="m-btn" data-act="boot" data-target="rebirth">&#9654;</button><button class="m-btn" data-act="stop" data-target="rebirth">&#9632;</button><button class="m-btn" data-act="restart" data-target="rebirth">&#8635;</button></div></div>
+      <div class="m-block" id="mnemo-mailbot"><div class="m-title">MAILBOT</div><div class="m-info" id="info-mailbot">&#9675; OFFLINE</div><div class="m-btns"><button class="m-btn" data-act="boot" data-target="mailbot">&#9654;</button><button class="m-btn" data-act="stop" data-target="mailbot">&#9632;</button><button class="m-btn" data-act="restart" data-target="mailbot">&#8635;</button></div></div>
+      <div class="m-block" id="mnemo-llm"><div class="m-title">LLM</div><div class="m-info" id="info-llm">&#9675; OFFLINE</div><div class="m-btns"><button class="m-btn" data-act="boot" data-target="llm">&#9654;</button><button class="m-btn" data-act="stop" data-target="llm">&#9632;</button><button class="m-btn" data-act="restart" data-target="llm">&#8635;</button></div></div>
+      <div class="m-block" id="mnemo-proxy"><div class="m-title">PROXY</div><div class="m-info" id="info-proxy">&#9675; OFFLINE</div><div class="m-btns"><button class="m-btn" data-act="boot" data-target="proxy">&#9654;</button><button class="m-btn" data-act="stop" data-target="proxy">&#9632;</button><button class="m-btn" data-act="restart" data-target="proxy">&#8635;</button></div></div>
+    </div>
+    <div class="m-right-col">
+      <div class="m-block" id="mnemo-sandbox"><div class="m-title">SANDBOX</div><div class="m-info" id="info-sandbox">0.0 MB / 0 f</div></div>
+      <div class="m-block" id="mnemo-projects"><div class="m-title">PROJECTS</div><div class="m-info" id="info-projects">0.0 MB / 0 f</div></div>
+      <div class="m-block" id="mnemo-rag"><div class="m-title">RAG</div><div class="m-info" id="info-rag">0.0 MB / 0 f</div></div>
+      <div class="m-block" id="mnemo-profiles"><div class="m-title">PROFILES</div><div class="m-info" id="info-profiles">0.0 MB / 0 f</div></div>
+    </div>
+  </div>
+
+  <div class="m-bot-row">
+    <div class="m-block m-slot" id="mnemo-slot-F">SLOT F</div>
+    <div class="m-block m-slot" id="mnemo-slot-J">SLOT J</div>
+    <div class="m-block m-slot" id="mnemo-slot-H">SLOT H</div>
+    <div class="m-block m-slot" id="mnemo-slot-K">SLOT K</div>
+    <div class="m-block m-slot" id="mnemo-slot-L">SLOT L</div>
+  </div>
+</div>
+
+<script id="mnemo-logic-script">
+document.addEventListener('DOMContentLoaded', function() {
+  const logDiv = document.getElementById('action-log-content');
+
+  document.body.addEventListener('click', async function(e) {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    e.preventDefault();
+    const act = btn.dataset.act;
+    const target = btn.dataset.target;
+    const ts = new Date().toLocaleTimeString();
+    if (logDiv) logDiv.innerHTML = '[' + ts + '] ' + act + ' ' + target + ' ...<br>' + logDiv.innerHTML;
+    try {
+      const r = await fetch('/api/' + act, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({target: target})
+      });
+      const j = await r.json();
+      const status = j.ok ? 'SUCCESS' : 'FAIL: ' + (j.error || 'unknown');
+      if (logDiv) logDiv.innerHTML = '[' + new Date().toLocaleTimeString() + '] ' + act + ' ' + target + ': ' + status + '<br>' + logDiv.innerHTML;
+    } catch (err) {
+      if (logDiv) logDiv.innerHTML = '[' + new Date().toLocaleTimeString() + '] ' + act + ' ' + target + ': ERR ' + err + '<br>' + logDiv.innerHTML;
+    }
+  });
+
+  const canvas = document.getElementById('mnemo-fx');
+  const wrap = document.getElementById('mnemo-wrap');
+  if (!canvas || !wrap) return;
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let lastCounts = {};
+
+  function resize() {
+    canvas.width = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+  }
+  window.addEventListener('resize', resize);
+  setTimeout(resize, 200);
+
+  function getCenter(elId) {
+    const el = document.getElementById(elId);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const rW = wrap.getBoundingClientRect();
+    return { x: r.left - rW.left + r.width / 2, y: r.top - rW.top + r.height / 2, el: el };
+  }
+
+  function targetFor(last) {
+    if (!last) return 'mnemo-mainframe';
+    const op = (last.op || '').toLowerCase();
+    const path = ((last.path || '') + ' ' + ((last.result && last.result.path) || '') + ' ' + (last.detail || '')).toLowerCase();
+    if (op === 'read' || op === 'list' || op === 'hash') {
+      if (path.indexOf('rag') >= 0) return 'mnemo-rag';
+      if (path.indexOf('profile') >= 0) return 'mnemo-profiles';
+      if (path.indexOf('project') >= 0) return 'mnemo-projects';
+      return 'mnemo-rag';
+    }
+    if (op === 'write' || op === 'mkdir' || op === 'delete') {
+      if (path.indexOf('project') >= 0) return 'mnemo-projects';
+      return 'mnemo-sandbox';
+    }
+    if (op === 'run') return 'mnemo-sandbox';
+    return 'mnemo-mainframe';
+  }
+
+  function flashTarget(el) {
+    if (!el) return;
+    el.classList.remove('flashing');
+    void el.offsetWidth;
+    el.classList.add('flashing');
+    setTimeout(function() { el.classList.remove('flashing'); }, 1800);
+  }
+
+  function spawnPulse(sourceId, targetId) {
+    const src = getCenter(sourceId);
+    const tgt = getCenter(targetId);
+    if (!src || !tgt) return;
+    particles.push({ sx: src.x, sy: src.y, ex: tgt.x, ey: tgt.y, prog: 0, dur: 0.9, fading: false, alpha: 1, trail: [], targetEl: tgt.el });
+  }
+
+  async function pollTelemetry() {
+    try {
+      const r = await fetch('/api/telemetry');
+      const d = await r.json();
+      if (!d || !d.channels) return;
+      for (const L in d.channels) {
+        const t = d.channels[L];
+        const cur = t.count || 0;
+        const prev = lastCounts[L] || 0;
+        if (cur > prev && t.last) spawnPulse('mnemo-agent-' + L, targetFor(t.last));
+        lastCounts[L] = cur;
+      }
+    } catch (e) {}
+  }
+
+  async function pollStatus() {
+    try {
+      const r = await fetch('/api/status');
+      const d = await r.json();
+      if (!d || !d.channels) return;
+      const ch = d.channels['A'];
+      if (ch) {
+        const setLamp = (id, on) => { const el = document.getElementById(id); if (el) el.className = 'm-lamp-sm ' + (on ? '' : 'off'); };
+        setLamp('lamp-A-agent', ch.agent_alive);
+        setLamp('lamp-A-bridge', ch.agent_alive && ch.cdp_alive);
+        setLamp('lamp-A-chrome', ch.cdp_alive);
+        setLamp('lamp-A-status', ch.agent_alive);
+        const txt = document.getElementById('text-A-status'); if (txt) txt.textContent = ch.agent_alive ? 'ONLINE' : 'OFFLINE';
+      }
+    } catch (e) {}
+  }
+
+  async function pollSysTel() {
+    try {
+      const r = await fetch('/api/sys_telemetry');
+      const d = await r.json();
+      if (!d || !d.ok) return;
+      const fmt = b => (b/1024/1024).toFixed(1) + ' MB';
+      const setInfo = (id, txt) => { const el = document.getElementById('info-'+id); if (el) el.textContent = txt; };
+      if (d.sandbox) setInfo('sandbox', fmt(d.sandbox.size) + ' / ' + d.sandbox.files + ' f');
+      if (d.projects) setInfo('projects', fmt(d.projects.size) + ' / ' + d.projects.files + ' f');
+      if (d.rag) setInfo('rag', fmt(d.rag.size) + ' / ' + d.rag.files + ' f');
+      if (d.profiles) setInfo('profiles', fmt(d.profiles.size) + ' / ' + d.profiles.files + ' f');
+      if (d.services) {
+        setInfo('llm', d.services.llm ? '\u25cf ONLINE' : '\u25cb OFFLINE');
+        setInfo('proxy', d.services.proxy ? '\u25cf ONLINE' : '\u25cb OFFLINE');
+        setInfo('rebirth', d.services.rebirth ? '\u25cf ONLINE' : '\u25cb OFFLINE');
+        setInfo('mailbot', d.services.mailbot ? '\u25cf ONLINE' : '\u25cb OFFLINE');
+      }
+    } catch (e) {}
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      if (!p.fading) {
+        p.prog += 0.016 / p.dur;
+        if (p.prog >= 1) { p.prog = 1; p.fading = true; if (p.targetEl) flashTarget(p.targetEl); }
+      } else {
+        p.alpha -= 0.016 / 0.5;
+        if (p.alpha <= 0) { particles.splice(i, 1); continue; }
+      }
+      const cx = p.sx + (p.ex - p.sx) * p.prog;
+      const cy = p.sy + (p.ey - p.sy) * p.prog;
+
+      if (!p.fading) {
+        p.trail.push({ x: cx, y: cy, age: 0 });
+        if (p.trail.length > 25) p.trail.shift();
+      }
+
+      for (let k = 0; k < p.trail.length; k++) {
+        const t = p.trail[k];
+        t.age += 0.016;
+        const a = Math.max(0, 1 - t.age / 0.6) * (k / p.trail.length);
+        if (a <= 0) continue;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, 2 + (k / p.trail.length) * 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#0f0';
+        ctx.globalAlpha = a;
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      if (!p.fading) {
+        ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff'; ctx.shadowColor = '#0f0'; ctx.shadowBlur = 20; ctx.fill(); ctx.shadowBlur = 0;
+      } else {
+        ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#0f0'; ctx.globalAlpha = p.alpha; ctx.fill(); ctx.globalAlpha = 1;
+      }
+    }
+    requestAnimationFrame(render);
+  }
+
+  pollStatus(); pollSysTel(); pollTelemetry();
+  setInterval(pollStatus, 5000); setInterval(pollSysTel, 5000); setInterval(pollTelemetry, 2000);
+  requestAnimationFrame(render);
+});
+</script>
+
+<script id="mnemo-telemetry-script">
+document.addEventListener('DOMContentLoaded', function() {
+  async function pollSysTel() {
+    try {
+      const r = await fetch('/api/sys_telemetry');
+      const d = await r.json();
+      if (!d || !d.ok) return;
+      const fmt = b => (b/1024/1024).toFixed(1) + ' MB';
+      const setInfo = (id, txt) => { const el = document.getElementById('info-'+id); if (el) el.textContent = txt; };
+      if (d.sandbox) setInfo('sandbox', fmt(d.sandbox.size) + ' / ' + d.sandbox.files + ' f');
+      if (d.projects) setInfo('projects', fmt(d.projects.size) + ' / ' + d.projects.files + ' f');
+      if (d.rag) setInfo('rag', fmt(d.rag.size) + ' / ' + d.rag.files + ' f');
+      if (d.profiles) setInfo('profiles', fmt(d.profiles.size) + ' / ' + d.profiles.files + ' f');
+      if (d.services) {
+        setInfo('llm', d.services.llm ? '\u25cf ONLINE' : '\u25cb OFFLINE');
+        setInfo('proxy', d.services.proxy ? '\u25cf ONLINE' : '\u25cb OFFLINE');
+        setInfo('rebirth', d.services.rebirth ? '\u25cf ONLINE' : '\u25cb OFFLINE');
+        setInfo('mailbot', d.services.mailbot ? '\u25cf ONLINE' : '\u25cb OFFLINE');
+      }
+    } catch(e) {}
+  }
+  async function pollSt() {
+    try {
+      const r = await fetch('/api/status');
+      const d = await r.json();
+      if (!d || !d.channels) return;
+      const ch = d.channels['A'];
+      if (ch) {
+        const setLamp = (id, on) => { const el = document.getElementById(id); if (el) el.className = 'm-lamp-sm ' + (on ? '' : 'off'); };
+        setLamp('lamp-A-agent', ch.agent_alive);
+        setLamp('lamp-A-bridge', ch.agent_alive && ch.cdp_alive);
+        setLamp('lamp-A-chrome', ch.cdp_alive);
+        setLamp('lamp-A-status', ch.agent_alive);
+        const txt = document.getElementById('text-A-status'); if (txt) txt.textContent = ch.agent_alive ? 'ONLINE' : 'OFFLINE';
+      }
+    } catch(e) {}
+  }
+  pollSysTel(); setInterval(pollSysTel, 5000);
+  pollSt(); setInterval(pollSt, 5000);
+});
+</script>
