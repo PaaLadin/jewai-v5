@@ -143,9 +143,16 @@ def telemetry(cfg: Config, path: str, body: dict) -> dict:
             out[L] = {"count": 0, "last": None}
             continue
         entries = data.get("entries") or []
+        last = entries[-1] if entries else None
+        # 11C: merge detail from last_action so UI knows the path
+        la = data.get("last_action")
+        if last is not None and isinstance(la, dict):
+            last = dict(last)
+            last["detail"] = la.get("detail", "")
+            last["path"] = la.get("detail", "")
         out[L] = {
             "count": len(entries),
-            "last": entries[-1] if entries else None,
+            "last": last,
             "updated": data.get("updated"),
             "paused": data.get("paused", False),
         }

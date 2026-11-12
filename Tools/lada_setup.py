@@ -126,7 +126,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--gguf", default="")
     ap.add_argument("--port", type=int, default=1234)
-    ap.add_argument("--ctx", type=int, default=4096)
+    ap.add_argument("--ctx", type=int, default=_SETUP.get("ctx", 4096))
     a = ap.parse_args()
     result = {"ts": time.time(), "port": a.port, "stage": "start"}
     write_status(result)

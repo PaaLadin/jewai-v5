@@ -1,52 +1,52 @@
 
 <div class="lada-layout" style="display: flex; height: calc(100vh - 120px); gap: 15px; font-family: monospace;">
   <div class="lada-sidebar" style="width: 220px; display: flex; flex-direction: column; border-right: 1px solid #333; padding-right: 10px;">
-    <button id="lada-new-chat" style="margin-bottom: 10px; padding: 8px; background: #111; color: #0f0; border: 1px solid #333; cursor: pointer; font-family: monospace;">+ Новый чат</button>
+    <button id="lada-new-chat" title="Создать новый чат с Ладой" style="margin-bottom: 10px; padding: 8px; background: #111; color: #0f0; border: 1px solid #333; cursor: pointer; font-family: monospace;">+ Новый чат</button>
     <div id="lada-chat-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;"></div>
   </div>
   
   <div class="lada-main" style="flex: 1; display: flex; flex-direction: column; position: relative;">
     <div id="lada-feed" style="flex: 1; overflow-y: auto; padding-bottom: 20px; display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.4;"></div>
     <div style="display: flex; gap: 10px; padding-top: 10px; border-top: 1px solid #333; background: #0a0a0a;">
-      <textarea id="lada-input" style="flex: 1; resize: none; height: 60px; padding: 10px; background: #000; color: #0f0; border: 1px solid #333; font-family: monospace; font-size: 15px;" placeholder="Сообщение (Enter - отправить, Shift+Enter - перенос)..."></textarea>
-      <button id="lada-send" style="padding: 0 20px; background: #111; color: #0f0; border: 1px solid #333; cursor: pointer; font-family: monospace; font-size: 15px;">Send</button>
+      <textarea id="lada-input" title="Введите сообщение. Enter — отправить, Shift+Enter — новая строка" style="flex: 1; resize: none; height: 60px; padding: 10px; background: #000; color: #0f0; border: 1px solid #333; font-family: monospace; font-size: 15px;" placeholder="Сообщение (Enter — отправить, Shift+Enter — новая строка)..."></textarea>
+      <button id="lada-send" title="Отправить сообщение Ладе" style="padding: 0 20px; background: #111; color: #0f0; border: 1px solid #333; cursor: pointer; font-family: monospace; font-size: 15px;">Отправить</button>
     </div>
   </div>
 
   <div class="lada-side" style="width: 300px; overflow-y: auto; border-left: 1px solid #333; padding-left: 10px;">
     <div class="lada-side-section">
       <div class="lada-side-title">ИНДИКАТОРЫ</div>
-      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-llama"></span><span>llama-server</span></div>
-      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-orch"></span><span>оркестратор</span></div>
-      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-model"></span><span>модель загружена</span></div>
-      <div class="lada-ind-row"><span class="lada-lamp" id="lamp-rag"></span><span>RAG индекс</span></div>
+      <div class="lada-ind-row" title="Локальный сервер LLM на порту 1234"><span class="lada-lamp" id="lamp-llama"></span><span>Сервер LLM</span></div>
+      <div class="lada-ind-row" title="Оркестратор задач (планируется)"><span class="lada-lamp" id="lamp-orch"></span><span>Оркестратор</span></div>
+      <div class="lada-ind-row" title="Модель загружена в память GPU"><span class="lada-lamp" id="lamp-model"></span><span>Модель загружена</span></div>
+      <div class="lada-ind-row" title="Индекс базы знаний (RAG) доступен"><span class="lada-lamp" id="lamp-rag"></span><span>Индекс RAG</span></div>
     </div>
     <div class="lada-side-section">
-      <div class="lada-side-title">ПАРАМЕТРЫ</div>
-      <label class="lada-param">temperature <span id="ptemp-val">0.7</span>
+      <div class="lada-side-title">ПАРАМЕТРЫ ГЕНЕРАЦИИ</div>
+      <label class="lada-param" title="Температура: насколько ответ случайный. 0 — строго, 1 — креативно, 2 — хаос. Рекомендуется 0.7">Температура <span id="ptemp-val">0.7</span>
         <input type="range" id="lada-temp" min="0" max="2" step="0.05" value="0.7"></label>
-      <label class="lada-param">top_p <span id="ptop-p-val">0.9</span>
+      <label class="lada-param" title="Top-p: отсекает маловероятные токены. 0.9 значит «оставить варианты, покрывающие 90% вероятности»">Top-p (охват) <span id="ptop-p-val">0.9</span>
         <input type="range" id="lada-top_p" min="0" max="1" step="0.05" value="0.9"></label>
-      <label class="lada-param">top_k <span id="ptop-k-val">40</span>
+      <label class="lada-param" title="Top-k: ограничение на k самых вероятных токенов. 40 — стандарт, меньше — строже">Top-k (отсечение) <span id="ptop-k-val">40</span>
         <input type="range" id="lada-top_k" min="0" max="100" step="1" value="40"></label>
-      <label class="lada-param">max_tokens <span id="pmax-val">1024</span>
+      <label class="lada-param" title="Максимум токенов в ответе. 1024 — примерно 750 слов. Больше — длиннее ответ">Макс. длина ответа <span id="pmax-val">1024</span>
         <input type="range" id="lada-max_tokens" min="64" max="4096" step="64" value="1024"></label>
-      <label class="lada-param">repeat_penalty <span id="prp-val">1.1</span>
+      <label class="lada-param" title="Штраф за повторы. 1.0 — без штрафа, 1.1 — лёгкий, 2.0 — сильно избегает повторов">Штраф за повторы <span id="prp-val">1.1</span>
         <input type="range" id="lada-repeat_penalty" min="0.8" max="2" step="0.05" value="1.1"></label>
-      <label class="lada-param">seed <span id="pseed-val">-1</span>
+      <label class="lada-param" title="Seed: зерно генератора. -1 — случайно каждый раз, конкретное число — воспроизводимый ответ">Зерно (Seed) <span id="pseed-val">-1</span>
         <input type="number" id="lada-seed" value="-1" style="width:100%"></label>
-      <button id="lada-save-params" class="lada-btn">Сохранить</button>
+      <button id="lada-save-params" title="Сохранить параметры для следующих запросов" class="lada-btn">Сохранить</button>
     </div>
     <div class="lada-side-section">
-      <div class="lada-side-title">TOOLS</div>
-      <label class="lada-tool"><input type="checkbox" id="tool-get_time" checked>get_time</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-get_weather" checked>get_weather</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-check_email">check_email</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-ask_agent">ask_agent</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-query_rag" checked>query_rag</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-generate_image">generate_image</label>
-      <label class="lada-tool"><input type="checkbox" id="tool-generate_audio">generate_audio</label>
-      <div id="lada-tools-status" class="lada-hint">сохранение авто</div>
+      <div class="lada-side-title">ИНСТРУМЕНТЫ АГЕНТА</div>
+      <label class="lada-tool" title="Прочитать текстовый файл в проекте (безопасно, только чтение)"><input type="checkbox" id="tool-read_file" checked>Чтение файлов</label>
+      <label class="lada-tool" title="Список файлов и папок в директории"><input type="checkbox" id="tool-list_dir" checked>Список папок</label>
+      <label class="lada-tool" title="Запись файлов. Разрешено ТОЛЬКО внутри Sandbox/"><input type="checkbox" id="tool-write_file" checked>Запись в Sandbox</label>
+      <label class="lada-tool" title="Выполнение shell-команд Windows (осторожно, логируется)"><input type="checkbox" id="tool-run_command">Выполнение команд</label>
+      <label class="lada-tool" title="Отправить сообщение другому агенту через мост"><input type="checkbox" id="tool-kick" checked>Связь с агентами</label>
+      <label class="lada-tool" title="Управление сервисами: boot/stop/restart для LLM, прокси и т.д."><input type="checkbox" id="tool-service" checked>Управление сервисами</label>
+      <label class="lada-tool" title="Текущая дата и время"><input type="checkbox" id="tool-get_time" checked>Текущее время</label>
+      <div id="lada-tools-status" class="lada-hint">Настройки сохраняются автоматически</div>
     </div>
   </div>
 </div>

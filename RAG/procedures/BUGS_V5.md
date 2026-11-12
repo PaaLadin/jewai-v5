@@ -387,3 +387,20 @@ Fix 10C (патч DeepSeek/sandbox/rebirth.py):
 Осталось:
 - 13B->14B Бориса - manual bypass, в том же чате. Реальный переход = 14B->15B
   (по 850 cmds), уже с починенным чеклистом.
+
+---
+
+## BUG-019: Bridge hangs forever on background processes (ИСПРАВЛЕНО 2026-11-10)
+
+**Симптом:** `op: run` с командой `start "" /B python <long-running-server>` вешает Bridge навсегда. В `stale_A.log` нет записи, `ledger` не двигается, Recovery не срабатывает.
+
+**Причина:** `subprocess.Popen()` в `Bridge/exec.py` передавал потомку пайпы `stdout/stderr`. Фоновый процесс (сервер) не закрывает их, `communicate()`/`wait()` ждет EOF бесконечно. Таймаут на уровне моста не убивал дочернее дерево процессов.
+
+**Исправление (11C, Семён):**
+1. `Bridge/exec.py` пишет stdout/stderr во временные файлы (`tempfile.NamedTemporaryFile`), а не в пайпы.
+2. `creationflags = CREATE_NO_WINDOW | DETACHED_PROCESS` — отвязывает фоновый процесс от родителя.
+3. При таймауте — `taskkill /F /T /PID <pid>` убивает всё дерево процессов (cmd.exe + python + внуки).
+
+**Файл:** `Bridge/exec.py`, функция `op_run()`, комментарий "BUG-019 fix (11C)".
+
+**Проверка:** запуск `start "" /B python Tools/lada_proxy.py` больше не вешает мост, `[AGENT REPORT]` приходит с `exit: 0` за 0.1-0.5 сек.
