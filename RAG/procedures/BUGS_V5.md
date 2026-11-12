@@ -328,7 +328,7 @@ Fix 10C:
 
 Git: PaaLadin/jewai-v5 (этот коммит).
 
-### BUG-017: PROMPT не находится из emergency/ (v5 vs DeepSeek) — FIXED
+### BUG-020: PROMPT не находится из emergency/ (v5 vs DeepSeek) — FIXED
 
 Симптом: оператор кладёт PROMPT_<series>.md в emergency/ (как в DeepSeek),
 v5 его не находит. Rebirth/cycle.py::load_prompt искал только:
@@ -382,7 +382,7 @@ Fix 10C (патч DeepSeek/sandbox/rebirth.py):
 Проверено:
 - rebirth.py --channel B --dry-run rc=0 с временным ready_B.json.
 - Чеклист: PROMPT_15B.md OK (было MISSING).
-- v5 Rebirth/cycle.py уже имел emergency/ (BUG-017, тот же паттерн).
+- v5 Rebirth/cycle.py уже имел emergency/ (BUG-020, тот же паттерн).
 
 Осталось:
 - 13B->14B Бориса - manual bypass, в том же чате. Реальный переход = 14B->15B
@@ -390,7 +390,7 @@ Fix 10C (патч DeepSeek/sandbox/rebirth.py):
 
 ---
 
-## BUG-019: Bridge hangs forever on background processes (ИСПРАВЛЕНО 2026-11-10)
+## BUG-017: Bridge hangs forever on background processes (ИСПРАВЛЕНО 2026-11-10)
 
 **Симптом:** `op: run` с командой `start "" /B python <long-running-server>` вешает Bridge навсегда. В `stale_A.log` нет записи, `ledger` не двигается, Recovery не срабатывает.
 
@@ -401,6 +401,6 @@ Fix 10C (патч DeepSeek/sandbox/rebirth.py):
 2. `creationflags = CREATE_NO_WINDOW | DETACHED_PROCESS` — отвязывает фоновый процесс от родителя.
 3. При таймауте — `taskkill /F /T /PID <pid>` убивает всё дерево процессов (cmd.exe + python + внуки).
 
-**Файл:** `Bridge/exec.py`, функция `op_run()`, комментарий "BUG-019 fix (11C)".
+**Файл:** `Bridge/exec.py`, функция `op_run()`, комментарий "BUG-017 fix (11C)".
 
 **Проверка:** запуск `start "" /B python Tools/lada_proxy.py` больше не вешает мост, `[AGENT REPORT]` приходит с `exit: 0` за 0.1-0.5 сек.
